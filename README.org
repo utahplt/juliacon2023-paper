@@ -19,9 +19,9 @@ Supplemental:
 
 * Building
 
-JuliaCon has particular submission requirements: we won't be submitting a PDF, but rather a link to this repository.
+JuliaCon has particular submission requirements: we won't be submitting a PDF, but rather a link to this repository. It is important our repository have a particular structure. See [[https://juliacon.github.io/proceedings-guide/author/#submission_details][the submission details from the Author's Guide]] for full requirements.
 
-You can check to make sure the paper builds with
+You can check to make sure the paper builds with:
 
 #+begin_src bash
   make paper.pdf
