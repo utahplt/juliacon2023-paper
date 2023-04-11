@@ -1,0 +1,40 @@
+#+title: JuliaCon 2023 Paper
+
+Source of our JuliaCon 2023 paper
+
+* Call for Papers
+
+ - [[https://juliacon.org/2023/][Conference homepage]]
+ - [[https://juliacon.github.io/proceedings-guide/author/][Author's Guide]]
+ - [[https://proceedings.juliacon.org/papers/new][JuliaCon paper submission form]]
+
+Supplemental:
+
+ - [[https://joss.readthedocs.io/en/latest/submitting.html][Submitting to JOSS docs]]
+
+* Submission Information
+
+ - page limit :: 5–10 pages [fn:1]
+ - deadline :: TODO
+
+* Building
+
+JuliaCon has particular submission requirements: we won't be submitting a PDF, but rather a link to this repository.
+
+You can check to make sure the paper builds with
+
+#+begin_src bash
+  make paper.pdf
+#+end_src
+
+* Authors
+
+The [[https://github.com/utahplt][Utah PLT]] group
+
+ - [[https://github.com/ashton314][Ashton Wiersdorf]]
+ - [[https://github.com/tcallred][Taylor Allred]]
+ - [[https://github.com/bennn][Ben Greenman]]
+
+* Footnotes
+
+[fn:1] https://juliacon.github.io/proceedings-guide/author/#full_paper_submissions
