@@ -65,13 +65,13 @@ The \texttt{OrdinaryDiffEq} library in particular enjoys widespread use in the s
 \subsection{NaN Fuzzing: OrdinaryDiffEq}
 
 The second thing we evaluated was an N-Body simulation library.
+We didn't find any sensible configuration of input parameters that lead to NaN kills like in the ShallowWaters library.
+We turned to the NaN injection capabilities of FloatTracker to fuzz the library to find any lurking bugs.
+% FIXME: add hyper-ref to § 4.1: ShallowWaters
+
 We configured FloatTracker to inject a single NaN to see if we could find any NaN kills.
 On some runs we noticed that we would get a kill and the program would warn about a NaN and prepare to exit.
 Contrary to the error message's claim, however, the program went into an infinite loop.
-
-% Note for Ashton:
-% file here: ~/Research/ode_debug/dev/OrdinaryDiffEq/src/solve.jl
-% see line 514
 
 The logs lead us to a routine in the widely-used \texttt{OrdinaryDiffEq} library.
 During initialization, a NaN got injected during the execution of \texttt{-} between two \texttt{TrackedFloat}s:
@@ -109,6 +109,10 @@ We get a very large kill file from this run, and the two lines from above show u
 Thus, this is a good candidate location for where the cause of the loop is.
 
 The relevant part of \texttt{solve.jl} looks like this:
+
+% Note for Ashton:
+% file here: ~/Research/ode_debug/dev/OrdinaryDiffEq/src/solve.jl
+% see line 514
 
 \begin{lstlisting}[language = Julia]
 while !isempty(time_stops)
