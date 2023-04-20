@@ -42,6 +42,8 @@ We have three primary goals when intercepting a float:
 % - start with the max example, perhaps?
 % - trace examples
 % - CSTGs
+%
+% Don't forget to talk about trace recording
 
 \section{Case Studies}
 
@@ -62,23 +64,51 @@ The \texttt{OrdinaryDiffEq} library in particular enjoys widespread use in the s
 
 \subsection{NaN Fuzzing: OrdinaryDiffEq}
 
-The second thing we looked at evaluating was an N-Body simulator that we found.
-We wanted to test the fuzzing abilities of FloatTracker:
-we configured FloatTracker so that it would inject one NaN at random into the program as it ran, and also to record the injection so that we could reproduce any interesting runs later.
-During one run, the N-Body simulation gave us a warning about a NaN causing instability, and then a notice that the program would exit.
-However, the program went into an infinite loop.
-
-With the recording in hand, we were able to reliably reproduce this behavior.
-Even though the loop only manifested on certain runs of the simulator, the recording made the NaN-injection deterministic.
-We used both the stack trace from terminating the loop as well as the injection and kill logs provided by FloatTracker to trace where the loop occurred and how the NaN we injected caused the problem.
+The second thing we evaluated was an N-Body simulation library.
+We configured FloatTracker to inject a single NaN to see if we could find any NaN kills.
+On some runs we noticed that we would get a kill and the program would warn about a NaN and prepare to exit.
+Contrary to the error message's claim, however, the program went into an infinite loop.
 
 % Note for Ashton:
 % file here: ~/Research/ode_debug/dev/OrdinaryDiffEq/src/solve.jl
 % see line 514
 
 The logs lead us to a routine in the widely-used \texttt{OrdinaryDiffEq} library.
-During the initialization of a differential equation problem, a NaN in the wrong place causes the setup to loop forever.
-Indecently, this is where we see a NaN kill; the critical code in question looks something like this:
+During initialization, a NaN got injected during the execution of \texttt{-} between two \texttt{TrackedFloat}s:
+
+\begin{verbatim}
+…
+- at FloatTracker/src/TrackedFloat.jl:89
+#__init#628 at OrdinaryDiffEq/src/solve.jl:106
+…
+\end{verbatim}
+
+That injection point is here on third line of this snippet, which corresponds to line 106 from the \texttt{solve.jl} file in the \texttt{OrdinaryDiffEq} library:
+
+\begin{lstlisting}[language = Julia]
+tType = eltype(prob.tspan)
+tspan = prob.tspan
+tdir = sign(tspan[end] - tspan[1])
+
+t = tspan[1]
+\end{lstlisting}
+
+\texttt{sign} correctly propagates NaNs, so \texttt{tdir} now contains a NaN.
+
+We \emph{could} trace this variable through the code, but that would be a lot of grunt work.
+Instead, we can look at the NaN kill logs to get a clue as to where we should look next:
+
+\begin{verbatim}
+…
+< at FloatTracker/src/TrackedFloat.jl:193
+solve! at OrdinaryDiffEq/src/solve.jl:515
+…
+\end{verbatim}
+
+We get a very large kill file from this run, and the two lines from above show up repeatedly.
+Thus, this is a good candidate location for where the cause of the loop is.
+
+The relevant part of \texttt{solve.jl} looks like this:
 
 \begin{lstlisting}[language = Julia]
 while !isempty(time_stops)
