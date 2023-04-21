@@ -1,6 +1,7 @@
 % JuliaCon proceedings template
 \documentclass{juliacon}
 \setcounter{page}{1}
+\usepackage{amsmath}
 
 \begin{document}
 
@@ -21,6 +22,78 @@
 
 % I think we will definitely need a clear, detailed section on how NaNs crop up and how they can be killed.
 
+The IEEE 754 specification for floating-point numbers \cite{IEEEStandardBinary1985} governs how NaNs are handled as arguments to arithmetic functions.
+Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
+This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
+
+However, there are a few places where NaNs flow into an expression, but not out.
+We call these instances ``NaN-kills'', and these can lead to subtle logic bugs.
+Consider the following example:
+
+\begin{lstlisting}[language = Julia]
+function bad_max(lst)
+  max_seen = 0.0
+  for x in lst
+    if ! (x <= max_seen)
+      # swap if new val greater
+      max_seen = x
+    end
+  end
+  max_seen
+end
+
+function good_max(lst)
+  foldl(max, lst)
+end
+\end{lstlisting}
+
+Both \texttt{bad\_max} and \texttt{good\_max} compute the maximum in a list.
+However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate NaNs, so you might not get the result you expected:
+
+\begin{lstlisting}[language = Julia]
+bad_max([1, 5, NaN, 4])     # returns 4
+good_max([1, 5, NaN, 4])    # returns NaN
+\end{lstlisting}
+
+Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a NaN in the list, the result is also wrong!
+The built-in \texttt{max} function correctly propagates NaNs, so we can see from its return that we got a NaN somewhere.
+It's not entirely obvious \emph{where} that NaN came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
+
+\subsection{Where do NaNs come from?}
+
+IEEE 754 \cite{IEEEStandardBinary1985} lists the following operations (among a few others) where NaNs result:
+
+\begin{itemize}
+\item $\frac{0}{0}$ or $\frac{\infty}{\infty}$
+\item $0 * \infty$
+\item $x \% y$ when $x = \infty$ or $y = 0$
+\item $+\infty + -\infty$ or $\infty - \infty$
+\item The square root or logarithm of a negative number
+\end{itemize}
+
+% Yadda yadda yadda...
+
+\subsection{NaN kills}
+
+Most mathematical operations preserve NaNs.
+However, there are some instances where NaNs can disappear, but not before potentially altering the correctness of the program!
+
+% \begin{itemize}
+% \item $x \; \texttt{cmp} \; y \rightarrow false$ where \texttt{cmp} is a binary comparison like \texttt{<}, \texttt{>}, \texttt{<=}, etc. and $x$ or $y$ is NaN.
+% \item $1^{NaN} \rightarrow 1$
+% \item $NaN^{0} \rightarrow 1$
+% \end{itemize}
+
+\begin{align*}
+x \; \texttt{cmp} \; y &\rightarrow false &\text{where \texttt{cmp} is \texttt{<}, \texttt{>}, \texttt{<=}, etc.} \\
+1^{\text{\texttt{NaN}}} &\rightarrow 1 \\
+\text{\texttt{NaN}}^{0} &\rightarrow 1
+\end{align*}
+
+% Yadda yadda yadda...
+
+% What else do we need to talk about?
+
 \section{FloatTracker Internals}
 
 FloatTracker works by leveraging Julia's type-based method dispatch system to capture everything from calls to the standard library down to basic arithmetic operations.
@@ -33,12 +106,10 @@ The surrogate methods in place, every operation on a TrackedFloat can be interce
 We have three primary goals when intercepting a float:
 
 \begin{enumerate}
-  \item Monitor the propagation of NaNs through the program
   \item Catch instances of NaN kills
+  \item Monitor the propagation of NaNs through the program
   \item Optionally \emph{inject} NaNs to fuzz the program under scrutiny against NaN-kills
 \end{enumerate}
-
-FILL: add a subsection for each item
 
 % Good things to put in this section:
 % - start with the max example, perhaps?
@@ -46,6 +117,19 @@ FILL: add a subsection for each item
 % - CSTGs
 %
 % Don't forget to talk about trace recording
+
+
+\subsection{Catching NaN kills}
+
+\subsection{NaN propagation monitoring}
+
+Remember in our first example with the \texttt{bad\_max} and \texttt{good\_max} functions how we didn't have a way to tell \emph{where} the NaNs originally came from?
+That can be a tedious task.
+However, FloatTracker makes this a lot easier by watching the life cycle of a NaN.
+
+% FIXME: talk about CSTGs
+
+\subsection{NaN injection}
 
 \section{Case Studies}
 
