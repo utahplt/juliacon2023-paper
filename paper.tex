@@ -9,7 +9,7 @@
 \maketitle
 
 \begin{abstract}
-  Reliable numerical computations are central to HPC and ML.
+  Reliable numerical computations are central to high-performance computing and machine learning.
   We present FlowFPX: a Julia-based tool for tracking the onset and flow of IEEE Floating-Point exceptions that signal numerical defects.
   FlowFPX's design exploits Julia's operator overloading to trace exception flows and even inject exceptions to accelerate testing.
   We present intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging and repair.
@@ -19,7 +19,6 @@
 
 \section{To Kill a Floating Point}
 % If anyone has a better "kill" pun/reference than "To Kill a Mockingbird", I'm all ears.
-
 % I think we will definitely need a clear, detailed section on how NaNs crop up and how they can be killed.
 
 The IEEE 754 specification for floating-point numbers \cite{IEEEStandardBinary1985} governs how NaNs are handled as arguments to arithmetic functions.
@@ -147,7 +146,58 @@ The \texttt{OrdinaryDiffEq} library in particular enjoys widespread use in the s
 
 \subsection{Surprise NaNs: ShallowWaters}
 
-\subsection{NaN Fuzzing: OrdinaryDiffEq}
+Most physics simulations of this sort include a parameter called the Courant-Friedrichs-Lewy (``CFL'') parameter, which roughly describes the size of the time step to take in running the simulation.
+Normally this value sits between 0 and 1---smaller values mean the simulation runs slower but with higher accuracy, whereas higher values mean the simulation takes bigger time steps and consequently runs faster, but results might be inaccurate.
+The primary reason for problems arising comes from information not having enough time to propagate through the simulation before the next time step is taken.
+
+% This is the story that I think we want to tell: you're going to run into NaNs,
+% so instead of dialing the the value down, we should look for where NaNs first
+% start to appear and fix those places.
+
+It is not uncommon to encounter cases where setting the CFL parameter too high results in NaNs in the result.
+Driving the CFL parameter low enough to excise the NaNs can make the simulation too long and unwieldy to be comfortable to use.
+Identifying where NaNs begin to arise can help point the way to where some mathematical refinement can be used to make the simulation both fast and accurate enough for practical use.
+
+For our first case study, we looked at the \texttt{ShallowWaters} library,\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021} which runs a simulates the flow of water over a seabed.
+This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
+That said, it works for our purposes as a proving ground for FloatTracker.
+We dialed the CFL parameter up to high values (as high as 10) and we started seeing NaNs in the result.
+
+\textbf{FIXME: add pictures here}
+
+The holes in the plots are regions where NaNs crept into the computation and destroyed the results.
+In one regard, this is not as bad as a NaN kill---knowing that there are NaNs in the computation means that we have a chance to fix it.
+NaN kills might silently give us the wrong answer, but we know that there were no NaN kills because our kill logs are empty.
+That said, finding the source of these NaNs can be difficult.
+This is where we employed FloatTracker.
+
+We ran ShallowWaters with a CFL value known to make bad outputs and recorded NaN \texttt{gen} events:
+
+\begin{lstlisting}[language = Julia]
+set_logger(buffersize=20, cstg=true, cstgArgs=true, cstgLineNum=true)
+
+P = run_model(T=TrackedFloat32,
+              cfl=10, Ndays=100, nx=100, L_ratio=1,
+              bc="nonperiodic", wind_forcing_x="double_gyre",
+              topography="seamount")
+\end{lstlisting}
+
+This produced the following in the log file: (formatted for clarity)
+
+\begin{verbatim}
+…
+-                 at FloatTracker/src/TrackedFloat.jl:106
+momentum_u!       at ShallowWaters/src/rhs.jl:246
+rhs_nonlinear!    at ShallowWaters/src/rhs.jl:50
+rhs!              at ShallowWaters/src/rhs.jl:14 [inlined]
+time_integration  at ShallowWaters/src/time_integration.jl:77
+run_model         at ShallowWaters/src/run_model.jl:37
+…
+\end{verbatim}
+
+% WORKING HERE
+
+\subsection{NaN fuzzing to find a kill: OrdinaryDiffEq}
 
 The second thing we evaluated was an N-Body simulation library.
 We didn't find any sensible configuration of input parameters that lead to NaN kills like in the ShallowWaters library.
@@ -163,8 +213,8 @@ During initialization, a NaN got injected during the execution of \texttt{-} bet
 
 \begin{verbatim}
 …
-- at FloatTracker/src/TrackedFloat.jl:89
-#__init#628 at OrdinaryDiffEq/src/solve.jl:106
+-            at FloatTracker/src/TrackedFloat.jl:89
+#__init#628  at OrdinaryDiffEq/src/solve.jl:106
 …
 \end{verbatim}
 
@@ -185,8 +235,8 @@ Instead, we can look at the NaN kill logs to get a clue as to where we should lo
 
 \begin{verbatim}
 …
-< at FloatTracker/src/TrackedFloat.jl:193
-solve! at OrdinaryDiffEq/src/solve.jl:515
+<       at FloatTracker/src/TrackedFloat.jl:193
+solve!  at OrdinaryDiffEq/src/solve.jl:515
 …
 \end{verbatim}
 
@@ -235,5 +285,5 @@ More dangerous cases can occur when the influence of a bad comparison is not as 
 % using the new jinx package for spell-checking!
 
 % Local Variables:
-% jinx-local-words: "CSTGs JuliaHub OrdinaryDiffEq ShallowWaters TrackedFloat"
+% jinx-local-words: "CFL CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq ShallowWaters TrackedFloat"
 % End:
