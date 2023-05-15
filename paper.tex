@@ -62,13 +62,17 @@ It's not entirely obvious \emph{where} that NaN came from---but more on that lat
 
 IEEE 754 \cite{IEEEStandardBinary1985} lists the following operations (among a few others) where NaNs result:
 
-\begin{itemize}
-\item $\frac{0}{0}$ or $\frac{\infty}{\infty}$
-\item $0 * \infty$
-\item $x \% y$ when $x = \infty$ or $y = 0$
-\item $+\infty + -\infty$ or $\infty - \infty$
-\item The square root or logarithm of a negative number
-\end{itemize}
+\begin{figure}[h]
+  \label{fig:nan-gens}
+  \begin{itemize}
+  \item $\frac{0}{0}$ or $\frac{\infty}{\infty}$
+  \item $0 * \infty$
+  \item $x \% y$ when $x = \infty$ or $y = 0$
+  \item $+\infty + -\infty$ or $\infty - \infty$
+  \item The square root or logarithm of a negative number
+  \end{itemize}
+  \caption{NaN-producing operations}
+\end{figure}
 
 % Yadda yadda yadda...
 
@@ -119,13 +123,32 @@ We have three primary goals when intercepting a float:
 
 \subsection{Catching NaN kills}
 
+With a floating point value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a NaN gets killed.
+Julia dispatches all arithmetic operations on that value to flow through FloatTracker, where we can inspect the arguments.
+Kills are relatively simple: if one or more NaNs flow into a function but don't flow out (i.e. the answer isn't a NaN) then that's a kill.
+For example:
+
+\begin{lstlisting}[language = Julia]
+  NaN + 42     -> NaN    # not a kill
+  Inf - Inf    -> NaN    # gen, but not a kill
+  min(NaN, 42) -> NaN    # not a kill
+  NaN < 42     -> false  # NaN kill!
+\end{lstlisting}
+
+There are a few exceptions to the rule of ``NaN in and no NaN out → kill''---some instances that we report as being a NaN kill might be instead a \emph{NaN-repair}, i.e. where the user explicitly checks for a NaN and gets some non-NaN value as a result.
+Once clear instance of this is the \texttt{isnan} function.
+Calling \texttt{isnan} and getting a boolean is expected behavior, and is usually used in error handling or in \emph{explicit} handling of unexpected values.
+FloatTracker still reports these cases in the kill logs so as to be complete---the user must not blindly assume that every instance of a NaN kill is bad and might be a case of NaN repair.
+
+% FIXME: we don't (yet) talk much about NaN repair in the rest of the paper.
+
 \subsection{NaN propagation monitoring}
 
 Remember in our first example with the \texttt{bad\_max} and \texttt{good\_max} functions how we didn't have a way to tell \emph{where} the NaNs originally came from?
 That can be a tedious task.
 However, FloatTracker makes this a lot easier by watching the life cycle of a NaN.
 
-% FIXME: talk about CSTGs
+% FIXME: don't forget to talk about CSTGs
 
 \subsection{NaN injection}
 
@@ -169,16 +192,22 @@ The holes in the plots are regions where NaNs crept into the computation and des
 In one regard, this is not as bad as a NaN kill---knowing that there are NaNs in the computation means that we have a chance to fix it.
 NaN kills might silently give us the wrong answer, but we know that there were no NaN kills because our kill logs are empty.
 That said, finding the source of these NaNs can be difficult.
-This is where we employed FloatTracker.
+
+Fortunately in this case, one of the key features \texttt{ShallowWaters} is its \emph{type flexibility}:
+\texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of floating-point precision.
+Upon model construction, \texttt{ShallowWaters} allows you to specify a type for floats in the model.
+We simply asked it to use our \texttt{TrackedFloat32} type, and then the entire simulation ran under the supervision of FloatTracker.
 
 We ran ShallowWaters with a CFL value known to make bad outputs and recorded NaN \texttt{gen} events:
 
 \begin{lstlisting}[language = Julia]
-set_logger(buffersize=20, cstg=true, cstgArgs=true, cstgLineNum=true)
+set_logger(buffersize=20, cstg=true, cstgArgs=true,
+           cstgLineNum=true)
 
 P = run_model(T=TrackedFloat32,
               cfl=10, Ndays=100, nx=100, L_ratio=1,
-              bc="nonperiodic", wind_forcing_x="double_gyre",
+              bc="nonperiodic",
+              wind_forcing_x="double_gyre",
               topography="seamount")
 \end{lstlisting}
 
@@ -186,16 +215,20 @@ This produced the following in the log file: (formatted for clarity)
 
 \begin{verbatim}
 …
--                 at FloatTracker/src/TrackedFloat.jl:106
-momentum_u!       at ShallowWaters/src/rhs.jl:246
-rhs_nonlinear!    at ShallowWaters/src/rhs.jl:50
-rhs!              at ShallowWaters/src/rhs.jl:14 [inlined]
-time_integration  at ShallowWaters/src/time_integration.jl:77
-run_model         at ShallowWaters/src/run_model.jl:37
+-                 FloatTracker/TrackedFloat.jl:106
+momentum_u!       ShallowWaters/rhs.jl:246
+rhs_nonlinear!    ShallowWaters/rhs.jl:50
+rhs!              ShallowWaters/rhs.jl:14 [inlined]
+time_integration  ShallowWaters/time_integration.jl:77
+run_model         ShallowWaters/run_model.jl:37
 …
 \end{verbatim}
 
-% WORKING HERE
+We can see that the NaN appeared from subtraction (first line) and that it was used in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
+In figure~\ref{fig:nan-gens} we can tell that this must be the result of $\infty - \infty$.
+Where did the $\infty$ come from?
+
+% What do we say here?!
 
 \subsection{NaN fuzzing to find a kill: OrdinaryDiffEq}
 
@@ -285,5 +318,5 @@ More dangerous cases can occur when the influence of a bad comparison is not as 
 % using the new jinx package for spell-checking!
 
 % Local Variables:
-% jinx-local-words: "CFL CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq ShallowWaters TrackedFloat"
+% jinx-local-words: "CFL CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq ShallowWaters TrackedFloat isnan"
 % End:
