@@ -64,7 +64,7 @@
 % If anyone has a better "kill" pun/reference than "To Kill a Mockingbird", I'm all ears.
 % I think we will definitely need a clear, detailed section on how NaNs crop up and how they can be killed.
 
-The IEEE 754 specification for floating-point numbers \cite{IEEEStandardBinary1985} governs how NaNs are handled as arguments to arithmetic functions.
+The IEEE 754 specification for floating-point numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
 Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
 This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
 
@@ -103,7 +103,7 @@ It's not entirely obvious \emph{where} that NaN came from---but more on that lat
 
 \subsection{Where do NaNs come from?}
 
-IEEE 754 \cite{IEEEStandardBinary1985} lists the following operations (among a few others) where NaNs result:
+IEEE 754~\cite{IEEEStandardBinary1985} lists the following operations (among a few others) where NaNs result:
 
 \begin{figure}[h]
   \label{fig:nan-gens}
@@ -226,7 +226,7 @@ It is not uncommon to encounter cases where setting the CFL parameter too high r
 Driving the CFL parameter low enough to excise the NaNs can make the simulation too long and unwieldy to be comfortable to use.
 Identifying where NaNs begin to arise can help point the way to where some mathematical refinement can be used to make the simulation both fast and accurate enough for practical use.
 
-For our first case study, we looked at the \texttt{ShallowWaters} library,\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021} which runs a simulates the flow of water over a seabed.
+For our first case study, we looked at the \texttt{ShallowWaters} library~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021}, which runs a simulates the flow of water over a seabed.
 This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
 That said, it works for our purposes as a proving ground for FloatTracker.
 We dialed the CFL parameter up to high values (as high as 10) and we started seeing NaNs in the result.
