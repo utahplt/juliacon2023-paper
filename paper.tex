@@ -58,6 +58,10 @@
   We present intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging and repair.
 \end{abstract}
 
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\FlowFPX}{FlowFPX}
+
+
 \section{Introduction}
 
 \section{To Kill a Floating Point}
@@ -359,7 +363,7 @@ More dangerous cases can occur when the influence of a bad comparison is not as 
 % Notes on RxInfer
 
 We searched GitHub for open issues in Julia libraries involving difficult-to-find NaNs.
-In our first batch of issues, we found the ``RxInfer.jl'' library with an issue\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}} revolving around NaN detection.
+In our first batch of issues, we found the \code{RxInfer.jl} library with an issue revolving around NaN detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
 We offered our tool for the package authors to use, and within a day the authors were able to track down the location of a NaN and fix the issue---all with minimal guidance.
 
 \section{Evaluation}
@@ -370,7 +374,7 @@ We offered our tool for the package authors to use, and within a day the authors
 
 \section{Acknowledgments}
 
-We would also like to thank the developers of RxInfer.jl for providing us with feedback on how we could make our tools more useful.
+We would also like to thank the developers of \code{RxInfer.jl} for feedback on \FlowFPX{}.
 
 \input{bib.tex}
 

@@ -1,4 +1,4 @@
-paper.pdf: paper.tex
+paper.pdf: paper.tex ref.bib
 	latexmk -bibtex -pdf paper.tex
 
 .PHONY: clean
