@@ -178,7 +178,7 @@ For example:
   NaN < 42     -> false  # NaN kill!
 \end{lstlisting}
 
-There are a few exceptions to the rule of ``NaN in and no NaN out → kill''---some instances that we report as being a NaN kill might be instead a \emph{NaN-repair}, i.e. where the user explicitly checks for a NaN and gets some non-NaN value as a result.
+There are a few exceptions to the rule of ``NaN in and no NaN out $\rightarrow$ kill''---some instances that we report as being a NaN kill might be instead a \emph{NaN-repair}, i.e. where the user explicitly checks for a NaN and gets some non-NaN value as a result.
 Once clear instance of this is the \texttt{isnan} function.
 Calling \texttt{isnan} and getting a boolean is expected behavior, and is usually used in error handling or in \emph{explicit} handling of unexpected values.
 FloatTracker still reports these cases in the kill logs so as to be complete---the user must not blindly assume that every instance of a NaN kill is bad and might be a case of NaN repair.
