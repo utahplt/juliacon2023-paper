@@ -2,6 +2,7 @@
 \documentclass{juliacon}
 \setcounter{page}{1}
 \usepackage{amsmath}
+\usepackage{cleveref}
 
 % If using Emacs, put cursor on last closing paren and call "eval-last-sexp" (usually `C-x C-e') to regenerate
 \iffalse
@@ -60,7 +61,12 @@
 
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\FlowFPX}{FlowFPX}
-
+\newcommand{\FloatTracker}{FloatTracker}
+\newcommand{\FT}{\FloatTracker}
+\newcommand{\CSTG}{stack graph}
+\newcommand{\CPP}{\code{C++}}
+\newcommand{\Dendro}{\textsc{Dendro}}
+\newcommand{\urlaccess}[2]{\url{#1}}
 
 \section{Introduction}
 
@@ -207,18 +213,10 @@ However, FloatTracker makes this a lot easier by watching the life cycle of a Na
 
 \section{Case Studies}
 
-To illustrate what FloatTracker is capable of, we applied our tool to three different Julia libraries to help us track down strange behavior:
+\FT{} is an effective tool for debugging all sorts of NaN-related issues.
+We have used it to reveal silent NaNs, uncover the root cause of NaNs,
+and fuzz for weak points in several case studies.
 
-\begin{description}
-\item[Surprise NaNs] We found that otherwise innocuous values for a time step parameter in the \texttt{ShallowWaters} library can produce NaNs in the result.
-  We used FloatTracker to track down where the NaNs arose.
-\item[NaN Fuzzing] We injected NaNs in a N-Body simulation and were able to find a bug in the widely-used \texttt{OrdinaryDiffEq} library.
-\item[NaN Kills] We observed issues with NaN kills inside of the \texttt{Finch} library.
-  % FIXME: more needed here
-\end{description}
-
-All three libraries are available from the JuliaHub package archive.
-The \texttt{OrdinaryDiffEq} library in particular enjoys widespread use in the scientific computing community.
 
 \subsection{Surprise NaNs: ShallowWaters}
 
@@ -354,9 +352,36 @@ Our kill logs led us right to this line; this is a perfect example of how NaN ki
 In this case, the problem was apparent besides what our logs told us and it manifested as an infinite loop.
 More dangerous cases can occur when the influence of a bad comparison is not as readily observable.
 
-\subsection{NaN Kills: Finch}
+\subsection{Finch}
+\label{s:finch}
 
-% Advection examples go here, right?
+Finch is a domain-specific language for specifying
+PDEs~\cite{heislerFinchDomainSpecific2022}.\footnote{Not to be confused
+with the Finch loop optimizer~\cite{adka-cgo-2023}.}
+In the spirit of FEniCS~\cite{fenics} and related
+tools~\cite{freefem,openfoam,dune,firedrake},
+Finch helps scientists quickly convert math into code.
+What sets Finch apart is its flexibility.
+It supports multiple discretization methods (finite element and finite
+volume) and multiple backends (Julia, \CPP{}, \Dendro{}~\cite{dendro}).
+Furthermore it strives to output code that humans can easily fine-tune.
+
+Fuzzing with \FT{} revealed two places where Finch needed
+protection against user input.
+The first was when reading an input mesh.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/16}{2023-06-06}}
+A NaN injected in the mesh led to a crash further on:
+\begin{verbatim}
+  BoundsError: attempt to access 1-element
+   Vector{Int64} at index [2]
+\end{verbatim}
+Defensive programming solves the issue.
+The second place was in setting bounds for the
+solver.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/17}{2023-06-06}}
+Here, a NaN could leave bounds uninitialized, leading to a bounds error.
+Additionally, \FT{} and \CSTG{}s have been useful for identifying NaNs that
+appear in unstable systems.
+%% advection2d, high cfl and high T (time) led to NaN during simulation
+
 
 \subsection{A Bug-Hunting Safari}
 
@@ -369,6 +394,24 @@ We offered our tool for the package authors to use, and within a day the authors
 \section{Evaluation}
 
 \section{Discussion}
+
+\subsection{Enhanced Fuzzing}
+
+While fuzzing is useful for discovering issues, its success rate
+is low because \emph{every} floating-point operation is a candidate
+for injection.
+Even operations that are already well-defended against NaNs are candidates.
+\FT{} could use two sorts of tools for improving injection.
+First, fine-grained control to let users decide where not to inject.
+Second, tools for understanding the context of an injection point
+after the fact.
+Program slicing is especially relevant to the latter point (and effectively
+what we did by hand when fuzzing Finch~\cref{s:finch}).
+For each operation, an expert needs to study the values that feed into it to
+decide whether they are protected or not.
+
+%% TODO example, start here at glbvertex https://github.com/paralab/Finch/blob/master/src/grid.jl#L360
+
 
 \section{Related Work}
 
