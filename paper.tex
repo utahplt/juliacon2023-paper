@@ -38,10 +38,12 @@
 %   Case Studies
 %     Surprise NaNs: ShallowWaters
 %     NaN fuzzing to find a kill: OrdinaryDiffEq
-%     NaN Kills: Finch
+%     Finch
 %     A Bug-Hunting Safari
 %   Evaluation
 %   Discussion
+%     Tracking more than NaNs
+%     Enhanced Fuzzing
 %   Related Work
 %   Acknowledgments
 % document
@@ -280,9 +282,14 @@ run_model         ShallowWaters/run_model.jl:37
 
 We can see that the NaN appeared from subtraction (first line) and that it was used in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
 In figure~\ref{fig:nan-gens} we can tell that this must be the result of $\infty - \infty$.
-Where did the $\infty$ come from?
 
-% What do we say here?!
+Thus, with little effort we were able to track down where the NaNs were originating.
+More work is needed to follow the $\infty$ back to wherever \emph{it} came from.
+Fortunately, we will be able to extend FloatTracker to handle more than just NaNs---watching and logging \texttt{Inf}s should be completely tractable.
+See~\cref{discussion} for more on future plans around this.
+
+% TODO: if we get some handling with Inf working, then we should keep tracing this back.
+% Where did the $\infty$ come from?
 
 \subsection{NaN fuzzing to find a kill: OrdinaryDiffEq}
 
@@ -394,6 +401,16 @@ We offered our tool for the package authors to use, and within a day the authors
 \section{Evaluation}
 
 \section{Discussion}
+\label{s:discussion}
+
+\subsection{Tracking more than NaNs}
+
+% This is mostly a stand-in in case we don't get around to adding Inf tracking.
+% It should be easy to do, but whether or not we have enough time to do it is
+% another matter.
+FloatTracker is capable of monitoring all sorts of events in a floating point value's lifetime---not just a value going to NaN.
+Extending FloatTracker to handle \texttt{Inf} is just a matter of engineering.
+Other values of interest may follow.
 
 \subsection{Enhanced Fuzzing}
 
@@ -427,5 +444,5 @@ We would also like to thank the developers of \code{RxInfer.jl} for feedback on 
 % using the new jinx package for spell-checking!
 
 % Local Variables:
-% jinx-local-words: "CFL CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq ShallowWaters TrackedFloat isnan"
+% jinx-local-words: "CFL CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq RxInfer ShallowWaters TrackedFloat isnan"
 % End:
