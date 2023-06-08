@@ -28,9 +28,11 @@
 % juliacon
 % document
 %   Introduction
-%   To Kill a Floating Point
+%     To Kill a Floating Point
+%     FloatTracker
+%   Floating Point Exception Primer
 %     Where do NaNs come from?
-%     NaN kills
+%     Infinity
 %   FloatTracker Internals
 %     Catching NaN kills
 %     NaN propagation monitoring
@@ -72,9 +74,10 @@
 
 \section{Introduction}
 
-\section{To Kill a Floating Point}
+% Here is a short, illustrative example about the problem.
+\subsection{To Kill a Floating Point}
+\label{s:to-kill-a-fp}
 % If anyone has a better "kill" pun/reference than "To Kill a Mockingbird", I'm all ears.
-% I think we will definitely need a clear, detailed section on how NaNs crop up and how they can be killed.
 
 The IEEE 754 specification for floating-point numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
 Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
@@ -113,6 +116,14 @@ Not only is the result from \texttt{bad\_max} problematic for obscuring the fact
 The built-in \texttt{max} function correctly propagates NaNs, so we can see from its return that we got a NaN somewhere.
 It's not entirely obvious \emph{where} that NaN came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
 
+\subsection{FloatTracker}
+% I'd love to find some Sherlock Holmes title for this section, as it would be a subtle nod to Sherlogs.jl and would be a nice literary reference to compliment "To Kill a Mockingbird"
+
+\section{Floating Point Exception Primer}
+
+In our work we focused on two of the most common problematic values in the floating point space: NaN and Inf.
+We leave the possibility of tracking other kinds of troublesome values (e.g. subnormal numbers) open, but for our work we restrict ourselves to just these values.
+
 \subsection{Where do NaNs come from?}
 
 IEEE 754~\cite{IEEEStandardBinary1985} lists the following operations (among a few others) where NaNs result:
@@ -129,18 +140,20 @@ IEEE 754~\cite{IEEEStandardBinary1985} lists the following operations (among a f
   \caption{NaN-producing operations}
 \end{figure}
 
-% Yadda yadda yadda...
-
-\subsection{NaN kills}
+When one of these events happens, we call it a NaN \emph{generation}.
 
 Most mathematical operations preserve NaNs.
-However, there are some instances where NaNs can disappear, but not before potentially altering the correctness of the program!
+We call these instances NaN \emph{propagation}, as the NaN is propagated from the source in the arguments to the result.
 
-% \begin{itemize}
-% \item $x \; \texttt{cmp} \; y \rightarrow false$ where \texttt{cmp} is a binary comparison like \texttt{<}, \texttt{>}, \texttt{<=}, etc. and $x$ or $y$ is NaN.
-% \item $1^{NaN} \rightarrow 1$
-% \item $NaN^{0} \rightarrow 1$
-% \end{itemize}
+There are, however, some instances where the IEEE standard requires that NaNs to \emph{not} propagate from arguments to the result; we call these NaN \emph{kills}.
+Sometimes this can be good---an \texttt{isnan} check should clearly return a boolean and not a NaN---but kills are often harmful in two ways:
+
+\begin{enumerate}
+  \item Users no longer see that there was some errant operation: NaNs are an opportunity to closely examine data for problems and code for unsoundness.
+  \item NaN kills can influence the control of a program leading to incorrect results, as we saw in~\cref{to-kill-a-fp}.
+\end{enumerate}
+
+Here are cases where, according to the IEEE standard, a NaN can be killed:
 
 \begin{align*}
 x \; \texttt{cmp} \; y &\rightarrow false &\text{where \texttt{cmp} is \texttt{<}, \texttt{>}, \texttt{<=}, etc.} \\
@@ -148,9 +161,15 @@ x \; \texttt{cmp} \; y &\rightarrow false &\text{where \texttt{cmp} is \texttt{<
 \text{\texttt{NaN}}^{0} &\rightarrow 1
 \end{align*}
 
-% Yadda yadda yadda...
+FloatTracker monitors these and all other operations for interesting events.
 
-% What else do we need to talk about? What other problems do we need to set up so that FloatTracker's solutions are clear?
+\subsection{Infinity}
+
+There are two infinities, $+\infty$ and $-\infty$, but they behave the same for our purposes, so we will refer to them just as ``Inf''.
+Like NaNs, Inf can crop up when bad math happens: $\frac{x}{0} \rightarrow \infty$ when $x \ne 0$.
+Inf can also arise when numbers get too big or too small for the choice of representation.
+
+% TODO
 
 \section{FloatTracker Internals}
 
@@ -218,7 +237,6 @@ However, FloatTracker makes this a lot easier by watching the life cycle of a Na
 \FT{} is an effective tool for debugging all sorts of NaN-related issues.
 We have used it to reveal silent NaNs, uncover the root cause of NaNs,
 and fuzz for weak points in several case studies.
-
 
 \subsection{Surprise NaNs: ShallowWaters}
 
