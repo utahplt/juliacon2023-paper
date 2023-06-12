@@ -195,7 +195,7 @@ We have three primary goals when intercepting a float:
 %
 % Don't forget to talk about trace recording
 
-\subsection{Catching NaN kills}
+\subsection{Catching a NaN Killer}
 
 With a floating point value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a NaN gets killed.
 Julia dispatches all arithmetic operations on that value to flow through FloatTracker, where we can inspect the arguments.
@@ -289,7 +289,7 @@ This produced the following in the log file: (formatted for clarity)
 
 \begin{verbatim}
 …
--                 FloatTracker/TrackedFloat.jl:106
+-                 FT/TrackedFloat.jl:106
 momentum_u!       ShallowWaters/rhs.jl:246
 rhs_nonlinear!    ShallowWaters/rhs.jl:50
 rhs!              ShallowWaters/rhs.jl:14 [inlined]
@@ -300,14 +300,50 @@ run_model         ShallowWaters/run_model.jl:37
 
 We can see that the NaN appeared from subtraction (first line) and that it was used in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
 In figure~\ref{fig:nan-gens} we can tell that this must be the result of $\infty - \infty$.
-
 Thus, with little effort we were able to track down where the NaNs were originating.
-More work is needed to follow the $\infty$ back to wherever \emph{it} came from.
-Fortunately, we will be able to extend FloatTracker to handle more than just NaNs---watching and logging \texttt{Inf}s should be completely tractable.
-See~\cref{discussion} for more on future plans around this.
+Now the question is: where did the $\infty$ come from?
 
-% TODO: if we get some handling with Inf working, then we should keep tracing this back.
-% Where did the $\infty$ come from?
+FloatTracker is not limited to NaNs---we can track any kind of value that we want.
+We have built-in support for tracking NaN and $\infty$; we can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
+
+\begin{verbatim}
+check_error([-1.515f31, 2])  FT/TrackedFloat.jl:10
+^(::TrackedFloat32, ::Int64) FT/TrackedFloat.jl:138
+…
+materialize(^)               broadcast.jl:860
+top-level getproperty(P, :u) examples/sw_nan_tf.jl:14
+…
+\end{verbatim}
+
+It looks like the $-\infty$ came from $-1.515e31^2$---no wonder a Float32 type couldn't handle something that large.
+We can tell that because the first line shows us the arguments\footnote{There is a configuration option that allows us to control this behavior.} and the second line shows us what function got called. Moreover, we get the top-level line: we can see that it came from line 14 in our ShallowWaters file.
+
+Tracking down why that value got so large is beyond the scope of FloatTracker right now.
+Most likely we will need some domain-expertise to find a solution to this problem.
+The point is, we were able to quickly and automatically arrive at this excellent starting point with FloatTracker.
+
+\subsubsection{CSTGs help us get a bigger picture}
+
+Running FloatTracker can produce a lot of logs.
+To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
+% FIXME: cite CSTG
+
+We can produce a CSTG of both the Inf as well as the NaN logs.
+Here is what the two graphs look like:\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
+  \caption{CSTG of NaN generation logs from ShallowWaters.}
+  \label{fig:sw_nan_cstg}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
+  \caption{CSTG of Inf generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
+  \label{fig:sw_inf_cstg}
+\end{figure}
 
 \subsection{NaN fuzzing to find a kill: OrdinaryDiffEq}
 
