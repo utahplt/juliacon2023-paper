@@ -1,4 +1,5 @@
 #+title: JuliaCon 2023 Talk Draft
+#+startup: showall
 
 * Talk Parameters
 
@@ -6,13 +7,53 @@ Time slot (according to the calendar invite) is half an hour.
 
 * Outline
 
- - Evocative story; candidates:
+ - Evocative story/example; candidates:
 
    + [[https://en.wikipedia.org/wiki/Ariane_flight_V88][Ariane flight V88]] :: maiden voyage of Ariane 5 rocket; FP exception lead to rocket exploding
 
    + Something ML related ::
 
    + Spreadsheet with NaNs :: This should be relatable to lots of people in the room
+
+   + Loop with floating point values :: This is just a good example of why floating point is hard!
+
+     "Who here is afraid of floating point numbers?"
+
+     If every hand goes up, we have an experienced crowd!
+
+     If not, I'm going to show you things that should terrify you.
+
+     #+begin_src julia :results output
+       n = 0
+       i::Float32 = 0.0
+       while i < 1
+         global i += 0.1
+         global n += 1
+       end
+
+       println("With float32: $n iterations")
+
+       n = 0
+       j::Float64 = 0.0
+       while j < 1
+         global j += 0.1
+         global n += 1
+       end
+
+       println("With float64: $n iterations")
+     #+end_src
+
+     #+RESULTS:
+     : 0
+     : 0.0
+     : With float32: 10 iterations
+     : 0
+     : 0.0
+     : With float64: 11 iterations
+
+     That example is just meant to show you how tricky floating point can be—unexpected stuff happens.
+
+     Maybe show an example of a 
 
  - Problem: floating point exceptions are difficult to track
 
