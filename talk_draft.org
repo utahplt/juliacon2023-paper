@@ -1,0 +1,44 @@
+#+title: JuliaCon 2023 Talk Draft
+
+* Talk Parameters
+
+Time slot (according to the calendar invite) is half an hour.
+
+* Outline
+
+ - Evocative story; candidates:
+
+   + [[https://en.wikipedia.org/wiki/Ariane_flight_V88][Ariane flight V88]] :: maiden voyage of Ariane 5 rocket; FP exception lead to rocket exploding
+
+   + Something ML related ::
+
+   + Spreadsheet with NaNs :: This should be relatable to lots of people in the room
+
+ - Problem: floating point exceptions are difficult to track
+
+   + Put a quote from the RxInfer issue on a slide
+     #+begin_quote
+     Now it is impossible to trace back the origin of the very first ~NaN~
+     without perform a lot of manual work. This limits the ability to debug the
+     code and to prevent these ~NaN~s in the first place.
+
+     [[https://github.com/biaslab/RxInfer.jl/issues/116][RxInfer.jl#116]]
+     #+end_quote
+
+ - Our solution: track how floats behave and track what happens to them.
+
+ - Walk-through of how it works.
+
+   This section is our chance to show off some of the aspects of Julia that make it nice to work with. People who love Julia because it's Julia will like this part a lot. (Maybe enough to use our tool!)
+
+   + Type-based method dispatching: show how this is done for *one* instance of a custom type.
+
+   + Explain how this would be super tedious to handle manually. → segue to metaprogramming
+
+     We can throw out some fancy numbers (e.g. 5 bajillion method signatures generated!!! Waaaaaa!!)
+
+   + Stuff is sticky: one ~TrackedFloat~ in one place will spread.
+
+ - (Gentle, well-scripted) live demo
+
+ - Questions?
