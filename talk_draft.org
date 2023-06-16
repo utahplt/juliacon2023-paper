@@ -5,11 +5,11 @@
 
 Time slot (according to the calendar invite) is half an hour.
 
-* Outline
+* Outline (draft 1)
 
  - Evocative story/example; candidates:
 
-   + [[https://en.wikipedia.org/wiki/Ariane_flight_V88][Ariane flight V88]] :: maiden voyage of Ariane 5 rocket; FP exception lead to rocket exploding
+   + +[[https://en.wikipedia.org/wiki/Ariane_flight_V88][Ariane flight V88]] :: maiden voyage of Ariane 5 rocket; FP exception lead to rocket exploding+
 
    + Something ML related ::
 
@@ -53,8 +53,8 @@ Time slot (according to the calendar invite) is half an hour.
 
      That example is just meant to show you how tricky floating point can be—unexpected stuff happens.
 
-     Maybe show an example of a 
-
+   + Better idea from Ben :: use one of *our* examples
+ 
  - Problem: floating point exceptions are difficult to track
 
    + Put a quote from the RxInfer issue on a slide
@@ -83,3 +83,15 @@ Time slot (according to the calendar invite) is half an hour.
  - (Gentle, well-scripted) live demo
 
  - Questions?
+
+* Outline (draft 2)
+
+Sketch: 2x 10-minute halves—first half is about how scientists would use this tool, and the second half is how we use Julia to do this in a convenient way.
+
+Don't forget to mention GPU FPX at some point!
+
+So:
+
+ - scientist story
+ - case studies
+ - how we did this in Julia
