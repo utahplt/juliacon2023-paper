@@ -70,6 +70,7 @@
 \newcommand{\GPUFPX}{GPU-FPX}
 \newcommand{\FloatTracker}{FloatTracker}
 \newcommand{\FT}{\FloatTracker}
+\newcommand{\Fp}{Floating-point} % hyphen or no?
 \newcommand{\fp}{floating-point} % hyphen or no?
 \newcommand{\CSTG}{stack graph}
 \newcommand{\CPP}{\code{C++}}
@@ -125,6 +126,29 @@ brief discussion~(\cref{s:discussion}).
 % TODO: talk about how floating point != real numbers → errors appear and build up
 % (see other tutorials; Art of Computer Programming, Ganesh, slides in Google Drive from guy in England)
 % 2 paragraphs or so: floating point primer
+
+\Fp{} numbers are a way of representing real numbers in a computer.
+However, since we limit our precision to a fixed, finite set of bits, \fp{} is \emph{inherently approximate} and necessarily incurs some error during computation.
+This is not bad; it is a trade-off: we get fast and compact representations that are good enough for most use cases.
+However, the downside is that \fp{} numbers \emph{do not} behave like real numbers.
+
+There are many excellent resources\cite{knuthArtComputerProgramming1997} on understanding the theory behind \fp{};
+we will explain the most essential aspects here.
+We represent \fp{} values $r \in \mathbb{R}$ in scientific notation $r = f \times b^{e-q}$,
+for some exponent $e$, a fixed value called an \emph{excess} $q$,\footnote{The purpose of the excess $q$ is so that with value of $e > q$ we can represent positive exponents, and $e < q$ we can represent negative exponents.} and fraction $f$.\footnote{Another name for the fraction part commonly seen in the literature is ``mantissa''.
+  You might occasionally also see ``characteristic'' referring to the exponent.
+  We will avoid those terms however.}
+
+We round and pack $e$ and $f$ into bit fields.
+This gives us a compact representation for both very small and very large values.
+
+Things get tricky when we start to do math when there is a big disparity between exponent values.
+For example, when adding two numbers $u$ and $v$, if the exponents differ by too much, the result of the addition will simply be the larger value.
+
+% TODO illustrative example: e.g. 1,234,567 + 0.0000001 = 1,234,567
+
+The gradual accumulation of these errors leads to surprising mathematical results!
+% FIXME: more examples of a NaN popping up out of nowhere, e.g. with bad addition
 
 In our work we focused on two of the most common problematic values in the \fp{} space: \NaN{} and \Inf{}.
 We leave the possibility of tracking other kinds of troublesome values (e.g. subnormal numbers) open, but for our work we restrict ourselves to just these values.
