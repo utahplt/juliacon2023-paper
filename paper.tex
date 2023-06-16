@@ -126,12 +126,12 @@ brief discussion~(\cref{s:discussion}).
 % (see other tutorials; Art of Computer Programming, Ganesh, slides in Google Drive from guy in England)
 % 2 paragraphs or so: floating point primer
 
-In our work we focused on two of the most common problematic values in the \fp{} space: NaN and Inf.
+In our work we focused on two of the most common problematic values in the \fp{} space: \NaN{} and \Inf{}.
 We leave the possibility of tracking other kinds of troublesome values (e.g. subnormal numbers) open, but for our work we restrict ourselves to just these values.
 
-\subsection{Where do NaNs come from?}
+\subsection{Where do \NaN{}s come from?}
 
-IEEE 754~\cite{IEEEStandardBinary1985} lists the following operations (among a few others) where NaNs result:
+IEEE 754~\cite{IEEEStandardBinary1985} lists the following operations (among a few others) where \NaN{}s result:
 
 \begin{figure}[h]
   \label{fig:nan-gens}
@@ -142,28 +142,28 @@ IEEE 754~\cite{IEEEStandardBinary1985} lists the following operations (among a f
   \item $+\infty + -\infty$ or $\infty - \infty$
   \item The square root or logarithm of a negative number
   \end{itemize}
-  \caption{NaN-producing operations}
+  \caption{\NaN{}-producing operations}
 \end{figure}
 
-When one of these events happens, we call it a NaN \emph{generation}.
+When one of these events happens, we call it a \NaN{} \emph{generation}.
 
-Most mathematical operations preserve NaNs.
-We call these instances NaN \emph{propagation}, as the NaN is propagated from the source in the arguments to the result.
+Most mathematical operations preserve \NaN{}s.
+We call these instances \NaN{} \emph{propagation}, as the \NaN{} is propagated from the source in the arguments to the result.
 
-There are, however, some instances where the IEEE standard requires that NaNs to \emph{not} propagate from arguments to the result; we call these NaN \emph{kills}.
-Sometimes this can be good---an \texttt{isnan} check should clearly return a boolean and not a NaN---but kills are often harmful in two ways:
+There are, however, some instances where the IEEE standard requires that \NaN{}s to \emph{not} propagate from arguments to the result; we call these \NaN{} \emph{kills}.
+Sometimes this can be good---an \texttt{isnan} check should clearly return a boolean and not a \NaN{}---but kills are often harmful in two ways:
 
 \begin{enumerate}
-  \item Users no longer see that there was some errant operation: NaNs are an opportunity to closely examine data for problems and code for unsoundness.
-  \item NaN kills can influence the control of a program leading to incorrect results, as we saw in~\cref{s:to-kill-a-fp}.
+  \item Users no longer see that there was some errant operation: \NaN{}s are an opportunity to closely examine data for problems and code for unsoundness.
+  \item \NaN{} kills can influence the control of a program leading to incorrect results, as we saw in~\cref{s:to-kill-a-fp}.
 \end{enumerate}
 
-Here are cases where, according to the IEEE standard, a NaN can be killed:
+Here are cases where, according to the IEEE standard, a \NaN{} can be killed:
 
 \begin{align*}
 x \; \texttt{cmp} \; y &\rightarrow false &\text{where \texttt{cmp} is \texttt{<}, \texttt{>}, \texttt{<=}, etc.} \\
-1^{\text{\texttt{NaN}}} &\rightarrow 1 \\
-\text{\texttt{NaN}}^{0} &\rightarrow 1
+1^{\text{\texttt{\NaN{}}}} &\rightarrow 1 \\
+\text{\texttt{\NaN{}}}^{0} &\rightarrow 1
 \end{align*}
 
 FloatTracker monitors these and all other operations for interesting events.
@@ -172,9 +172,9 @@ FloatTracker monitors these and all other operations for interesting events.
 
 %%ben: shouldn't this come before NaN b/c infs lead to NaNs?
 
-There are two infinities, $+\infty$ and $-\infty$, but they behave the same for our purposes, so we will refer to them just as ``Inf''.
-Like NaNs, Inf can crop up when bad math happens: $\frac{x}{0} \rightarrow \infty$ when $x \ne 0$.
-Inf can also arise when numbers get too big or too small for the choice of representation.
+There are two infinities, $+\infty$ and $-\infty$, but they behave the same for our purposes, so we will refer to them just as ``\Inf{}''.
+Like \NaN{}s, \Inf{} can crop up when bad math happens: $\frac{x}{0} \rightarrow \infty$ when $x \ne 0$.
+\Inf{} can also arise when numbers get too big or too small for the choice of representation.
 
 % Here is a short, illustrative example about the problem.
 \subsection{To Kill a Floating Point}
@@ -183,16 +183,16 @@ Inf can also arise when numbers get too big or too small for the choice of repre
 
 \begin{figure}
   \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
-  \caption{Gen, Prop, Kill: Lifetime of a NaN value}
+  \caption{Gen, Prop, Kill: Lifetime of a \NaN{} value}
   \label{f:gpk}
 \end{figure}
 
-The IEEE 754 specification for \fp{} numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
-Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
+The IEEE 754 specification for \fp{} numbers governs how \NaN{}s are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
+Most of the time, when any or all of the arguments are \NaN{}, the result is also a \NaN{}.
 This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
 
-However, there are a few places where NaNs flow into an expression, but not out.
-We call these instances ``NaN-kills'', and these can lead to subtle logic bugs.
+However, there are a few places where \NaN{}s flow into an expression, but not out.
+We call these instances ``\NaN{}-kills'', and these can lead to subtle logic bugs.
 Consider the following example:
 
 \begin{lstlisting}[language = Julia]
@@ -213,16 +213,16 @@ end
 \end{lstlisting}
 
 Both \texttt{bad\_max} and \texttt{good\_max} compute the maximum in a list.
-However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate NaNs, so you might not get the result you expected:
+However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate \NaN{}s, so you might not get the result you expected:
 
 \begin{lstlisting}[language = Julia]
 bad_max([1, 5, NaN, 4])     # returns 4
 good_max([1, 5, NaN, 4])    # returns NaN
 \end{lstlisting}
 
-Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a NaN in the list, the result is also wrong!
-The built-in \texttt{max} function correctly propagates NaNs, so we can see from its return that we got a NaN somewhere.
-It's not entirely obvious \emph{where} that NaN came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
+Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a \NaN{} in the list, the result is also wrong!
+The built-in \texttt{max} function correctly propagates \NaN{}s, so we can see from its return that we got a \NaN{} somewhere.
+It's not entirely obvious \emph{where} that \NaN{} came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
 
 \section{\FlowFPX{}}
 \label{s:flowfpx}
@@ -242,9 +242,9 @@ The surrogate methods in place, every operation on a TrackedFloat can be interce
 We have three primary goals when intercepting a float:
 
 \begin{enumerate}
-  \item Catch instances of NaN kills
-  \item Monitor the propagation of NaNs through the program
-  \item Optionally \emph{inject} NaNs to fuzz the program under scrutiny against NaN-kills
+  \item Catch instances of \NaN{} kills
+  \item Monitor the propagation of \NaN{}s through the program
+  \item Optionally \emph{inject} \NaN{}s to fuzz the program under scrutiny against \NaN{}-kills
 \end{enumerate}
 
 % Good things to put in this section:
@@ -254,86 +254,86 @@ We have three primary goals when intercepting a float:
 %
 % Don't forget to talk about trace recording
 
-\subsection{Catching a NaN Killer}
+\subsection{Catching a \NaN{} Killer}
 
-With a \fp{} value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a NaN gets killed.
+With a \fp{} value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a \NaN{} gets killed.
 Julia dispatches all arithmetic operations on that value to flow through FloatTracker, where we can inspect the arguments.
-Kills are relatively simple: if one or more NaNs flow into a function but don't flow out (i.e. the answer isn't a NaN) then that's a kill.
+Kills are relatively simple: if one or more \NaN{}s flow into a function but don't flow out (i.e. the answer isn't a \NaN{}) then that's a kill.
 For example:
 
 \begin{lstlisting}[language = Julia]
   NaN + 42     -> NaN    # not a kill
-  Inf - Inf    -> NaN    # gen, but not a kill
+  \Inf{} - \Inf{}    -> NaN    # gen, but not a kill
   min(NaN, 42) -> NaN    # not a kill
   NaN < 42     -> false  # NaN kill!
 \end{lstlisting}
 
-There are a few exceptions to the rule of ``NaN in and no NaN out $\rightarrow$ kill''---some instances that we report as being a NaN kill might be instead a \emph{NaN-repair}, i.e. where the user explicitly checks for a NaN and gets some non-NaN value as a result.
+There are a few exceptions to the rule of ``\NaN{} in and no \NaN{} out $\rightarrow$ kill''---some instances that we report as being a \NaN{} kill might be instead a \emph{\NaN{}-repair}, i.e. where the user explicitly checks for a \NaN{} and gets some non-\NaN{} value as a result.
 Once clear instance of this is the \texttt{isnan} function.
 Calling \texttt{isnan} and getting a boolean is expected behavior, and is usually used in error handling or in \emph{explicit} handling of unexpected values.
-FloatTracker still reports these cases in the kill logs so as to be complete---the user must not blindly assume that every instance of a NaN kill is bad and might be a case of NaN repair.
+FloatTracker still reports these cases in the kill logs so as to be complete---the user must not blindly assume that every instance of a \NaN{} kill is bad and might be a case of \NaN{} repair.
 
 % FIXME: we don't (yet) talk much about NaN repair in the rest of the paper.
 
 % TODO?
 
-\subsection{NaN propagation monitoring}
+\subsection{\NaN{} propagation monitoring}
 
-Remember in our first example with the \texttt{bad\_max} and \texttt{good\_max} functions how we didn't have a way to tell \emph{where} the NaNs originally came from?
+Remember in our first example with the \texttt{bad\_max} and \texttt{good\_max} functions how we didn't have a way to tell \emph{where} the \NaN{}s originally came from?
 That can be a tedious task.
-However, FloatTracker makes this a lot easier by watching the life cycle of a NaN.
+However, FloatTracker makes this a lot easier by watching the life cycle of a \NaN{}.
 
 % TODO
 
 % FIXME: don't forget to talk about CSTGs
 
-\subsection{NaN injection}
+\subsection{\NaN{} injection}
 
 % TODO
 
 \section{Case Studies}
 \label{s:casestudies}
 
-\FlowFPX{} is effective for debugging all sorts of NaN-related issues.
-We have used it to reveal silent NaNs, uncover the root cause of NaNs,
+\FlowFPX{} is effective for debugging all sorts of \NaN{}-related issues.
+We have used it to reveal silent \NaN{}s, uncover the root cause of \NaN{}s,
 and fuzz for weak points in several case studies.
 
 
-\subsection{Surprise NaNs: ShallowWaters}
+\subsection{Surprise \NaN{}s: ShallowWaters}
 
 Most physics simulations of this sort include a parameter called the Courant-Friedrichs-Lewy (``CFL'') parameter, which roughly describes the size of the time step to take in running the simulation.
 Normally this value sits between 0 and 1---smaller values mean the simulation runs slower but with higher accuracy, whereas higher values mean the simulation takes bigger time steps and consequently runs faster, but results might be inaccurate.
 The primary reason for problems arising comes from information not having enough time to propagate through the simulation before the next time step is taken.
 
-It is not uncommon to encounter cases where setting the CFL parameter too high results in NaNs in the result.
-Driving the CFL parameter low enough to excise the NaNs can make the simulation too long and unwieldy to be comfortable to use.
-Identifying where NaNs begin to arise can help point the way to where some mathematical refinement can be used to make the simulation both fast and accurate enough for practical use.
+It is not uncommon to encounter cases where setting the CFL parameter too high results in \NaN{}s in the result.
+Driving the CFL parameter low enough to excise the \NaN{}s can make the simulation too long and unwieldy to be comfortable to use.
+Identifying where \NaN{}s begin to arise can help point the way to where some mathematical refinement can be used to make the simulation both fast and accurate enough for practical use.
 
 For our first case study, we looked at the \texttt{ShallowWaters} library~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021}, which runs a simulates the flow of water over a seabed.
 This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
 That said, it works for our purposes as a proving ground for FloatTracker.
-We dialed the CFL parameter up to high values (as high as 10) and we started seeing NaNs in the result.
+We dialed the CFL parameter up to high values (as high as 10) and we started seeing \NaN{}s in the result.
 Note that the program did not crash: instead, it began producing bad output.
 
 \begin{figure}
   \centering
   \includegraphics[width=3in]{./fig/shallow_waters_cfl_diff.png}
-  \caption{Effect of high CFL parameters: on the left, normal output. On the right: NaNs cause white holes and gaps in the result.}
+  \caption{Effect of high CFL parameters: on the left, normal output. On the right: \NaN{}s cause white holes and gaps in the result.}
   \label{fig:sw_nans}
 \end{figure}
 
-The holes in the plots are regions where NaNs crept into the computation and destroyed the results.
-In one regard, this is not as bad as a NaN kill---knowing that there are NaNs in the computation means that we have a chance to fix it, whereas a NaN kill might silently give us the wrong answer.
-Incidentally, we know that there were no NaN kills in this test because our kill logs are empty.
-But finding the sources of NaNs can be tricky.
-We expected NaNs in this case because we set the CFL parameter up so high, but tracking down the sources of NaNs generally is a difficult and time-consuming problem.
+The holes in the plots are regions where \NaN{}s crept into the computation and destroyed the results.
+In one regard, this is not as bad as a \NaN{} kill---knowing that there are \NaN{}s in the computation means that we have a chance to fix it, whereas a \NaN{} kill might silently give us the wrong answer.
+Incidentally, we know that there were no \NaN{} kills in this test because our kill logs are empty.
+But finding the sources of \NaN{}s can be tricky.
+We expected \NaN{}s in this case because we set the CFL parameter up so high, but tracking down the sources of \NaN{}s generally is a difficult and time-consuming problem.
 
 Fortunately in this case, one of the key features \texttt{ShallowWaters} is its \emph{type flexibility}:
 \texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of \fp{} precision.
 Upon model construction, \texttt{ShallowWaters} allows you to specify a type for floats in the model.
 We simply asked it to use our \texttt{TrackedFloat32} type, and then the entire simulation ran under the supervision of FloatTracker.
 
-We ran ShallowWaters with a CFL value known to make bad outputs and recorded NaN \texttt{gen} events:
+We ran ShallowWaters with a CFL value known to make bad outputs and recorded \NaN{} \texttt{gen} events:
 
 \begin{lstlisting}[language = Julia]
 set_logger(buffersize=20, cstg=true, cstgArgs=true,
@@ -359,13 +359,13 @@ run_model         ShallowWaters/run_model.jl:37
 …
 \end{verbatim}
 
-We can see that the NaN appeared from subtraction (first line) and that it was used in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
+We can see that the \NaN{} appeared from subtraction (first line) and that it was used in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
 In figure~\ref{fig:nan-gens} we can tell that this must be the result of $\infty - \infty$.
-Thus, with little effort we were able to track down where the NaNs were originating.
+Thus, with little effort we were able to track down where the \NaN{}s were originating.
 Now the question is: where did the $\infty$ come from?
 
-FloatTracker is not limited to NaNs---we can track any kind of value that we want.
-We have built-in support for tracking NaN and $\infty$; we can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
+FloatTracker is not limited to \NaN{}s---we can track any kind of value that we want.
+We have built-in support for tracking \NaN{} and $\infty$; we can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
 
 \begin{verbatim}
 check_error([-1.515f31, 2])  FT/TrackedFloat.jl:10
@@ -389,36 +389,36 @@ Running FloatTracker can produce a lot of logs.
 To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
 % FIXME: cite CSTG
 
-We can produce a CSTG of both the Inf as well as the NaN logs.
+We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 Here is what the two graphs look like:\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
 
 \begin{figure}
   \centering
   \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
-  \caption{CSTG of NaN generation logs from ShallowWaters.}
+  \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
   \label{fig:sw_nan_cstg}
 \end{figure}
 
 \begin{figure}
   \centering
   \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
-  \caption{CSTG of Inf generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
+  \caption{CSTG of \Inf{} generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
   \label{fig:sw_inf_cstg}
 \end{figure}
 
-\subsection{NaN fuzzing to find a kill: OrdinaryDiffEq}
+\subsection{\NaN{} fuzzing to find a kill: OrdinaryDiffEq}
 
 The second thing we evaluated was an N-Body simulation library.
-We didn't find any sensible configuration of input parameters that lead to NaN kills like in the ShallowWaters library.
-We turned to the NaN injection capabilities of FloatTracker to fuzz the library to find any lurking bugs.
+We didn't find any sensible configuration of input parameters that lead to \NaN{} kills like in the ShallowWaters library.
+We turned to the \NaN{} injection capabilities of FloatTracker to fuzz the library to find any lurking bugs.
 % FIXME: add hyper-ref to § 4.1: ShallowWaters
 
-We configured FloatTracker to inject a single NaN to see if we could find any NaN kills.
-On some runs we noticed that we would get a kill and the program would warn about a NaN and prepare to exit.
+We configured FloatTracker to inject a single \NaN{} to see if we could find any \NaN{} kills.
+On some runs we noticed that we would get a kill and the program would warn about a \NaN{} and prepare to exit.
 Contrary to the error message's claim, however, the program went into an infinite loop.
 
 The logs lead us to a routine in the widely-used \texttt{OrdinaryDiffEq} library.
-During initialization, a NaN got injected during the execution of \texttt{-} between two \texttt{TrackedFloat}s:
+During initialization, a \NaN{} got injected during the execution of \texttt{-} between two \texttt{TrackedFloat}s:
 
 \begin{verbatim}
 …
@@ -437,10 +437,10 @@ tdir = sign(tspan[end] - tspan[1])
 t = tspan[1]
 \end{lstlisting}
 
-\texttt{sign} correctly propagates NaNs, so \texttt{tdir} now contains a NaN.
+\texttt{sign} correctly propagates \NaN{}s, so \texttt{tdir} now contains a \NaN{}.
 
 We \emph{could} trace this variable through the code, but that would be a lot of grunt work.
-Instead, we can look at the NaN kill logs to get a clue as to where we should look next:
+Instead, we can look at the \NaN{} kill logs to get a clue as to where we should look next:
 
 \begin{verbatim}
 …
@@ -467,10 +467,10 @@ while !isempty(time_stops)
 end
 \end{lstlisting}
 
-The problem here is on line 2 when \texttt{tdir} is NaN: multiplication propagates NaNs, and comparison kills it, so the condition on the inner \texttt{while} loop is \emph{always} false.
+The problem here is on line 2 when \texttt{tdir} is \NaN{}: multiplication propagates \NaN{}s, and comparison kills it, so the condition on the inner \texttt{while} loop is \emph{always} false.
 No work got done in the inner loop, and so the conditional \texttt{pop} routine never reduced the size of the \texttt{time\_stops} vector.
 
-Our kill logs led us right to this line; this is a perfect example of how NaN kills can influence control flow to go awry.
+Our kill logs led us right to this line; this is a perfect example of how \NaN{} kills can influence control flow to go awry.
 In this case, the problem was apparent besides what our logs told us and it manifested as an infinite loop.
 More dangerous cases can occur when the influence of a bad comparison is not as readily observable.
 
@@ -491,7 +491,7 @@ Furthermore it strives to output code that humans can easily fine-tune.
 Fuzzing with \FT{} revealed two places where Finch needed
 protection against user input.
 The first was when reading an input mesh.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/16}{2023-06-06}}
-A NaN injected in the mesh led to a crash further on:
+A \NaN{} injected in the mesh led to a crash further on:
 \begin{verbatim}
   BoundsError: attempt to access 1-element
    Vector{Int64} at index [2]
@@ -499,8 +499,8 @@ A NaN injected in the mesh led to a crash further on:
 Defensive programming solves the issue.
 The second place was in setting bounds for the
 solver.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/17}{2023-06-06}}
-Here, a NaN could leave bounds uninitialized, leading to a bounds error.
-Additionally, \FT{} and \CSTG{}s have been useful for identifying NaNs that
+Here, a \NaN{} could leave bounds uninitialized, leading to a bounds error.
+Additionally, \FT{} and \CSTG{}s have been useful for identifying \NaN{}s that
 appear in unstable systems.
 %% advection2d, high cfl and high T (time) led to NaN during simulation
 
@@ -509,9 +509,9 @@ appear in unstable systems.
 
 % Notes on RxInfer
 
-We searched GitHub for open issues in Julia libraries involving difficult-to-find NaNs.
-In our first batch of issues, we found the \code{RxInfer.jl} library with an issue revolving around NaN detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
-We offered our tool for the package authors to use, and within a day the authors were able to track down the location of a NaN and fix the issue---all with minimal guidance.
+We searched GitHub for open issues in Julia libraries involving difficult-to-find \NaN{}s.
+In our first batch of issues, we found the \code{RxInfer.jl} library with an issue revolving around \NaN{} detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
+We offered our tool for the package authors to use, and within a day the authors were able to track down the location of a \NaN{} and fix the issue---all with minimal guidance.
 
 
 \subsection{\GPUFPX{}: Oceananigans}
@@ -585,10 +585,10 @@ FILL
 \label{s:discussion}
 % future work
 
-\subsection{Tracking more than NaNs and Infs}
-FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to NaN or Inf.
-We spent most of the time engineering and testing NaN tracking and injection.
-Adding Inf tracking took a few hours.
+\subsection{Tracking more than \NaN{}s and \Inf{}s}
+FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to \NaN{} or \Inf{}.
+We spent most of the time engineering and testing \NaN{} tracking and injection.
+Adding \Inf{} tracking took a few hours.
 Adding other values of interest would be issues of relatively simple engineering.
 
 \subsection{Enhanced Fuzzing}
@@ -596,7 +596,7 @@ Adding other values of interest would be issues of relatively simple engineering
 While fuzzing is useful for discovering issues, its success rate
 is low because \emph{every} \fp{} operation is a candidate
 for injection.
-Even operations that are already well-defended against NaNs are candidates.
+Even operations that are already well-defended against \NaN{}s are candidates.
 \FT{} could use two sorts of tools for improving injection.
 First, fine-grained control to let users decide where not to inject.
 Second, tools for understanding the context of an injection point
