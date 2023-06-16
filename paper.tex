@@ -58,7 +58,7 @@
 
 \begin{abstract}
   Reliable numerical computations are central to high-performance computing and machine learning.
-  We present FlowFPX: a Julia-based tool for tracking the onset and flow of IEEE floating point exceptions.
+  We present FlowFPX: a Julia-based tool for tracking the onset and flow of floating-point exceptions.
   FlowFPX's design exploits Julia's operator overloading to trace exception flows and even inject exceptions to accelerate testing.
   We present intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging and repair.
 \end{abstract}
@@ -68,19 +68,59 @@
 \newcommand{\GPUFPX}{GPU-FPX}
 \newcommand{\FloatTracker}{FloatTracker}
 \newcommand{\FT}{\FloatTracker}
+\newcommand{\fp}{floating-point} % hyphen or no?
 \newcommand{\CSTG}{stack graph}
 \newcommand{\CPP}{\code{C++}}
 \newcommand{\Dendro}{\textsc{Dendro}}
 \newcommand{\urlaccess}[2]{\url{#1}}
+\newcommand{\Nan}{\code{NaN}}
+\newcommand{\NaN}{\Nan}
+\newcommand{\Inf}{\code{Inf}}
 
 \section{Introduction}
 
-kk
+Reliable numeric computations are central to high-performance computing,
+machine learning, and scientific applications.
+Yet, the \fp{} arithmetic that powers these computations is fundamentally
+unreliable~(\cref{s:background}).
+Exceptional values, namely Not a Number (\Nan{}) and infinity (\Inf{}),
+can and often do arise thanks to culprits such as roundoff error,
+catastrophic cancellation, singular matrices, and vanishing
+derivatives~\cite{sdjmrstp-pc-2022,ddghlllprr-correctness-2022,gllprt-correctness-2021,fpchecker-reports,llg-soap-2022,bllmg-xloop-2022}.
+When exceptions happen, domain experts must take time away from their main
+focus and trek down a rabbit hole to find the source of the error.
+There is little tool support to assist in this difficult task,
+thus (unsurpringly) a quick GitHub search reports over 4,000 open issues
+related to \NaN{} or \Inf{} exceptions~\cite{github-issues}.
+
+We introduce \FlowFPX{}, a toolkit for debugging
+\fp{} exceptions in an easy and intuitive way~(\cref{s:flowfpx}):
+\begin{itemize}
+  \item
+    The centerpiece of \FlowFPX{} is \FT{}, a dynamic analysis tool that uses
+    Julia's operator overloading to selectively monitor for exceptions and to
+    fuzz code for vulnerabilities.
+  \item
+    To visualize results, \FT{} adapts coalesced stack-trace graphs 
+    (CSTGs)~\cite{hmbdrg-cse-2014} for a whole-program view on the generation,
+    propagation, and death of exceptional values.
+  \item \GPUFPX{}~[CITE] provides fine-grained insights for GPU kernels.
+\end{itemize}
+%
+Together, the \FlowFPX{} tools have helped debug exceptions in a variety
+of applications: from ocean simulations to heat models~(\cref{s:casestudies}).
+That said, there is much more to explore.
+\FlowFPX{} is a growing project and we welcome feedback from domain experts
+on how to best suit their workflow.
+
+This paper concludes with related work~(\cref{s:related}) and a
+brief discussion~(\cref{s:discussion}).
 
 
 \section{Floating Point Exception Primer}
+\label{s:background}
 
-In our work we focused on two of the most common problematic values in the floating point space: NaN and Inf.
+In our work we focused on two of the most common problematic values in the \fp{} space: NaN and Inf.
 We leave the possibility of tracking other kinds of troublesome values (e.g. subnormal numbers) open, but for our work we restrict ourselves to just these values.
 
 \subsection{Where do NaNs come from?}
@@ -109,7 +149,7 @@ Sometimes this can be good---an \texttt{isnan} check should clearly return a boo
 
 \begin{enumerate}
   \item Users no longer see that there was some errant operation: NaNs are an opportunity to closely examine data for problems and code for unsoundness.
-  \item NaN kills can influence the control of a program leading to incorrect results, as we saw in~\cref{to-kill-a-fp}.
+  \item NaN kills can influence the control of a program leading to incorrect results, as we saw in~\cref{s:to-kill-a-fp}.
 \end{enumerate}
 
 Here are cases where, according to the IEEE standard, a NaN can be killed:
@@ -123,6 +163,8 @@ x \; \texttt{cmp} \; y &\rightarrow false &\text{where \texttt{cmp} is \texttt{<
 FloatTracker monitors these and all other operations for interesting events.
 
 \subsection{Infinity}
+
+%%ben: shouldn't this come before NaN b/c infs lead to NaNs?
 
 There are two infinities, $+\infty$ and $-\infty$, but they behave the same for our purposes, so we will refer to them just as ``Inf''.
 Like NaNs, Inf can crop up when bad math happens: $\frac{x}{0} \rightarrow \infty$ when $x \ne 0$.
@@ -142,7 +184,7 @@ Inf can also arise when numbers get too big or too small for the choice of repre
   \label{f:gpk}
 \end{figure}
 
-The IEEE 754 specification for floating-point numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
+The IEEE 754 specification for \fp{} numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
 Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
 This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
 
@@ -179,9 +221,15 @@ Not only is the result from \texttt{bad\_max} problematic for obscuring the fact
 The built-in \texttt{max} function correctly propagates NaNs, so we can see from its return that we got a NaN somewhere.
 It's not entirely obvious \emph{where} that NaN came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
 
-\section{FlowFPX Toolkit}
+\section{\FlowFPX{}}
+\label{s:flowfpx}
 
-FloatTracker works by leveraging Julia's type-based method dispatch system to capture everything from calls to the standard library down to basic arithmetic operations.
+FILL intro
+
+\subsection{\FT{}}
+\label{s:floattracker}
+
+\FT{} works by leveraging Julia's type-based method dispatch system to capture everything from calls to the standard library down to basic arithmetic operations.
 We do this by creating custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32} etc. counterparts.
 We then defined methods for every function in the \texttt{Base} module, including new implementations for operators like \texttt{+} and \texttt{*}.
 These new methods had to be defined for every combination of tracked/untracked arguments;
@@ -205,7 +253,7 @@ We have three primary goals when intercepting a float:
 
 \subsection{Catching a NaN Killer}
 
-With a floating point value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a NaN gets killed.
+With a \fp{} value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a NaN gets killed.
 Julia dispatches all arithmetic operations on that value to flow through FloatTracker, where we can inspect the arguments.
 Kills are relatively simple: if one or more NaNs flow into a function but don't flow out (i.e. the answer isn't a NaN) then that's a kill.
 For example:
@@ -241,6 +289,7 @@ However, FloatTracker makes this a lot easier by watching the life cycle of a Na
 % TODO
 
 \section{Case Studies}
+\label{s:casestudies}
 
 \FlowFPX{} is effective for debugging all sorts of NaN-related issues.
 We have used it to reveal silent NaNs, uncover the root cause of NaNs,
@@ -277,7 +326,7 @@ But finding the sources of NaNs can be tricky.
 We expected NaNs in this case because we set the CFL parameter up so high, but tracking down the sources of NaNs generally is a difficult and time-consuming problem.
 
 Fortunately in this case, one of the key features \texttt{ShallowWaters} is its \emph{type flexibility}:
-\texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of floating-point precision.
+\texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of \fp{} precision.
 Upon model construction, \texttt{ShallowWaters} allows you to specify a type for floats in the model.
 We simply asked it to use our \texttt{TrackedFloat32} type, and then the entire simulation ran under the supervision of FloatTracker.
 
@@ -525,14 +574,16 @@ FILL
 
 
 \section{Related Work}
+\label{s:related}
 
 
 
 \section{Discussion}
 \label{s:discussion}
+% future work
 
 \subsection{Tracking more than NaNs and Infs}
-FloatTracker is capable of monitoring all sorts of events in a floating point value's lifetime---not just a value going to NaN or Inf.
+FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to NaN or Inf.
 We spent most of the time engineering and testing NaN tracking and injection.
 Adding Inf tracking took a few hours.
 Adding other values of interest would be issues of relatively simple engineering.
@@ -540,7 +591,7 @@ Adding other values of interest would be issues of relatively simple engineering
 \subsection{Enhanced Fuzzing}
 
 While fuzzing is useful for discovering issues, its success rate
-is low because \emph{every} floating-point operation is a candidate
+is low because \emph{every} \fp{} operation is a candidate
 for injection.
 Even operations that are already well-defended against NaNs are candidates.
 \FT{} could use two sorts of tools for improving injection.
@@ -554,6 +605,9 @@ decide whether they are protected or not.
 
 %% TODO example, start here at glbvertex https://github.com/paralab/Finch/blob/master/src/grid.jl#L360
 
+\subsection{Static FPX, Gradual Types}
+
+FILL
 
 
 \section{Acknowledgments}
