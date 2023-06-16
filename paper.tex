@@ -58,13 +58,14 @@
 
 \begin{abstract}
   Reliable numerical computations are central to high-performance computing and machine learning.
-  We present FlowFPX: a Julia-based tool for tracking the onset and flow of IEEE Floating-Point exceptions that signal numerical defects.
+  We present FlowFPX: a Julia-based tool for tracking the onset and flow of IEEE floating point exceptions.
   FlowFPX's design exploits Julia's operator overloading to trace exception flows and even inject exceptions to accelerate testing.
   We present intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging and repair.
 \end{abstract}
 
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\FlowFPX}{FlowFPX}
+\newcommand{\GPUFPX}{GPU-FPX}
 \newcommand{\FloatTracker}{FloatTracker}
 \newcommand{\FT}{\FloatTracker}
 \newcommand{\CSTG}{stack graph}
@@ -74,50 +75,8 @@
 
 \section{Introduction}
 
-% Here is a short, illustrative example about the problem.
-\subsection{To Kill a Floating Point}
-\label{s:to-kill-a-fp}
-% If anyone has a better "kill" pun/reference than "To Kill a Mockingbird", I'm all ears.
+kk
 
-The IEEE 754 specification for floating-point numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
-Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
-This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
-
-However, there are a few places where NaNs flow into an expression, but not out.
-We call these instances ``NaN-kills'', and these can lead to subtle logic bugs.
-Consider the following example:
-
-\begin{lstlisting}[language = Julia]
-function bad_max(lst)
-  max_seen = 0.0
-  for x in lst
-    if ! (x <= max_seen)
-      # swap if new val greater
-      max_seen = x
-    end
-  end
-  max_seen
-end
-
-function good_max(lst)
-  foldl(max, lst)
-end
-\end{lstlisting}
-
-Both \texttt{bad\_max} and \texttt{good\_max} compute the maximum in a list.
-However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate NaNs, so you might not get the result you expected:
-
-\begin{lstlisting}[language = Julia]
-bad_max([1, 5, NaN, 4])     # returns 4
-good_max([1, 5, NaN, 4])    # returns NaN
-\end{lstlisting}
-
-Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a NaN in the list, the result is also wrong!
-The built-in \texttt{max} function correctly propagates NaNs, so we can see from its return that we got a NaN somewhere.
-It's not entirely obvious \emph{where} that NaN came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
-
-\subsection{FloatTracker}
-% I'd love to find some Sherlock Holmes title for this section, as it would be a subtle nod to Sherlogs.jl and would be a nice literary reference to compliment "To Kill a Mockingbird"
 
 \section{Floating Point Exception Primer}
 
@@ -171,7 +130,56 @@ Inf can also arise when numbers get too big or too small for the choice of repre
 
 % TODO
 
-\section{FloatTracker Internals}
+
+% Here is a short, illustrative example about the problem.
+\subsection{To Kill a Floating Point}
+\label{s:to-kill-a-fp}
+% If anyone has a better "kill" pun/reference than "To Kill a Mockingbird", I'm all ears.
+
+\begin{figure}
+  \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
+  \caption{Gen, Prop, Kill: Lifetime of a NaN value}
+  \label{f:gpk}
+\end{figure}
+
+The IEEE 754 specification for floating-point numbers governs how NaNs are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
+Most of the time, when any or all of the arguments are NaN, the result is also a NaN.
+This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
+
+However, there are a few places where NaNs flow into an expression, but not out.
+We call these instances ``NaN-kills'', and these can lead to subtle logic bugs.
+Consider the following example:
+
+\begin{lstlisting}[language = Julia]
+function bad_max(lst)
+  max_seen = 0.0
+  for x in lst
+    if ! (x <= max_seen)
+      # swap if new val greater
+      max_seen = x
+    end
+  end
+  max_seen
+end
+
+function good_max(lst)
+  foldl(max, lst)
+end
+\end{lstlisting}
+
+Both \texttt{bad\_max} and \texttt{good\_max} compute the maximum in a list.
+However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate NaNs, so you might not get the result you expected:
+
+\begin{lstlisting}[language = Julia]
+bad_max([1, 5, NaN, 4])     # returns 4
+good_max([1, 5, NaN, 4])    # returns NaN
+\end{lstlisting}
+
+Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a NaN in the list, the result is also wrong!
+The built-in \texttt{max} function correctly propagates NaNs, so we can see from its return that we got a NaN somewhere.
+It's not entirely obvious \emph{where} that NaN came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
+
+\section{FlowFPX Toolkit}
 
 FloatTracker works by leveraging Julia's type-based method dispatch system to capture everything from calls to the standard library down to basic arithmetic operations.
 We do this by creating custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32} etc. counterparts.
@@ -234,9 +242,10 @@ However, FloatTracker makes this a lot easier by watching the life cycle of a Na
 
 \section{Case Studies}
 
-\FT{} is an effective tool for debugging all sorts of NaN-related issues.
+\FlowFPX{} is effective for debugging all sorts of NaN-related issues.
 We have used it to reveal silent NaNs, uncover the root cause of NaNs,
 and fuzz for weak points in several case studies.
+
 
 \subsection{Surprise NaNs: ShallowWaters}
 
@@ -452,7 +461,72 @@ We searched GitHub for open issues in Julia libraries involving difficult-to-fin
 In our first batch of issues, we found the \code{RxInfer.jl} library with an issue revolving around NaN detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
 We offered our tool for the package authors to use, and within a day the authors were able to track down the location of a NaN and fix the issue---all with minimal guidance.
 
-\section{Evaluation}
+
+\subsection{\GPUFPX{}: Oceananigans}
+
+FILL
+
+% * what about GPUs? companion project at Utah GPU-FPX
+% * architecture diagram, CPU + GPU, show Ocean source code
+% * replace CPU() with GPU() in code, get output like below & attached
+% 
+% \begin{verbatim}
+% using Oceananigans
+% grid = RectilinearGrid(GPU(), size=(128, 128), x=(0, 2π), y=(0, 2π), topology=(Periodic, Periodic, Flat))
+% model = NonhydrostaticModel(; grid, advection=WENO())
+% ϵ(x, y, z) = 2rand() - 1
+% set!(model, u=ϵ, v=ϵ)
+% simulation = Simulation(model; Δt=0.01, stop_time=4)
+% run!(simulation)
+% \end{verbatim}
+% 
+% ... xinyi ran gpu-fpx on this code ... on the binary it created?
+% 
+% 
+% - - -
+% 
+% 
+% #GPU-FPX LOC-EXCEP INFO: in kernel
+% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
+% DIV0 found @ ./float.jl:335 [FP64]
+% #GPU-FPX LOC-EXCEP INFO: in kernel
+% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
+% NaN found @ ./float.jl:335 [FP64]
+% #GPU-FPX LOC-EXCEP INFO: in kernel
+% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
+% NaN found @ ./float.jl:335 [FP32]
+% #GPU-FPX LOC-EXCEP INFO: in kernel
+% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
+% DIV0 found @ ./int.jl:261 [FP64]
+% #GPU-FPX LOC-EXCEP INFO: in kernel
+% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
+% NaN found @ ./int.jl:261 [FP64]
+% #GPU-FPX LOC-EXCEP INFO: in kernel
+% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
+% INF found @ ./int.jl:261 [FP64]
+% 
+% 
+% \begin{verbatim}
+% --- GPU-FPX Report ---
+% 
+% --- FP64 Operations ---
+% Total NaN found: 2
+% Total INF found: 1
+% Total underflow (subnormal): 0
+% Total division by zero: 2
+% --- FP32 Operations ---
+% Total NaN found: 1
+% Total INF found: 0
+% Total underflow (subnormal): 0
+% Total division by zero: 0
+% --- Other Stats ---
+% Kernels: 21
+% \end{verbatim}
+
+
+\section{Related Work}
+
+
 
 \section{Discussion}
 \label{s:discussion}
@@ -481,7 +555,6 @@ decide whether they are protected or not.
 %% TODO example, start here at glbvertex https://github.com/paralab/Finch/blob/master/src/grid.jl#L360
 
 
-\section{Related Work}
 
 \section{Acknowledgments}
 
