@@ -128,26 +128,35 @@ brief discussion~(\cref{s:discussion}).
 % 2 paragraphs or so: floating point primer
 
 \Fp{} numbers are a way of representing real numbers in a computer.
-However, since we limit our precision to a fixed, finite set of bits, \fp{} is \emph{inherently approximate} and necessarily incurs some error during computation.
+However, since we limit our precision to a fixed, finite set of bits, \fp{} values are \emph{inherently approximate} and necessarily incur some error during computation.
 This is not bad; it is a trade-off: we get fast and compact representations that are good enough for most use cases.
 However, the downside is that \fp{} numbers \emph{do not} behave like real numbers.
 
-There are many excellent resources\cite{knuthArtComputerProgramming1997} on understanding the theory behind \fp{};
-we will explain the most essential aspects here.
-We represent \fp{} values $r \in \mathbb{R}$ in scientific notation $r = f \times b^{e-q}$,
-for some exponent $e$, a fixed value called an \emph{excess} $q$,\footnote{The purpose of the excess $q$ is so that with value of $e > q$ we can represent positive exponents, and $e < q$ we can represent negative exponents.} and fraction $f$.\footnote{Another name for the fraction part commonly seen in the literature is ``mantissa''.
+% FIXME: more resources!
+There are many excellent resources\cite{knuthArtComputerProgramming1997,torontoPracticallyAccurateFloatingPoint2014} on understanding the theory behind \fp{};
+we will explain the most essential aspects here briefly.
+
+A \fp value approximates real number $r \in \mathbb{R}$ by expressing $r$ in scientific notation $r = s \times f \times b^{e-q}$,
+for some base $b$,
+an integer exponent $e \in \mathbb{N}$,
+a fixed value called an \emph{excess} $q$,\footnote{The purpose of the excess $q$ is so that with value of $e > q$ we can represent positive exponents, and $e < q$ we can represent negative exponents.}
+a \emph{sign} $s \in \{-1, 1\}$,
+and a \emph{fraction} $f$ such that $0 \leq f < b$.\footnote{Another name for the fraction part commonly seen in the literature is ``mantissa'' or ``significand''.
   You might occasionally also see ``characteristic'' referring to the exponent.
-  We will avoid those terms however.}
+  We will stick to ``fraction'' and ``exponent'' however.}
 
-We round and pack $e$ and $f$ into bit fields.
-This gives us a compact representation for both very small and very large values.
+We pack $s$, $e$, and $f$ into bit fields.
+This gives us a compact representation for both very small and very large values: because the exponent is variable, we can represent numbers as big as Avogadro's number or as small as Planck's constant with the same number of bits.
+However, since we have only a finite number of bits $p$, we have to round $f$ and the range of $e$ is limited.
+Moreover, there is some error between the real number $r$ and the value we can express with a float.
+This is why $0.1 + 0.2 = 0.30000000000000004$---$0.3$ is not precisely representable.
 
-Things get tricky when we start to do math when there is a big disparity between exponent values.
-For example, when adding two numbers $u$ and $v$, if the exponents differ by too much, the result of the addition will simply be the larger value.
+To make matters worse, things get tricky when we do math.
+Adding e.g. Avogadro's number and Planck's constant together is beyond 16-, 32-, and 64-bit floats to represent.
+In fact, whenever the exponents differ by more than $p+2$, the result of the addition will just be the same as the larger number.
+In the case of Avogadro's number, adding any value less than $FIXME$ will just result in Avogadro's number again.
 
-% TODO illustrative example: e.g. 1,234,567 + 0.0000001 = 1,234,567
-
-The gradual accumulation of these errors leads to surprising mathematical results!
+The gradual accumulation of these errors and other representation issues leads to surprising results!
 % FIXME: more examples of a NaN popping up out of nowhere, e.g. with bad addition
 
 In our work we focused on two of the most common problematic values in the \fp{} space: \NaN{} and \Inf{}.
