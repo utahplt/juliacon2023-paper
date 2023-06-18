@@ -79,6 +79,8 @@
 \newcommand{\Nan}{\code{NaN}}
 \newcommand{\NaN}{\Nan}
 \newcommand{\Inf}{\code{Inf}}
+\newcommand{\zerowidth}[1]{\makebox[0pt][l]{#1}}
+\newcommand{\zerocode}[1]{\zerowidth{\code{#1}}}
 
 \section{Introduction}
 
@@ -601,24 +603,30 @@ FILL
 % #GPU-FPX LOC-EXCEP INFO: in kernel
 % [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
 % INF found @ ./int.jl:261 [FP64]
-% 
-% 
-% \begin{verbatim}
-% --- GPU-FPX Report ---
-% 
-% --- FP64 Operations ---
-% Total NaN found: 2
-% Total INF found: 1
-% Total underflow (subnormal): 0
-% Total division by zero: 2
-% --- FP32 Operations ---
-% Total NaN found: 1
-% Total INF found: 0
-% Total underflow (subnormal): 0
-% Total division by zero: 0
-% --- Other Stats ---
-% Kernels: 21
-% \end{verbatim}
+
+\begin{figure}[t]
+  \begin{tabular}[t]{ll}
+    \begin{tabular}[t]{ll}
+    \zerocode{--- FP64 Operations ---} \\
+    \code{Total NaN:} & \code{2} \\
+    \code{Total INF:} & \code{1} \\
+    \code{Total subnormal:} & \code{0} \\
+    \code{Total div0:} & \code{2} \\
+    \zerocode{--- Other Stats ---} \\
+    \code{Kernels:} & \code{21}
+  \end{tabular}
+    & \begin{tabular}[t]{ll}
+    \zerocode{--- FP32 Operations ---} \\
+    \code{Total NaN:} & \code{1} \\
+    \code{Total INF:} & \code{0} \\
+    \code{Total subnormal:} & \code{0} \\
+    \code{Total div0:} & \code{0} \\
+  \end{tabular}
+  \end{tabular}
+
+  \caption{Example \GPUFPX{} report}
+  \label{t:gpufpx}
+\end{figure}
 
 
 \section{Related Work}
