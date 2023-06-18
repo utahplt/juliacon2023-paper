@@ -296,7 +296,7 @@ For example:
 
 \begin{lstlisting}[language = Julia]
   NaN + 42     -> NaN    # not a kill
-  \Inf{} - \Inf{}    -> NaN    # gen, but not a kill
+  Inf - Inf    -> NaN    # gen, but not a kill
   min(NaN, 42) -> NaN    # not a kill
   NaN < 42     -> false  # NaN kill!
 \end{lstlisting}

@@ -3,4 +3,4 @@ paper.pdf: paper.tex ref.bib
 
 .PHONY: clean
 clean:
-	latexmk -c
+	latexmk -c && rm paper.bbl
