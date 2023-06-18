@@ -337,6 +337,10 @@ FILL cstg output, how to read, float tracker interface,
 
 FILL basic idea, loose coupling, typical overhead, 
 
+% * what about GPUs? companion project at Utah GPU-FPX
+% * architecture diagram, CPU + GPU, show Ocean source code
+% * replace CPU() with GPU() in code, get output like below & attached
+
 
 \section{Case Studies}
 \label{s:casestudies}
@@ -563,69 +567,59 @@ We offered our tool for the package authors to use, and within a day the authors
 
 \subsection{\GPUFPX{}: Oceananigans}
 
-FILL
+Oceananigans~\cite{OceananigansJOSS} is simulation package for incompressible
+fluid dynamics that can generate code for Nvidia GPUs.
+For example, the following program (from the project readme) simulates turbulance:
 
-% * what about GPUs? companion project at Utah GPU-FPX
-% * architecture diagram, CPU + GPU, show Ocean source code
-% * replace CPU() with GPU() in code, get output like below & attached
-% 
-% \begin{verbatim}
-% using Oceananigans
-% grid = RectilinearGrid(GPU(), size=(128, 128), x=(0, 2π), y=(0, 2π), topology=(Periodic, Periodic, Flat))
-% model = NonhydrostaticModel(; grid, advection=WENO())
-% ϵ(x, y, z) = 2rand() - 1
-% set!(model, u=ϵ, v=ϵ)
-% simulation = Simulation(model; Δt=0.01, stop_time=4)
-% run!(simulation)
-% \end{verbatim}
-% 
-% ... xinyi ran gpu-fpx on this code ... on the binary it created?
-% 
-% 
-% - - -
-% 
-% 
-% #GPU-FPX LOC-EXCEP INFO: in kernel
-% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
-% DIV0 found @ ./float.jl:335 [FP64]
-% #GPU-FPX LOC-EXCEP INFO: in kernel
-% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
-% NaN found @ ./float.jl:335 [FP64]
-% #GPU-FPX LOC-EXCEP INFO: in kernel
-% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
-% NaN found @ ./float.jl:335 [FP32]
-% #GPU-FPX LOC-EXCEP INFO: in kernel
-% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
-% DIV0 found @ ./int.jl:261 [FP64]
-% #GPU-FPX LOC-EXCEP INFO: in kernel
-% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
-% NaN found @ ./int.jl:261 [FP64]
-% #GPU-FPX LOC-EXCEP INFO: in kernel
-% [_Z27julia_broadcast_kernel_716715CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi3ELi1EE11BroadcastedI12CuArrayStyleILi3EE5TupleI5OneToI5Int64ES6_IS7_ES6_IS7_EE2__S5_IS3_IS4_ILi3EEvS8_S5_I8ExtrudedIS0_IS1_IS2_ELi3ELi1EES5_I4BoolS10_S10_ES5_IS7_S7_S7_EEEES3_IS4_ILi3EEvS8_S5_IS3_IS4_ILi3EEvS8_S5_IS9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EES9_IS0_IS2_Li3ELi1EES5_IS10_S10_S10_ES5_IS7_S7_S7_EEEES7_EEEES7_],
-% INF found @ ./int.jl:261 [FP64]
+\begin{lstlisting}[language = Julia]
+using Oceananigans
+grid = RectilinearGrid(GPU(),
+  size=(128, 128), x=(0, 2π), y=(0, 2π),
+  topology=(Periodic, Periodic, Flat))
+model = NonhydrostaticModel(; grid,
+  advection=WENO())
+ϵ(x, y, z) = 2rand() - 1
+set!(model, u=ϵ, v=ϵ)
+simulation = Simulation(model;
+  Δt=0.01, stop_time=4)
+run!(simulation)
+\end{lstlisting}
 
-\begin{figure}[t]
+\GPUFPX{} provides detailed feedback on this program.
+The output in~\cref{f:gpufpx} shows that 21 kernels
+appear and generate six floating-point exceptions.
+There are three \NaN{}s, one \Inf{}, and two division
+by zero errors.
+The report is a starting point for further investigation
+of the reliability of the example.
+%% TODO exactly how?
+
+
+\begin{figure}[t]\centering
   \begin{tabular}[t]{ll}
-    \begin{tabular}[t]{ll}
-    \zerocode{--- FP64 Operations ---} \\
-    \code{Total NaN:} & \code{2} \\
-    \code{Total INF:} & \code{1} \\
-    \code{Total subnormal:} & \code{0} \\
-    \code{Total div0:} & \code{2} \\
-    \zerocode{--- Other Stats ---} \\
+    \begin{tabular}[t]{lr}
+      \zerocode{-{}- FP64 Operations -{}-} \\
+      \code{Total NaN:} & \code{2} \\
+      \code{Total INF:} & \code{1} \\
+      \code{Total subnormal:} & \code{0} \\
+      \code{Total div0:} & \code{2} \\
+    \end{tabular}
+    &
+    \begin{tabular}[t]{lr}
+      \zerocode{-{}- FP32 Operations -{}-} \\
+      \code{Total NaN:} & \code{1} \\
+      \code{Total INF:} & \code{0} \\
+      \code{Total subnormal:} & \code{0} \\
+      \code{Total div0:} & \code{0} \\
+    \end{tabular}
+  \end{tabular}
+  \begin{tabular}{lr}
+    \zerocode{-{}- Other Stats -{}-} \\
     \code{Kernels:} & \code{21}
   \end{tabular}
-    & \begin{tabular}[t]{ll}
-    \zerocode{--- FP32 Operations ---} \\
-    \code{Total NaN:} & \code{1} \\
-    \code{Total INF:} & \code{0} \\
-    \code{Total subnormal:} & \code{0} \\
-    \code{Total div0:} & \code{0} \\
-  \end{tabular}
-  \end{tabular}
 
-  \caption{Example \GPUFPX{} report}
-  \label{t:gpufpx}
+  \caption{Example \GPUFPX{} output}
+  \label{f:gpufpx}
 \end{figure}
 
 
