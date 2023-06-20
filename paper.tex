@@ -341,6 +341,16 @@ FILL basic idea, loose coupling, typical overhead,
 % * architecture diagram, CPU + GPU, show Ocean source code
 % * replace CPU() with GPU() in code, get output like below & attached
 
+%% Ganesh
+% 3) These are conceptually usable together (Julia calling GPU kernels below).
+% The usage is simple: Start the Julia application that calls a GPU kernel under
+% LD_PRELOAD as with GPU-FPX launch. When this launch transfers control to a GPU
+% kernel, the GPU-FPX instrumentation starts notifying the exceptions on the
+% console of the CPU. When the GPU launch returns, the exceptions go in the
+% return call path of the Julia execution. Ashton and Xinyi plz validate this
+% scenario
+
+
 
 \section{Case Studies}
 \label{s:casestudies}
