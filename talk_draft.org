@@ -84,7 +84,7 @@ Time slot (according to the calendar invite) is half an hour.
 
  - Questions?
 
-* Outline (draft 2)
+* Talk (draft 2)
 
 Sketch: 2x 10-minute halves—first half is about how scientists would use this tool, and the second half is how we use Julia to do this in a convenient way.
 
@@ -95,3 +95,285 @@ So:
  - scientist story
  - case studies
  - how we did this in Julia
+
+** Introduction: the Dark world of Floating-Point Arithmetic
+
+We will be visiting one of the darker corners of computer science today. Of course, I'm talking about floating-point.
+
+"What's the big deal with floating-point?" you might ask. "It works just fine!"
+
+Yes, it does work fine for most applications. But there are dark corners of floating-point that can creep up on your if you're not careful.
+
+# Commentary: we might consider using the [[Formula 1]] example here instead
+
+Consider this example:
+
+#+begin_src julia :results output
+  i::Float32 = 0.0
+  n::Int = 0
+  while i < 1.0
+    global i += 0.1
+    global n += 1
+  end
+
+  println("Did $n iterations with a Float32")
+
+  j::Float64 = 0.0
+  m::Int = 0
+  while j < 1.0
+    global j += 0.1
+    global m += 1
+  end
+
+  println("Did $m iterations with a Float64")
+#+end_src
+
+#+RESULTS:
+: 0.0
+: 0
+: Did 10 iterations with a Float32
+: 0.0
+: 0
+: Did 11 iterations with a Float64
+
+Did you see that? A 64-bit float gives you /11/ iterations instead of 10 like we'd expect. Why does this happen? Well, it all goes back to how floating-point is an /approximation/ of real numbers. We only have 16-, 32-, or 64-bits to work with, so instead of a smooth number line, we actually have a series of /points/ that we can move between.
+
+# Show graph like from [cite:@torontoPracticallyAccurateFloatingPoint2014]
+
+There's necessarily some gap between the values that we are trying to represent and the values that we /can/ represent. This means that there is always some kind of error. Moreover, that error accumulates throughout a computation. There are ways to work around this error, and for simple calculations it's not that important, but sometimes it can push us just over the brink into /exceptional values/.
+
+# Here is where we do some signposting so people know what the talk is about
+
+We have developed a tool called FloatTracker to help navigate the rapids, as it were, of numerical computation. We'll start by talking just a little more about what these exceptional floating-point values are like, and we'll take a look at some cases where numerical computations have gone awry. Next we'll explore how our tool helps fix problems with exceptional values, and look at some case studies where our tool helped. Finally, we'll look at how we leveraged some of the exciting features of Julia to make FloatTracker not just /possible/ but rather elegant as well.
+
+*** Exceptional values
+
+There are two main exceptional values that you've likely run into: =Inf= and =NaN=. =Inf= of course represents a value too /large/ to fit into your representation.
+
+#+begin_src julia
+  x::Float32 = 2f38
+  y::Float32 = 1f38
+  [(x + x) - y, x + (x - y)]
+#+end_src
+
+#+RESULTS:
+|   Inf |
+| 3e+38 |
+
+This means math like addition is /not associative/! We are not working with real numbers here, people! If the first example didn't scare you, this one should scare you good and proper.
+
+=Inf= often begets =NaN=, which comes from nonsensical computation.
+
+#+begin_src julia
+  Inf - Inf
+#+end_src
+
+#+RESULTS:
+: NaN
+
+But that's not the only place a NaN can come from. Sometimes it arises from bad sensor data, typos, etc.
+
+# TODO: example of <<Formula 1>> car crashing? Or earlier?
+
+=NaN= is a /sticky/ value: most operations with =NaN= result in a =NaN=. This is good because if a =NaN= crops up in our computation, we want to /see/ it.
+
+# TODO: the animations from Eric's talk here would be fantastic
+
+There are cases where the NaN can disappear silently—we call this a "kill". These can be especially dangerous as it can result in the *wrong* value for a computation without us ever knowing.
+
+# TODO: max example? I'm thinking we don't need to lean too much into NaN kills—we'll mention it for sure, but there's enough that can go wrong with just Inf and NaN showing up.
+
+** Story: The Busy Scientist
+
+With all these freaky things happening in your computation, it's like there's a ghost haunting your software. So, when you see something strange, comin' outta your code, who you gonna call?
+
+FLOAT TRACKER!
+
+Imagine a busy scientist running some simulation like that you see here:
+
+# TODO: show Eric's GIF
+
+It /looks/ like it's going great, but somewhere, somehow, a NaN creeps in and starts rendering the simulation unstable. Manually tracing through the code and finding that point is a frustrating, time-consuming task.
+
+One GitHub issue for a Bayesian network package said the following:
+
+#+begin_quote
+Now it is impossible to trace back the origin of the very first ~NaN~ without perform a lot of manual work. This limits the ability to debug the code and to prevent these ~NaN~s in the first place.
+
+RxInfer.jl#116
+#+end_quote
+
+Fortunately, FloatTracker lets us avoid a lot of the manual work.
+
+The scientist from our example can simply wrap some of the inputs in our ~TrackedFloat~ type, and FloatTracker will do all the heavy lifting of tracing where those =NaNs= come from, where they go, and whether or not they end up getting killed.
+
+** Case studies
+
+We took our tool out for a spin on some Julia libraries. The first library we'll look at is =ShallowWaters.jl=, a tool for doing shallow ocean simulation.
+
+*** ShallowWaters
+
+ShallowWaters lets you take a mesh of a sea bed and then run a time series simulation and get the speed and direction of currents over that sea floor.
+
+# TODO: show example pictures, as well as the code to start a run.
+
+**** NaNs from instability
+
+I'd like to highlight this parameter here: the =CFL= parameter. I'm no domain expert, but this value control the time step rate in the simulation. A lower value means a more granular, careful flow of time in the simulation, but it means the simulation doesn't complete as quickly.
+
+In contrast, a higher =CFL= parameter means the simulation goes faster, but it can result in instability. If we set the =CFL= parameter /really/ high, we start seeing some instability in the simulation.
+
+# TODO: show NaN-broken simulation pictures
+
+I'll note that while in our case the =CFL= parameter is a little unrealistic, it's not uncommon to have an issue with simulation instability. Remember this graph from earlier?
+
+# TODO: show Eric H.'s graph again
+
+This is a similar sort of issue.
+
+Figuring out /where/ the NaN was coming from would be difficult to do manually, but we can add FloatTracker to the code like this:
+
+# TODO: show little animation/diff on adding FloatTracker to ShallowWaters
+
+We make just two simple changes:
+
+ - we set up some logging for FloatTracker [highlight on slide]
+ - we wrap the input in ~TrackedFloat~
+
+With that we get some nice logs about where those NaNs are coming from.
+
+To get a quick summary, we can /coalesce/ the logs into a handy graph that lets us see where most fo the flows are going to/or from.
+
+# FIXME: figure out what the exact operation here is
+We can see on this line in this file [highlight] that a NaN appears when we do [ *FIXME: show operation* ].
+
+Now we leave it to a domain expert to figure out how to mitigate this. Some strategies:
+
+ - use a bigger bit-width
+ - use a tool like Herbie to rewrite floating-point expressions to reduce error
+ - manual reorder operations to keep values from getting too big
+
+# note: this will probably be about the 7-minute mark; 1k ≈ 1 minute of speaking
+ 
+*** Fuzzing: OrdinaryDiffEq
+
+Next we took a look at the =OrdinaryDiffEq= library—a commonly used library for… you guessed it… differential equations.
+
+Since this is such a highly used library, it's important to ensure that there are no =NaN= kills in this library.
+
+FloatTracker has a utility akin to fuzz testing that lets us randomly /inject/ =NaNs= into the computation. We can then watch the logs for any =NaN= kills and make corrections.
+
+Without too much effort, we were able to find one place where a =NaN= would cause =OrdinaryDiffEq= to go into an infinite loop because of a =NaN= kill. It wasn't a common case, but it was a behavioral issue that we were quickly able to identify and rectify with FloatTracker.
+
+*** RxInfer
+
+FloatTracker isn't just for "PL wizards"—this is a /useful/ tool that others have tried out and gotten good results with. We came across an issue with the =RxInfer= package, a library for Bayesian inference. We found an issue that said:
+
+#+begin_quote
+Now it is impossible to trace back the origin of the very first ~NaN~ without perform a lot of manual work. This limits the ability to debug the code and to prevent these ~NaN~s in the first place.
+
+RxInfer.jl#116
+#+end_quote
+
+They were doing work with some proprietary information, so we were not able to help them out ourselves. However, they /did/ try our tool out. In less than a day, they got our tool up and running and found the issue.
+
+# This should be around the 8–9 minute mark or so
+
+** How we made this work
+
+Now we'll talk a little bit about how we got FloatTracker to work. In principle we're not doing anything that couldn't be done in another language, but Julia makes it /really/ easy to create the kind of tool that we did.
+
+Julia, as you're aware, uses a /type-based dispatch mechanism/, and it's JIT compiler is tuned to optimize these sorts of calls. Moreover, the standard library is just made of functions, and we can define our own kinds.
+
+If we look at ~+~ for instance, we can ask Julia what methods are available:
+
+#+begin_src julia
+  methods(+)
+#+end_src
+
+#+RESULTS:
+| +(x::T, y::T) where T<:Union{Int128, Int16, Int32, Int64, Int8, UInt128, UInt16, UInt32, UInt64, UInt8} in Base at int.jl:87                                                               |
+| +(x::T, y::T) where T<:Union{Float16, Float32, Float64} in Base at float.jl:383                                                                                                            |
+| +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigInt) in Base.GMP at gmp.jl:531                                                                                                            |
+| +(c::Union{Int16, Int32, Int64, Int8}, x::BigInt) in Base.GMP at gmp.jl:537                                                                                                                |
+| +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigFloat) in Base.MPFR at mpfr.jl:398                                                                                                        |
+| +(c::Union{Int16, Int32, Int64, Int8}, x::BigFloat) in Base.MPFR at mpfr.jl:406                                                                                                            |
+| +(c::Union{Float16, Float32, Float64}, x::BigFloat) in Base.MPFR at mpfr.jl:414                                                                                                            |
+| +(x::Union{Dates.CompoundPeriod, Dates.Period}) in Dates at /Users/ashton/.asdf/installs/julia/1.8.5/share/julia/stdlib/v1.8/Dates/src/periods.jl:378                                      |
+| +(A::SparseArrays.AbstractSparseMatrixCSC, B::SparseArrays.AbstractSparseMatrixCSC) in SparseArrays at /Users/ashton/.asdf/installs/julia/1.8.5/share/julia/stdlib/v1.8/SparseArrays/src/sparsematrix.jl:1835 |
+| +(A::SparseArrays.AbstractSparseMatrixCSC, B::Array) in SparseArrays at /Users/ashton/.asdf/installs/julia/1.8.5/share/julia/stdlib/v1.8/SparseArrays/src/sparsematrix.jl:1838             |
+| …                                                                                                                                                                                           |
+There are over 200 definitions for ~+~. Julia efficiently handles dispatching to the right value depending on what appears at runtime.
+
+With FloatTracker, we:
+
+ - build our own types ~TrackedFloat16~, ~TrackedFloat32~, and ~TrackedFloat64~ to replace ~Float16~, ~Float32~, and ~Float64~
+ - overload all the built-in operators and functions to intercept function calls and do the right thing
+
+*** Some more details
+
+We start by defining a new data type that wraps a regular float:
+
+#+begin_src julia
+  abstract type AbstractTrackedFloat <: AbstractFloat end
+
+  struct TrackedFloat32 <: AbstractTrackedFloat
+    val::Float32
+  end
+#+end_src
+
+And then all we have to do is implement overloaded methods for this type:
+
+#+begin_src julia
+  function Base.+(x::TrackedFloat32, y::TrackedFloat32)
+    result = x.val + y.val
+    check_error(+, result, x.val, y.val)
+    TrackedFloat32(r)
+  end
+#+end_src
+
+# TODO: walk through this carefully
+# Talk about:
+#  - running the function
+#  - (maybe mention how this is where we can also inject NaNs for fuzzing?)
+#  - check for interesting exceptional value events
+#  - return a new wrapped value
+
+*** Using meta programming
+
+That, as you might assume, would be tedious to write out for every function, not to mention impossible to maintain. Fortunately, Julia lets us use /macros/, so we can automate an impressive amount of things.
+
+You can write two nested ~for~ loops to quickly generate the code needed for this:
+
+#+begin_src julia
+  for TrackedFloatN in (:TrackedFloat16, :TrackedFloat32, :TrackedFloat64)
+    for Op in (:+, :-, :/, :^)
+      @eval function Base.$Op(x::$TrackedFloatN, y::$TrackedFloatN)
+        result = $Op(x, y)
+        check_error($Op, result, x.val, y.val)
+        $TrackedFloatN(r)
+      end
+    end
+  end
+#+end_src
+
+# TODO: add some nice slides walking through the different parts of that example
+
+It's a little more complicated than that to handle a few edge cases, but /not by much/.
+
+We generate
+ - 3 structs
+ - 645 function variants
+ - only 218 lines of code, about 23 of which are devoted to defining helper functions and boilerplate
+
+** GPU utilities
+
+# TODO
+
+** Conclusion
+
+Despite it's young age, FloatTracker has been useful not only to /us/ as researchers, but also to developers like you diagnose floating-point exceptions. It can be a valuable tool for hardening floating-point code against inadvertent =NaN= kills which can lead to baffling behavior or silently incorrect results.
+
+We've been able to exercise some exciting metaprogramming abilities of Julia to make this possible.
+
+Thank you for your attention. We hope you find FloatTracker useful to you as you write numerical code. I'll be happy to answer your questions now.
