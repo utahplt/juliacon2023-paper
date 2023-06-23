@@ -203,6 +203,20 @@ x \; \texttt{cmp} \; y &\rightarrow false &\text{where \texttt{cmp} is \texttt{<
 
 FloatTracker monitors these and all other operations for interesting events.
 
+\subsubsection{TODO good quote, try to work this in}
+
+From IEEE 754. Section 6.2 here: \url{http://www.dsc.ufcg.edu.br/~cnum/modulos/Modulo2/IEEE754\_2008.pdf}:
+
+\begin{quote}
+  Quiet NaNs should, by means left to the implementer’s discretion, afford
+  retrospective diagnostic information inherited from invalid or unavailable
+  data and results.
+\end{quote}
+
+Found via \url{https://anniecherkaev.com/the-secret-life-of-nan}
+
+TODO what other tools are there for retrospective diagnosis?
+
 \subsection{Infinity}
 
 %%ben: shouldn't this come before NaN b/c infs lead to NaNs?
