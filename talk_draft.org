@@ -84,7 +84,7 @@ We'll take a brief foray into where floating-point is liable to trip you up. Aft
 
 So, before we get into our tool proper, let's take a quick look at why floating-point can be so tricky.
 
-Consider this example:
+Consider this loop:
 
 #+begin_src julia :results output
   i::Float32 = 0.0
@@ -122,11 +122,13 @@ There's necessarily some gap between the values that we are trying to represent 
 
 # Here is where we do some signposting so people know what the talk is about
 
-We have developed a tool called FloatTracker to help navigate the rapids, as it were, of numerical computation. We'll start by talking just a little more about what these exceptional floating-point values are like, and we'll take a look at some cases where numerical computations have gone awry. Next we'll explore how our tool helps fix problems with exceptional values, and look at some case studies where our tool helped. Finally, we'll look at how we leveraged some of the exciting features of Julia to make FloatTracker not just /possible/ but rather elegant as well.
+We have developed a tool called FloatTracker to help navigate the rapids, as it were, of numerical computation. Inthis talk, we'll start by talking just a little more about what these exceptional floating-point values are like, and we'll take a look at some cases where numerical computations have gone awry. Next we'll explore how our tool helps fix problems with exceptional values, and look at some case studies where our tool helped. Finally, we'll look at how we leveraged some of the exciting features of Julia to make FloatTracker not just /possible/ but rather elegant as well.
 
 *** Exceptional values
 
-There are two main exceptional values that you've likely run into: =Inf= and =NaN=. =Inf= of course represents a value too /large/ to fit into your representation.
+There are two main exceptional values that you've likely run into: =Inf= and =NaN=. =Inf= of course represents a value too /large/ to fit into your representation, be that a 16-, 32-, or 64-bit float. Once a value goes to =Inf=, there's no coming back.
+
+In this example, we take /algebraically equivalent/ expressions and get different answers.
 
 #+begin_src julia
   x::Float32 = 2f38
@@ -149,19 +151,46 @@ This means math like addition is /not associative/! We are not working with real
 #+RESULTS:
 : NaN
 
-But that's not the only place a NaN can come from. Sometimes it arises from bad sensor data, typos, etc. That race car's issue came from a NaN on a sensor bus.
+But that's not the only place a NaN can come from. Sometimes it arises from a bad sensor, typos in data, etc. That race car's issue came from a NaN on a sensor bus.
 
-=NaN= is a /sticky/ value: most operations with =NaN= result in a =NaN=. This is good because if a =NaN= crops up in our computation, we want to /see/ it.
+=NaN= is a /sticky/ value: almost all operations with =NaN= result in a =NaN=. This is good because if a =NaN= crops up in our computation, we want to /see/ it.
 
-# TODO: the animations from Eric's talk here would be fantastic
+For example, in this simulation, somewhere a value goes to =NaN= and it starts breaking apart the simulation as subsequent time steps take into account neighboring data points.
 
-There are cases where the NaN can disappear silently—we call this a "kill". These can be especially dangerous as it can result in the *wrong* value for a computation without us ever knowing.
+*TODO: the animations from Eric's talk here would be fantastic*
 
-# TODO: max example? I'm thinking we don't need to lean too much into NaN kills—we'll mention it for sure, but there's enough that can go wrong with just Inf and NaN showing up.
+Now, I said that /almost all/ operations involving =NaN= can result in a =NaN=. There are cases where the NaN can disappear silently—we call this a "kill". These can be especially dangerous as it can result in the *wrong* value for a computation without us ever knowing.
+
+Here is a short example from our paper, which you can also find in our examples repository. This is a problematic implementation of a ~list_max~ function:
+
+# TODO: see if I can't clean up this example a little bit
+
+#+begin_src julia
+  function maximum(lst)
+    max_seen = 0.0
+    for x in lst
+      if ! (x <= max_seen)
+        max_seen = x              # swap if new val greater
+      end
+    end
+    max_seen
+  end
+
+  maximum([1, 5, 4, NaN, 4])
+#+end_src
+
+#+RESULTS:
+: 4.0
+
+Not only does this fail to propagate the =NaN=, but the answer is /wrong/! =NaN= kills are very dangerous.
+
+** Introducing FloatTracker
+
+Our toolkit includes a library called FloatTracker. FloatTracker automatically notices when a =NaN= or an =Inf= gets generated or killed.
 
 ** Case studies
 
-We took our tool out for a spin on some Julia libraries. The first library we'll look at is =ShallowWaters.jl=, a tool for doing shallow ocean simulation.
+We took our tool out for a spin on some Julia libraries. The first library we'll look at is =ShallowWaters.jl= —a program for doing shallow ocean simulation.
 
 *** ShallowWaters
 

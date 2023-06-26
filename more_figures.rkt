@@ -17,3 +17,6 @@
                      (fp-example-points 32 8 1.8)))
   (plot (points (map (λ (x) (vector x 0)) xs)
                 #:sym 'point)))
+
+(require math/utils)
+(test-floating-point 10000)
