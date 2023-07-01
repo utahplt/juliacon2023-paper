@@ -19,44 +19,30 @@ So:
 
 ** Introduction: the busy scientist
 
-Suppose that you are a scientist doing some numerical work. Maybe you're crunching data, maybe you're running a simulation, maybe you're training a model, etc. Whatever it is, you've got your workload spread across some CPUs and GPUs.
+Suppose that you are a scientist doing some numerical work. Maybe you're crunching data, maybe you're running a simulation, maybe you're training a model—whatever. You've got your workload spread across some CPUs and GPUs.
 
-Let's say you're working on running a simulation like the one you see here:
-
-*TODO: Eric's GIF*
-
-All is going well, until somewhere, somehow, a NaN creeps in and starts rendering the simulation unstable. Poof—all the time you spent setting up and running this simulation has been wasted, and now you're looking at hours of manually tracing through the code, rerunning your simulation and praying that you're logging the right things in the right places at the right times to catch the NaN, etc.
+All is going well, until somewhere, somehow, a NaN creeps in and starts rendering the simulation unstable. Poof—all the time you spent setting up and running this simulation has been wasted, and now you're looking at hours of manually tracing through the code, rerunning your simulation and praying that you're logging the right things in the right places at the right times to catch the NaN.
 
 Sounds like fun, no?
 
-You aren't the first to have this problem. One GitHub issue for a Bayesian network package said the following:
+After hours and hours of tedious, boring, grunt work, you finally figure out that a NaN is coming from a division where the dividend underflowed to 0. You fine-tune some of the arithmetic to avoid this problem and, eyes brimming full of hope and excitement, you re-run your program with the final fix in place.
 
-#+begin_quote
-Now it is impossible to trace back the origin of the very first ~NaN~ without perform a lot of manual work. This limits the ability to debug the code and to prevent these ~NaN~s in the first place.
+And it… works. Sort of. Something seems off about the results that you've gotten. Maybe the numbers don't look quite right. Maybe the program hangs for no apparent reason when one of the inputs changes—but you don't know what inputs matter for that. You're uncertain and uneasy about the results you're getting.
 
-RxInfer.jl#116
-#+end_quote
+Not wanting to fall into the trap of, "the computer did it so it must be correct", you—intrepid scientist you—embark once again into the bowels of your arithmetic routines.
 
-Well, better start digging.
-
-After hours and hours of tedious, boring, grunt work, the scientist finally figures out that a NaN is coming from a division where the dividend underflowed to 0. They fine-tune some of the arithmetic to avoid this problem and, eyes brimming full of hope and excitement, run their program with the final fix in place.
-
-And it… works. Sort of. Something seems off about the results that they've gotten. Maybe the numbers don't look quite right. Maybe the program hangs for no apparent reason when one of the inputs changes—but the scientist doesn't know which. In any case, the scientist is flummoxed.
-
-Not wanting to fall into the trap of, "the computer did it so it must be correct", our intrepid scientist embarks once again into the bowels of their arithmetic routines.
-
-After a week of toil, the scientist notices something strange: a NaN pops into existence at one point, but then quietly disappears leaving no hole in the output. After some searching, the scientist discovers the killer: a conditional.
+After a week of toil, you notice something strange: a NaN pops into existence at one point, but then quietly disappears leaving no hole in the output. After some searching, you uncover the killer: a conditional has swallowed the NaN whole.
 
 # Slide: 42 < NaN ⇒ false
 #        42 > NaN ⇒ false
 
 See the problem?
 
-The scientist adds a guard here for safety, then traces /that/ NaN back to Inf - Inf, which of course leads to the question: where did that Inf come from.
+You add a guard here for safety, then trace /that/ NaN back to Inf - Inf, which of course leads to the question: where did that Inf come from?
 
-Another week of painful debugging goes by until the scientist /finally/ figures out where values got too big too fast, or where one of the inputs in the 10 GB input file was missing a decimal point, etc.
+Another week of painful debugging goes by until you /finally/ figure out where values got too big too fast, or where one of the inputs in the 10 GB input file was missing a decimal point, etc.
 
-This time when the scientist runs the program, the output matches the scientist's intuition.
+This time when you run the program, the output matches the your intuition.
 
 Hooray! Time to deploy this code to production!
 
@@ -65,18 +51,20 @@ Hooray! Time to deploy this code to production!
 Well… not so fast.
 
 # https://www.thedrive.com/news/37366/why-that-autonomous-race-car-crashed-straight-into-a-wall
-The scientist remembers this mishap with the autonomous vehicle. See, what happened was that a faulty sensor returned a NaN, locking the steering column to the right. The scientist wonders if there are any other parts of their code that could be susceptible to such problematic behavior. But trying to figure /that/ out would take a /ton/ of effort.
+You remember this mishap with the autonomous vehicle. See, what happened was that a faulty sensor returned a NaN, locking the steering column to the right.
+
+You begin to wonder if there are any other parts of their code that could be susceptible to such problematic behavior. It might be nice if you could somehow fuzz the code to find =NaN=-susceptible regions. But trying to figure /that/ out would take a /ton/ of effort, right?
 
 Fortunately, we have tools to help!
 
-Floating-point numbers underpin so many critical computations. But there are some dark corners of the IEEE 754 spec governing their behavior that can invalidate our results or worse, silently cause errors. Moreover, it can be difficult to harden our programs against exceptional values. Unexpected floating-point behavior has lead not only to race car crashes but also to rockets exploding or medical patients getting fatal doses of radiation.
+Floating-point numbers underpin so many critical computations. The IEEE 754 spec is a useful and performant way of representing numbers, but there are many counterintuitive aspects of both floating-point's intrinsic behavior as well as of the spec that can invalidate our results—or worse—silently cause errors. Moreover, it can be difficult to harden our programs against exceptional values. Unexpected floating-point behavior has lead not only to race car crashes but also to rockets exploding or medical patients getting fatal doses of radiation.
 
 So, just remember: if there's somethin' strange, in your floating-points, who you gonna call? *FloatTracker!* If there's somethin' weird and it don't look good, who you gonna call? *FloatTracker!*
 
-If, instead of doing all that manual work, the scientist simply used our FloatTracker tool, they would have had logs that would have lead them immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help them fuzz their code and find cases where they could harden their code against spurious NaNs that didn't show up in testing.
+If, instead of doing all that manual work, you simply used our FloatTracker tool, you would have had logs that would have lead you immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help you fuzz your code and find cases where you could harden your code against spurious NaNs that didn't show up in testing.
 
 # Sign posting!
-We'll take a brief foray into where floating-point is liable to trip you up. After that we'll talk about how to use our tool to make debugging your numerical programs a breeze. Then we'll wrap up with a quick look at some of the neat aspects of Julia that made building such a tool possible for our small research team.
+For the rest of the talk, we'll take a brief foray into where floating-point is liable to trip you up. After that we'll talk about how to use our tool to make debugging your numerical programs a breeze. Then we'll wrap up with a quick look at some of the neat aspects of Julia that made building such a tool possible for our small research team.
 
 # timing: ≈ 4 minutes here, second draft
 
@@ -122,7 +110,7 @@ There's necessarily some gap between the values that we are trying to represent 
 
 # Here is where we do some signposting so people know what the talk is about
 
-We have developed a tool called FloatTracker to help navigate the rapids, as it were, of numerical computation. Inthis talk, we'll start by talking just a little more about what these exceptional floating-point values are like, and we'll take a look at some cases where numerical computations have gone awry. Next we'll explore how our tool helps fix problems with exceptional values, and look at some case studies where our tool helped. Finally, we'll look at how we leveraged some of the exciting features of Julia to make FloatTracker not just /possible/ but rather elegant as well.
+We have developed a tool called FloatTracker to help navigate the rapids, as it were, of numerical computation. In this talk, we'll start by talking just a little more about what these exceptional floating-point values are like, and we'll take a look at some cases where numerical computations have gone awry. Next we'll explore how our tool helps fix problems with exceptional values, and look at some case studies where our tool helped. Finally, we'll look at how we leveraged some of the exciting features of Julia to make FloatTracker not just /possible/ but rather elegant as well.
 
 *** Exceptional values
 
@@ -208,7 +196,7 @@ In contrast, a higher =CFL= parameter means the simulation goes faster, but it c
 
 I'll note that while in our case the =CFL= parameter is a little unrealistic, it's not uncommon to have an issue with simulation instability. Remember this graph from earlier?
 
-# TODO: show Eric H.'s graph again
+*TODO: show Eric H.'s graph again*
 
 This is a similar sort of issue.
 
