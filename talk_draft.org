@@ -203,6 +203,8 @@ All it takes to add FloatTracker is:
   ft_flush_logs()
 #+end_src
 
+It's as simple as that. FloatTracker will log every operation that the ~TrackedFloat~ type touches. Also, like a virus, the ~TrackedFloat~ type will stick to anything it comes into contact with, which means getting good coverage is relatively easy. We are working on some ways to make tracking input data even easier—that said, we've had good success with this approach so far.
+
 Some libraries, like Finch or ShallowWaters—both of which we'll see in some of our case studies—let you /parameterize/ the type of float to use. This seems to be not uncommon with Julia libraries. If you are fortunate enough to be using such a library, simply use a ~TrackedFloat~.
 
 ** Case studies
