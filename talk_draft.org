@@ -61,16 +61,16 @@ Floating-point numbers underpin so many critical computations. The IEEE 754 spec
 
 So, just remember: if there's somethin' strange, in your floating-points, who you gonna call? *FloatTracker!* If there's somethin' weird and it don't look good, who you gonna call? *FloatTracker!*
 
-If, instead of doing all that manual work, you simply used our FloatTracker tool, you would have had logs that would have lead you immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help you fuzz your code and find cases where you could harden your code against spurious NaNs that didn't show up in testing.
+If, instead of doing all that manual work, you simply used our FloatTracker tool, you would have had logs that would have lead you immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help you fuzz your code and find cases where you could harden your routines against spurious NaNs that didn't show up in testing.
 
 # Sign posting!
-For the rest of the talk, we'll take a brief foray into where floating-point is liable to trip you up. After that we'll talk about how to use our tool to make debugging your numerical programs a breeze. Then we'll wrap up with a quick look at some of the neat aspects of Julia that made building such a tool possible for our small research team.
+We'll now take a brief foray into where floating-point is liable to trip you up. After that we'll talk about how to use our tool to make debugging your numerical programs a breeze. Then we'll wrap up with a quick look at some of the neat aspects of Julia that made building such a tool possible for our small research team.
 
 # timing: ≈ 4 minutes here, second draft
 
 ** The dark world of floating-point arithmetic
 
-So, before we get into our tool proper, let's take a quick look at why floating-point can be so tricky.
+Let's take a quick look at why floating-point can be so tricky.
 
 Consider this loop:
 
@@ -108,10 +108,6 @@ Did you see that? A 64-bit float gives you /11/ iterations instead of 10 like we
 
 There's necessarily some gap between the values that we are trying to represent and the values that we /can/ represent. This means that there is always some kind of error. Moreover, that error accumulates throughout a computation. There are ways to work around this error, and for simple calculations it's not that important, but sometimes it can push us just over the brink into /exceptional values/.
 
-# Here is where we do some signposting so people know what the talk is about
-
-We have developed a tool called FloatTracker to help navigate the rapids, as it were, of numerical computation. In this talk, we'll start by talking just a little more about what these exceptional floating-point values are like, and we'll take a look at some cases where numerical computations have gone awry. Next we'll explore how our tool helps fix problems with exceptional values, and look at some case studies where our tool helped. Finally, we'll look at how we leveraged some of the exciting features of Julia to make FloatTracker not just /possible/ but rather elegant as well.
-
 *** Exceptional values
 
 There are two main exceptional values that you've likely run into: =Inf= and =NaN=. =Inf= of course represents a value too /large/ to fit into your representation, be that a 16-, 32-, or 64-bit float. Once a value goes to =Inf=, there's no coming back.
@@ -128,9 +124,9 @@ In this example, we take /algebraically equivalent/ expressions and get differen
 |   Inf |
 | 3e+38 |
 
-This means math like addition is /not associative/! We are not working with real numbers here, people! If the first example didn't scare you, this one should scare you good and proper.
+This means that addition is /not associative/! We are not working with real numbers here, people! If the first example with the loops didn't scare you, this one should scare you good and proper.
 
-=Inf= often begets =NaN=, which comes from nonsensical computation.
+=Inf= often begets =NaN= (though that's not the only place where it can come from) which denotes some nonsensical computation.
 
 #+begin_src julia
   Inf - Inf
@@ -139,9 +135,9 @@ This means math like addition is /not associative/! We are not working with real
 #+RESULTS:
 : NaN
 
-But that's not the only place a NaN can come from. Sometimes it arises from a bad sensor, typos in data, etc. That race car's issue came from a NaN on a sensor bus.
+Sometimes it also arises from bad sensor data, typos in data, etc. That race car's issue came from a NaN on a sensor bus.
 
-=NaN= is a /sticky/ value: almost all operations with =NaN= result in a =NaN=. This is good because if a =NaN= crops up in our computation, we want to /see/ it.
+=NaN= is a /sticky/ value: almost all operations with =NaN= result in a =NaN=. This is good because if a =NaN= crops up in our computation, we want to /see/ it in the result.
 
 For example, in this simulation, somewhere a value goes to =NaN= and it starts breaking apart the simulation as subsequent time steps take into account neighboring data points.
 
@@ -175,6 +171,39 @@ Not only does this fail to propagate the =NaN=, but the answer is /wrong/! =NaN=
 ** Introducing FloatTracker
 
 Our toolkit includes a library called FloatTracker. FloatTracker automatically notices when a =NaN= or an =Inf= gets generated or killed.
+
+FloatTracker is easy to use. Suppose you have some simulation that looks roughly like this:
+
+#+begin_src julia
+  using MySimulator
+
+  P = run_model(cfl=0.8, iterations=100,
+                param1="nonperiodic", param2="double_gyre",
+                param3="seamount")
+
+  savefig("output.fig")
+#+end_src
+
+All it takes to add FloatTracker is:
+
+ 1. Require the library
+ 2. Set up the logger
+ 3. Wrap inputs in ~TrackedFloat~ types
+ 4. Flush logs
+
+#+begin_src julia
+  using MySimulator
+  using FloatTracker
+
+  P = run_model(cfl=TrackedFloat32(0.8), iterations=100,
+                param1="nonperiodic", param2="double_gyre",
+                param3="seamount")
+
+  savefig("output.fig")
+  ft_flush_logs()
+#+end_src
+
+Some libraries, like Finch or ShallowWaters—both of which we'll see in some of our case studies—let you /parameterize/ the type of float to use. This seems to be not uncommon with Julia libraries. If you are fortunate enough to be using such a library, simply use a ~TrackedFloat~.
 
 ** Case studies
 
