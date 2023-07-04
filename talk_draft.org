@@ -345,6 +345,8 @@ Since this is such a highly used library, it's important to ensure that there ar
 
 FloatTracker has a utility akin to fuzz testing that lets us randomly /inject/ =NaNs= into the computation. We can then watch the logs for any =NaN= kills and make corrections.
 
+# TODO: show code to fuzz the program
+
 Without too much effort, we were able to find one place where a =NaN= would cause =OrdinaryDiffEq= to go into an infinite loop because of a =NaN= kill. It wasn't a common case, but it was a behavioral issue that we were quickly able to identify and rectify with FloatTracker.
 
 *** RxInfer
