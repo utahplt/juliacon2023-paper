@@ -250,7 +250,8 @@ All it takes to add FloatTracker is:
 
 It's as simple as that. FloatTracker will log every operation that the ~TrackedFloat~ type touches. Also, like a virus, the ~TrackedFloat~ type will stick to anything it comes into contact with, which means getting good coverage is relatively easy. We are working on some ways to make tracking input data even easier—that said, we've had good success with this approach so far.
 
-Some libraries, like Finch or ShallowWaters—both of which we'll see in some of our case studies—let you /parameterize/ the type of float to use. This seems to be not uncommon with Julia libraries. If you are fortunate enough to be using such a library, simply use a ~TrackedFloat~.
+# We talk about this in the [[ShallowWaters]] section
+# Some libraries, like Finch or ShallowWaters—both of which we'll see in some of our case studies—let you /parameterize/ the type of float to use. This seems to be not uncommon with Julia libraries. If you are fortunate enough to be using such a library, simply use a ~TrackedFloat~.
 
 ** Case studies
 
@@ -260,7 +261,67 @@ We took our tool out for a spin on some Julia libraries. The first library we'll
 
 ShallowWaters lets you take a mesh of a sea bed and then run a time series simulation and get the speed and direction of currents over that sea floor.
 
-# TODO: show example pictures, as well as the code to start a run.
+# Show picture of output
+
+ShallowWaters was interesting to use because it let you parameterize the type of float used in the simulation. So we were able to enable FloatTracker with a simple modification to the code:
+
+#+begin_src julia
+  using ShallowWaters, PyPlot
+
+  P = run_model(nx=100, L_ratio=1, cfl=1.5, Ndays=300,
+                bc="nonperiodic", wind_forcing_x="double_gyre",
+                topography="seamount")
+
+  pcolormesh(P.η')
+  savefig("height_pretty_nan_notf.png")
+
+  speed = sqrt.(Ix(P.u.^2)[:,2:end-1] + Iy(P.v.^2)[2:end-1,:])
+  pcolormesh(speed')
+  savefig("speed_pretty_nan_notf.png")
+#+end_src
+
+This becomes:
+
+#+begin_src julia
+  using FloatTracker
+  using ShallowWaters, PyPlot
+
+  config_logger(filename="pretty_nan_tf", buffersize=100000)
+  exclude_stacktrace([:prop,:kill])
+
+  P = run_model(T=TrackedFloat32,
+                nx=100, L_ratio=1, cfl=2, Ndays=300,
+                bc="nonperiodic", wind_forcing_x="double_gyre",
+                topography="seamount")
+
+  pcolormesh(P.η')
+  savefig("height_pretty_nan_tf.png")
+
+  speed = sqrt.(Ix(P.u.^2)[:,2:end-1] + Iy(P.v.^2)[2:end-1,:])
+  pcolormesh(speed')
+  savefig("speed_pretty_nan_tf.png")
+#+end_src
+
+We make just two simple changes:
+
+ - we set up some logging for FloatTracker [highlight on slide]
+ - we wrap the input in ~TrackedFloat~
+
+With that we get some nice logs about where those NaNs are coming from.
+
+To get a quick summary, we can /coalesce/ the logs into a handy graph that lets us see where most of the flows are going to/or from.
+
+Looks like /most/ of the problems are coming from the ~continuity_itself!~ function from the ~+~ routine. I don't show it here in these slides, but we can configure FloatTracker to show us the arguments, and we can see we're getting =Inf + -Inf=.
+
+So where are those =Inf='s coming from? Well, fortunately, FloatTracker watches for that too. Here's the coalesced stack trace for =Inf= generation, and we can see where that value is coming from.
+
+Looks like the arguments here are -1.5150702f31^2—no wonder a Float32 couldn't handle that and went to Inf.
+
+Now we leave it to a domain expert to figure out how to mitigate this. Some strategies:
+
+ - use a bigger bit-width
+ - use a tool like Herbie to rewrite floating-point expressions to reduce error
+ - manual reorder operations to keep values from getting too big, like that example we saw earlier
 
 **** NaNs from instability
 
@@ -270,33 +331,11 @@ In contrast, a higher =CFL= parameter means the simulation goes faster, but it c
 
 # TODO: show NaN-broken simulation pictures
 
-I'll note that while in our case the =CFL= parameter is a little unrealistic, it's not uncommon to have an issue with simulation instability. Remember this graph from earlier?
+I'll note that while in our case the =CFL= parameter is a little unrealistic, it's not uncommon to have an issue with simulation instability.
 
-*TODO: show Eric H.'s graph again*
+*Show Eric H.'s graph again*
 
 This is a similar sort of issue.
-
-Figuring out /where/ the NaN was coming from would be difficult to do manually, but we can add FloatTracker to the code like this:
-
-# TODO: show little animation/diff on adding FloatTracker to ShallowWaters
-
-We make just two simple changes:
-
- - we set up some logging for FloatTracker [highlight on slide]
- - we wrap the input in ~TrackedFloat~
-
-With that we get some nice logs about where those NaNs are coming from.
-
-To get a quick summary, we can /coalesce/ the logs into a handy graph that lets us see where most fo the flows are going to/or from.
-
-# FIXME: figure out what the exact operation here is
-We can see on this line in this file [highlight] that a NaN appears when we do [ *FIXME: show operation* ].
-
-Now we leave it to a domain expert to figure out how to mitigate this. Some strategies:
-
- - use a bigger bit-width
- - use a tool like Herbie to rewrite floating-point expressions to reduce error
- - manual reorder operations to keep values from getting too big
 
 *** Fuzzing: OrdinaryDiffEq
 
@@ -400,3 +439,7 @@ Despite it's young age, FloatTracker has been useful not only to /us/ as researc
 We've been able to exercise some exciting metaprogramming abilities of Julia to make this possible.
 
 Thank you for your attention. We hope you find FloatTracker useful to you as you write numerical code. I'll be happy to answer your questions now.
+
+# Local Variables:
+# jinx-local-words: "ShallowWaters"
+# End:
