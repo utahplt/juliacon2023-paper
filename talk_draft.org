@@ -150,6 +150,7 @@ Here is a short example from our paper, which you can also find in our examples 
 # TODO: see if I can't clean up this example a little bit
 
 #+begin_src julia
+
   function maximum(lst)
     max_seen = 0.0
     for x in lst
@@ -160,7 +161,8 @@ Here is a short example from our paper, which you can also find in our examples 
     max_seen
   end
 
-  maximum([1, 5, 4, NaN, 4])
+  maximum([1.0, 5.0, 4.0, NaN, 4.0])
+
 #+end_src
 
 #+RESULTS:
@@ -172,7 +174,50 @@ Not only does this fail to propagate the =NaN=, but the answer is /wrong/! =NaN=
 
 Our toolkit includes a library called FloatTracker. FloatTracker automatically notices when a =NaN= or an =Inf= gets generated or killed.
 
-FloatTracker is easy to use. Suppose you have some simulation that looks roughly like this:
+FloatTracker is easy to use. Let's revisit that maximum example:
+
+#+begin_src julia
+
+  using FloatTracker
+
+  config_logger(filename="max_example", buffersize=1)
+
+  function maximum(lst)
+    max_seen = 0.0
+    for x in lst
+      if ! (x <= max_seen)
+        max_seen = x              # swap if new val greater
+      end
+    end
+    max_seen
+  end
+
+  maximum([TrackedFloat32(x) for x in [1.0, 5.0, 4.0, NaN, 4.0]])
+  ft_flush_logs()
+
+#+end_src
+
+#+RESULTS:
+
+We can rewrite it to use FloatTracker like so:
+
+#+begin_src julia
+#+end_src
+
+That gives us some logs that look like this:
+
+#+begin_example
+  [NaN] check_error at /Users/ashton/.julia/dev/FloatTracker/src/TrackedFloat.jl:11
+  <= at /Users/ashton/.julia/dev/FloatTracker/src/TrackedFloat.jl:214
+  maximum at /Users/ashton/Research/FloatTrackerExamples/examples/max_min_example.jl:0
+  top-level scope at /Users/ashton/Research/FloatTrackerExamples/examples/max_min_example.jl:15
+#+end_example
+
+The second line shows us that the culprit was ~<=~, and that it it came to a call to ~maximum~ on line 15 of our file.
+
+The third line might look a little suspect: the line number is 0. This seems to happen when Julia starts inlining things. We'd like to improve it, but we're a little stuck with what kinds of stack traces we can get from Julia.
+
+Let's look at how /you/ might use it in a little more realistic scenario. Suppose you have some simulation that looks roughly like this:
 
 #+begin_src julia
   using MySimulator

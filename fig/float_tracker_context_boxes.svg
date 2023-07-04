@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="103.5 860.5 1709.375 355" width="1709.375" height="355">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.68 0 L 0 -.63 L 0 .63 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-3 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M -1.68 0 L 0 .63 L 0 -.63 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="FloatTracker_in_Context" fill-opacity="1" stroke-dasharray="none" fill="none" stroke="none" stroke-opacity="1">
+    <title>FloatTracker in Context</title>
+    <g id="FloatTracker_in_Context_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_9">
+        <path d="M 1296.875 863 L 1796.375 863 C 1804.107 863 1810.375 869.268 1810.375 877 L 1810.375 1199 C 1810.375 1206.732 1804.107 1213 1796.375 1213 L 1296.875 1213 C 1289.143 1213 1282.875 1206.732 1282.875 1199 L 1282.875 877 C 1282.875 869.268 1289.143 863 1296.875 863 Z" fill="#9de0f3"/>
+        <path d="M 1296.875 863 L 1796.375 863 C 1804.107 863 1810.375 869.268 1810.375 877 L 1810.375 1199 C 1810.375 1206.732 1804.107 1213 1796.375 1213 L 1296.875 1213 C 1289.143 1213 1282.875 1206.732 1282.875 1199 L 1282.875 877 C 1282.875 869.268 1289.143 863 1296.875 863 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1287.875 868)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="123.07" y="61">GPU FPX</tspan>
+        </text>
+      </g>
+      <g id="Graphic_7">
+        <path d="M 120 863 L 1201 863 C 1208.732 863 1215 869.268 1215 877 L 1215 1199 C 1215 1206.732 1208.732 1213 1201 1213 L 120 1213 C 112.26801 1213 106 1206.732 106 1199 L 106 877 C 106 869.268 112.26801 863 120 863 Z" fill="#caebb1"/>
+        <path d="M 120 863 L 1201 863 C 1208.732 863 1215 869.268 1215 877 L 1215 1199 C 1215 1206.732 1208.732 1213 1201 1213 L 120 1213 C 112.26801 1213 106 1206.732 106 1199 L 106 877 C 106 869.268 112.26801 863 120 863 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(111 868)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="373.5" y="61">FloatTracker</tspan>
+        </text>
+      </g>
+      <g id="Graphic_4">
+        <path d="M 1332.375 980 L 1760.875 980 C 1766.3978 980 1770.875 984.4772 1770.875 990 L 1770.875 1177 C 1770.875 1182.5228 1766.3978 1187 1760.875 1187 L 1332.375 1187 C 1326.8522 1187 1322.375 1182.5228 1322.375 1177 L 1322.375 990 C 1322.375 984.4772 1326.8522 980 1332.375 980 Z" fill="#e6eaf0"/>
+        <path d="M 1332.375 980 L 1760.875 980 C 1766.3978 980 1770.875 984.4772 1770.875 990 L 1770.875 1177 C 1770.875 1182.5228 1766.3978 1187 1760.875 1187 L 1332.375 1187 C 1326.8522 1187 1322.375 1182.5228 1322.375 1177 L 1322.375 990 C 1322.375 984.4772 1326.8522 980 1332.375 980 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1327.375 1045.104)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="129.778" y="61">CUDA</tspan>
+        </text>
+      </g>
+      <g id="Graphic_2">
+        <path d="M 152.1875 980 L 580.6875 980 C 586.21035 980 590.6875 984.4772 590.6875 990 L 590.6875 1177 C 590.6875 1182.5228 586.21035 1187 580.6875 1187 L 152.1875 1187 C 146.66465 1187 142.1875 1182.5228 142.1875 1177 L 142.1875 990 C 142.1875 984.4772 146.66465 980 152.1875 980 Z" fill="#e6eaf0"/>
+        <path d="M 152.1875 980 L 580.6875 980 C 586.21035 980 590.6875 984.4772 590.6875 990 L 590.6875 1177 C 590.6875 1182.5228 586.21035 1187 580.6875 1187 L 152.1875 1187 C 146.66465 1187 142.1875 1182.5228 142.1875 1177 L 142.1875 990 C 142.1875 984.4772 146.66465 980 152.1875 980 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(147.1875 1045.104)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="32.562" y="61">Julia on CPU</tspan>
+        </text>
+      </g>
+      <g id="Graphic_3">
+        <path d="M 740.3125 980 L 1168.8125 980 C 1174.3353 980 1178.8125 984.4772 1178.8125 990 L 1178.8125 1177 C 1178.8125 1182.5228 1174.3353 1187 1168.8125 1187 L 740.3125 1187 C 734.78965 1187 730.3125 1182.5228 730.3125 1177 L 730.3125 990 C 730.3125 984.4772 734.78965 980 740.3125 980 Z" fill="#e6eaf0"/>
+        <path d="M 740.3125 980 L 1168.8125 980 C 1174.3353 980 1178.8125 984.4772 1178.8125 990 L 1178.8125 1177 C 1178.8125 1182.5228 1174.3353 1187 1168.8125 1187 L 740.3125 1187 C 734.78965 1187 730.3125 1182.5228 730.3125 1177 L 730.3125 990 C 730.3125 984.4772 734.78965 980 740.3125 980 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(735.3125 1006.708)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="153.458" y="61">Julia </tspan>
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="40.85" y="137.792">Intermeidary</tspan>
+        </text>
+      </g>
+      <g id="Line_5">
+        <line x1="615.8275" y1="1083.5" x2="705.1725" y2="1083.5" marker-end="url(#FilledArrow_Marker)" marker-start="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="8"/>
+      </g>
+      <g id="Line_6">
+        <line x1="1203.9525" y1="1083.5" x2="1297.235" y2="1083.5" marker-end="url(#FilledArrow_Marker)" marker-start="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="8"/>
+      </g>
+    </g>
+  </g>
+</svg>

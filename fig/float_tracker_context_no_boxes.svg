@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="122.875 1393.5 1650.5 212" width="1650.5" height="212">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.68 0 L 0 -.63 L 0 .63 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-3 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M -1.68 0 L 0 .63 L 0 -.63 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="FloatTracker_in_Context" fill-opacity="1" stroke-dasharray="none" fill="none" stroke="none" stroke-opacity="1">
+    <title>FloatTracker in Context</title>
+    <g id="FloatTracker_in_Context_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_14">
+        <path d="M 1332.375 1396 L 1760.875 1396 C 1766.3978 1396 1770.875 1400.4772 1770.875 1406 L 1770.875 1593 C 1770.875 1598.5228 1766.3978 1603 1760.875 1603 L 1332.375 1603 C 1326.8522 1603 1322.375 1598.5228 1322.375 1593 L 1322.375 1406 C 1322.375 1400.4772 1326.8522 1396 1332.375 1396 Z" fill="#e6eaf0"/>
+        <path d="M 1332.375 1396 L 1760.875 1396 C 1766.3978 1396 1770.875 1400.4772 1770.875 1406 L 1770.875 1593 C 1770.875 1598.5228 1766.3978 1603 1760.875 1603 L 1332.375 1603 C 1326.8522 1603 1322.375 1598.5228 1322.375 1593 L 1322.375 1406 C 1322.375 1400.4772 1326.8522 1396 1332.375 1396 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1327.375 1461.104)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="129.778" y="61">CUDA</tspan>
+        </text>
+      </g>
+      <g id="Graphic_13">
+        <path d="M 135.375 1396 L 563.875 1396 C 569.39785 1396 573.875 1400.4772 573.875 1406 L 573.875 1593 C 573.875 1598.5228 569.39785 1603 563.875 1603 L 135.375 1603 C 129.85215 1603 125.375 1598.5228 125.375 1593 L 125.375 1406 C 125.375 1400.4772 129.85215 1396 135.375 1396 Z" fill="#e6eaf0"/>
+        <path d="M 135.375 1396 L 563.875 1396 C 569.39785 1396 573.875 1400.4772 573.875 1406 L 573.875 1593 C 573.875 1598.5228 569.39785 1603 563.875 1603 L 135.375 1603 C 129.85215 1603 125.375 1598.5228 125.375 1593 L 125.375 1406 C 125.375 1400.4772 129.85215 1396 135.375 1396 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(130.375 1461.104)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="32.562" y="61">Julia on CPU</tspan>
+        </text>
+      </g>
+      <g id="Graphic_12">
+        <path d="M 733.875 1396 L 1162.375 1396 C 1167.8978 1396 1172.375 1400.4772 1172.375 1406 L 1172.375 1593 C 1172.375 1598.5228 1167.8978 1603 1162.375 1603 L 733.875 1603 C 728.35215 1603 723.875 1598.5228 723.875 1593 L 723.875 1406 C 723.875 1400.4772 728.35215 1396 733.875 1396 Z" fill="#e6eaf0"/>
+        <path d="M 733.875 1396 L 1162.375 1396 C 1167.8978 1396 1172.375 1400.4772 1172.375 1406 L 1172.375 1593 C 1172.375 1598.5228 1167.8978 1603 1162.375 1603 L 733.875 1603 C 728.35215 1603 723.875 1598.5228 723.875 1593 L 723.875 1406 C 723.875 1400.4772 728.35215 1396 733.875 1396 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(728.875 1422.708)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="153.458" y="61">Julia </tspan>
+          <tspan font-family="Helvetica Neue" font-size="64" fill="black" x="40.85" y="137.792">Intermeidary</tspan>
+        </text>
+      </g>
+      <g id="Line_11">
+        <line x1="599.015" y1="1499.5" x2="698.735" y2="1499.5" marker-end="url(#FilledArrow_Marker)" marker-start="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="8"/>
+      </g>
+      <g id="Line_10">
+        <line x1="1197.515" y1="1499.5" x2="1297.235" y2="1499.5" marker-end="url(#FilledArrow_Marker)" marker-start="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="8"/>
+      </g>
+    </g>
+  </g>
+</svg>
