@@ -57,11 +57,11 @@ You begin to wonder if there are any other parts of their code that could be sus
 
 Fortunately, we have tools to help!
 
-Floating-point numbers underpin so many critical computations. The IEEE 754 spec is a useful and performant way of representing numbers, but there are many counterintuitive aspects of both floating-point's intrinsic behavior as well as of the spec that can invalidate our results—or worse—silently cause errors. Moreover, it can be difficult to harden our programs against exceptional values. Unexpected floating-point behavior has lead not only to race car crashes but also to rockets exploding or medical patients getting fatal doses of radiation.
-
-So, just remember: if there's somethin' strange, in your floating-points, who you gonna call? *FloatTracker!* If there's somethin' weird and it don't look good, who you gonna call? *FloatTracker!*
+Floating-point numbers underpin so many critical computations. The IEEE 754 spec is a useful and performant way of representing numbers, but there are many counterintuitive aspects of both floating-point's intrinsic behavior as well as of the spec that can invalidate our results—or worse—silently cause errors. It can be difficult to find the root cause of these unwanted behaviors. Moreover, it can be difficult to harden our programs against exceptional values. Unexpected floating-point behavior has lead not only to race car crashes but also to rockets exploding or medical patients getting fatal doses of radiation.
 
 If, instead of doing all that manual work, you simply used our FloatTracker tool, you would have had logs that would have lead you immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help you fuzz your code and find cases where you could harden your routines against spurious NaNs that didn't show up in testing.
+
+FloatTracker is one part of the FPX toolkit. We have some tools for working with GPU-based programs as well, but this talk focuses on our work with FloatTracker and Coalesced Stack-Trace Graphs, or CSTGs.
 
 # Sign posting!
 We'll now take a brief foray into where floating-point is liable to trip you up. After that we'll talk about how to use our tool to make debugging your numerical programs a breeze. Then we'll wrap up with a quick look at some of the neat aspects of Julia that made building such a tool possible for our small research team.
@@ -72,37 +72,39 @@ We'll now take a brief foray into where floating-point is liable to trip you up.
 
 Let's take a quick look at why floating-point can be so tricky.
 
-Consider this loop:
+# I'm thinking we can drop this example.
 
-#+begin_src julia :results output
-  i::Float32 = 0.0
-  n::Int = 0
-  while i < 1.0
-    global i += 0.1
-    global n += 1
-  end
+# Consider this loop:
 
-  println("Did $n iterations with a Float32")
+# #+begin_src julia :results output
+#   i::Float32 = 0.0
+#   n::Int = 0
+#   while i < 1.0
+#     global i += 0.1
+#     global n += 1
+#   end
 
-  j::Float64 = 0.0
-  m::Int = 0
-  while j < 1.0
-    global j += 0.1
-    global m += 1
-  end
+#   println("Did $n iterations with a Float32")
 
-  println("Did $m iterations with a Float64")
-#+end_src
+#   j::Float64 = 0.0
+#   m::Int = 0
+#   while j < 1.0
+#     global j += 0.1
+#     global m += 1
+#   end
 
-#+RESULTS:
-: 0.0
-: 0
-: Did 10 iterations with a Float32
-: 0.0
-: 0
-: Did 11 iterations with a Float64
+#   println("Did $m iterations with a Float64")
+# #+end_src
 
-Did you see that? A 64-bit float gives you /11/ iterations instead of 10 like we'd expect. Why does this happen? Well, it all goes back to how floating-point is an /approximation/ of real numbers. We only have 16-, 32-, or 64-bits to work with, so instead of a smooth number line, we actually have a series of /points/ that we can move between.
+# #+RESULTS:
+# : 0.0
+# : 0
+# : Did 10 iterations with a Float32
+# : 0.0
+# : 0
+# : Did 11 iterations with a Float64
+
+# Did you see that? A 64-bit float gives you /11/ iterations instead of 10 like we'd expect. Why does this happen? Well, it all goes back to how floating-point is an /approximation/ of real numbers. We only have 16-, 32-, or 64-bits to work with, so instead of a smooth number line, we actually have a series of /points/ that we can move between.
 
 # Show graph like from [cite:@torontoPracticallyAccurateFloatingPoint2014]
 
