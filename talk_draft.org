@@ -339,19 +339,32 @@ This is a similar sort of issue.
 
 *** Fuzzing: OrdinaryDiffEq
 
-Next we took a look at the =OrdinaryDiffEq= library—a commonly used library for… you guessed it… differential equations.
+Next we took a look at the =OrdinaryDiffEq= library—a commonly used library for differential equations. I say we took a look at it—really we started with a library to do N-body simulation, and we ended up uncovering a bug with OrdinaryDiffEq.
 
 Since this is such a highly used library, it's important to ensure that there are no =NaN= kills in this library.
 
 FloatTracker has a utility akin to fuzz testing that lets us randomly /inject/ =NaNs= into the computation. We can then watch the logs for any =NaN= kills and make corrections.
 
-# TODO: show code to fuzz the program
+#+begin_src julia
+  config_injector(odds=2,
+                  functions=[FunctionRef(:run_simulation, "nbody_simulation_result.jl")],
+                  libraries=["NBodySimulator", "OrdinaryDiffEq"])
+  record_injection("injection_recording.txt")
+#+end_src
 
-Without too much effort, we were able to find one place where a =NaN= would cause =OrdinaryDiffEq= to go into an infinite loop because of a =NaN= kill. It wasn't a common case, but it was a behavioral issue that we were quickly able to identify and rectify with FloatTracker.
+There are a few controls right now; here we're setting the odds of an operation spontaneously turning into a NaN to 1:2, and we're asking FloatTracker to only inject when we're working inside the =run_simulation= function and within the libraries =NBodySimulator= or =OrdinaryDiffEq=. That way we don't start injecting NaN into Base functions that we'll trust are well-behaved.
+
+On the bottom line there we /record/ the injections so that we can replay them later. This helped us get to a reproducible issue.
+
+With little effort we found a =NaN= kill that would cause =OrdinaryDiffEq= to go into an infinite loop. It wasn't a /common/ case, but it was a behavioral issue that we were quickly able to identify and rectify with FloatTracker.
 
 *** RxInfer
 
-FloatTracker isn't just for "PL wizards"—this is a /useful/ tool that others have tried out and gotten good results with. We came across an issue with the =RxInfer= package, a library for Bayesian inference. We found an issue that said:
+Now, the following two case studies are both things that our team was able to do with our tool. You might be thinking, "but I'm a busy scientist! I don't have time to try out some cutting-edge rough research tool!"
+
+I'm going to tell you about one instance where one busy scientist took FloatTracker out for a spin and found a bug in their code—with basically no help from us!
+
+I was looking through issues on GitHub when I came across an issue with the =RxInfer= package, a library for Bayesian inference. The issue description said:
 
 #+begin_quote
 Now it is impossible to trace back the origin of the very first ~NaN~ without perform a lot of manual work. This limits the ability to debug the code and to prevent these ~NaN~s in the first place.
@@ -359,11 +372,17 @@ Now it is impossible to trace back the origin of the very first ~NaN~ without pe
 RxInfer.jl#116
 #+end_quote
 
+I chimed in and said, "hey! we're building a tool that makes it easy to do just that!"
+
 They were doing work with some proprietary information, so we were not able to help them out ourselves. However, they /did/ try our tool out. In less than a day, they got our tool up and running and found the issue.
+
+** Intermezzo
+
+I hope that inspires some confidence in you. Next time you find yourself wishing that there were a faster way to track down NaNs and Infs, just remember that there /is/. We hope you try our tool out and that it helps you solve your problems. We'd also love to hear your feedback!
 
 ** How we made this work
 
-Now we'll talk a little bit about how we got FloatTracker to work. In principle we're not doing anything that couldn't be done in another language, but Julia makes it /really/ easy to create the kind of tool that we did.
+For the last part of the talk we'll take a look at how we got FloatTracker to work. In principle we're not doing anything that couldn't be done in another language, but Julia makes it /really/ easy to create the kind of tool that we did.
 
 Julia, as you're aware, uses a /type-based dispatch mechanism/, and it's JIT compiler is tuned to optimize these sorts of calls. Moreover, the standard library is just made of functions, and we can define our own kinds.
 
@@ -443,5 +462,5 @@ We've been able to exercise some exciting metaprogramming abilities of Julia to 
 Thank you for your attention. We hope you find FloatTracker useful to you as you write numerical code. I'll be happy to answer your questions now.
 
 # Local Variables:
-# jinx-local-words: "ShallowWaters"
+# jinx-local-words: "OrdinaryDiffEq RxInfer ShallowWaters"
 # End:
