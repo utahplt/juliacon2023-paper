@@ -350,11 +350,11 @@ This is a similar sort of issue.
 
 *** Fuzzing: OrdinaryDiffEq
 
-Next we took a look at the =OrdinaryDiffEq= library—a commonly used library for differential equations. I say we took a look at it—really we started with a library to do N-body simulation, and we ended up uncovering a bug with OrdinaryDiffEq.
+Next we took a look at the =OrdinaryDiffEq= library—a popular library for differential equations. I say we took a look at it—really we started with a library to do N-body simulation, and we ended up uncovering a bug with OrdinaryDiffEq.
 
-Since this is such a highly used library, it's important to ensure that there are no =NaN= kills in this library.
+Since this is such a widely used library, it's important to ensure that there are no =NaN= kills.
 
-FloatTracker has a utility akin to fuzz testing that lets us randomly /inject/ =NaNs= into the computation. We can then watch the logs for any =NaN= kills and make corrections.
+FloatTracker has a utility akin to fuzz testing that lets us randomly /inject/ =NaNs= during the run of a program. We can then watch the logs for any =NaN= kills and make corrections.
 
 #+begin_src julia
   config_injector(odds=2,
@@ -367,15 +367,17 @@ There are a few controls right now; here we're setting the odds of an operation 
 
 On the bottom line there we /record/ the injections so that we can replay them later. This helped us get to a reproducible issue.
 
-With little effort we found a =NaN= kill that would cause =OrdinaryDiffEq= to go into an infinite loop. It wasn't a /common/ case, but it was a behavioral issue that we were quickly able to identify and rectify with FloatTracker.
+With little effort we found a =NaN= kill that would cause =OrdinaryDiffEq= to go into an infinite loop. It wasn't a case that you'd really think to test, and that's kind of the point of fuzzing: catch edge cases before they ever crop up.
+
+Going back to the example of the race car crashing into the wall, this kind of fuzzing might have helped the drivers notice the odd behavior of the steering column if a NaN happened to be sent over the sensor bus. Who knows that it will help /you/ catch?
 
 *** RxInfer
 
-Now, the following two case studies are both things that our team was able to do with our tool. You might be thinking, "but I'm a busy scientist! I don't have time to try out some cutting-edge rough research tool!"
+Now, the following two case studies are both things that our team was able to do with our tool. You might be thinking, "but I'm a busy scientist! I don't have time to try out some cutting-edge research tool!"
 
 I'm going to tell you about one instance where one busy scientist took FloatTracker out for a spin and found a bug in their code—with basically no help from us!
 
-I was looking through issues on GitHub when I came across an issue with the =RxInfer= package, a library for Bayesian inference. The issue description said:
+We were looking through issues on GitHub when we came across an issue with the =RxInfer= package, a library for Bayesian inference. The issue description said:
 
 #+begin_quote
 Now it is impossible to trace back the origin of the very first ~NaN~ without perform a lot of manual work. This limits the ability to debug the code and to prevent these ~NaN~s in the first place.
@@ -383,9 +385,9 @@ Now it is impossible to trace back the origin of the very first ~NaN~ without pe
 RxInfer.jl#116
 #+end_quote
 
-I chimed in and said, "hey! we're building a tool that makes it easy to do just that!"
+We chimed in and said, "hey! we're building a tool that makes it easy to do just that!"
 
-They were doing work with some proprietary information, so we were not able to help them out ourselves. However, they /did/ try our tool out. In less than a day, they got our tool up and running and found the issue.
+They were doing work with some proprietary information, so we were not able to help them out much beyond pointing them at our tool. However, they /did/ try our tool out, and less than a day after we suggested using our tool, they got it up and running and found an issue.
 
 ** Intermezzo
 
@@ -393,9 +395,9 @@ I hope that inspires some confidence in you. Next time you find yourself wishing
 
 ** How we made this work
 
-For the last part of the talk we'll take a look at how we got FloatTracker to work. In principle we're not doing anything that couldn't be done in another language, but Julia makes it /really/ easy to create the kind of tool that we did.
+For the last part of the talk I'm going to show you how how we got FloatTracker to work. In principle we're not doing anything that couldn't be done in another language, but Julia makes it /really/ easy to create the kind of tool that we did.
 
-Julia, as you're aware, uses a /type-based dispatch mechanism/, and it's JIT compiler is tuned to optimize these sorts of calls. Moreover, the standard library is just made of functions, and we can define our own kinds.
+Julia, as you're aware, uses a /type-based dispatch mechanism/, and it's JIT compiler is tuned to optimize these sorts of calls. Moreover, the standard library is just made of functions, and we can define overloads of common arithmetic operators.
 
 For example, there are over 200 definitions for ~+~ out-of-the-box. Julia efficiently handles dispatching to the right value depending on what appears at runtime.
 
@@ -416,6 +418,8 @@ We start by defining a new data type that wraps a regular float:
   end
 #+end_src
 
+This means that a TrackedFloat32 is valid anywhere an ~AbstractFloat~ is allowed.
+
 And then all we have to do is implement overloaded methods for this type:
 
 #+begin_src julia
@@ -426,13 +430,12 @@ And then all we have to do is implement overloaded methods for this type:
   end
 #+end_src
 
-# TODO: walk through this carefully
-# Talk about:
-#  - running the function
-#  - (maybe mention how this is where we can also inject NaNs for fuzzing?)
-#  - check for interesting exceptional value events
-#  - return a new wrapped value
+ - First we run the function
+ - Then we check to see if we had a NaN/Inf gen/prop/kill
+ - Finally return the result wrapped in a ~TrackedFloat~ type
 
+There's a little more to it than this to make the NaN injection work, but that's about it.
+ 
 *** Using meta programming
 
 That, as you might assume, would be tedious to write out for every function, not to mention impossible to maintain. Fortunately, Julia lets us use /macros/, so we can automate an impressive amount of things.
@@ -451,18 +454,14 @@ You can write two nested ~for~ loops to quickly generate the code needed for thi
   end
 #+end_src
 
-# TODO: add some nice slides walking through the different parts of that example
+The outer loop runs through each of the different ~TrackedFloat~ types we generate, while the inner loop goes through all the operators.
 
-It's a little more complicated than that to handle a few edge cases, but /not by much/.
+There are a few edge cases we handle, but Julia makes it pretty easy to handle.
 
 We generate
  - 3 structs
  - 645 function variants
  - only 218 lines of code, about 23 of which are devoted to defining helper functions and boilerplate
-
-** GPU utilities
-
-# TODO
 
 ** Conclusion
 
