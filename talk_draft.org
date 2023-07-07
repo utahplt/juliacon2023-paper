@@ -495,6 +495,8 @@ We generate
  - 645 function variants
  - only 218 lines of code, about 23 of which are devoted to defining helper functions and boilerplate
 
+I'll mention something briefly real quick that makes FloatTracker work for everyone: thanks to Julia's type dispatch mechanism, you can write your own override methods too! This is something that we encountered with some frequency. I know the RxInfer guys had to write at least one wrapper, but they didn't have any difficulty with that.
+
 ** Conclusion
 
 Despite it's young age, FloatTracker has been useful not only to /us/ as researchers, but also to developers like you diagnose floating-point exceptions. It can be a valuable tool for hardening floating-point code against inadvertent =NaN= kills which can lead to baffling behavior or silently incorrect results.
