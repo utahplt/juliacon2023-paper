@@ -15,6 +15,50 @@ So:
 
 *Notes on the slides:* Julia has it's own font [[https://juliamono.netlify.app/][JuliaMono]] and it will look extra-classy if we use that in all the examples. It's not my favorite font for code, but it's not bad either. Good character coverage.
 
+* Technical outline
+
+ - Finding exceptions with the log files
+   + What gets logged
+     * Config: log everything → log a few things
+     * Infs and NaNs
+   + Tooling
+     * Log splitter
+   + Visualization
+     * CSTG
+     * diffing ← if we could get this to work…
+ - Fuzzing
+   + Control of where and when to inject
+ - Wrapping inputs vs. type parametrization
+ - How it works
+   + Type-based dispatch
+
+** Technical points for case studies
+
+ - ShallowWaters
+   + Simulations use a CFL parameter → too high leads to instability
+   + Tracking down where NaNs come from can help us stabilize simulations without sacrificing simulation speed
+   + Also: NaNs in output does not necessarily result in a crash—finding kills is important too (no kills in this one)
+   + We tracked down Inf - Inf ⇒ NaN; then tracked down most Infs to $big_number ^ 2
+   + We used a visualization (CSTG) to summarize the huge log files
+   + Nice thing: type parameterization
+ - NBody/OrdinaryDiffEq
+   + Fuzzing
+     * Configured fuzzer to focus on libraries that we were interested in
+     * Found an instance where OrdinaryDiffEq said it would exit, then went into an infinite loop
+     * Reproduced with a recording
+     * Bug was due to a kill—example of a kill causing a Bad Thing in the wild!
+ - Finch and advection
+   + Finch is a DSL for PDEs—in a way this is a nice compliment to the ODE library
+   + Fuzzing found two places where Finch needed protection against user input:
+     1. Inputting a mesh
+     2. Setting bounds for the solver
+   + CSTGs also useful for finding NaNs in unstable systems, just like with ShallowWaters
+ - RxInfer
+   + Bayesian inference library
+   + ShallowWaters let us parameterize the type; this time the users just wrapped inputs
+   + Proof that this is useful for more than just the creators :)
+   + Got some good feedback from these folks on how to improve the ergonomics—you, dear audience member, can help us too
+
 * Talk
 
 ** Introduction: the busy scientist
@@ -328,7 +372,51 @@ To get a quick summary, we can /coalesce/ the logs into a handy graph that lets 
 
 Looks like /most/ of the problems are coming from the ~continuity_itself!~ function from the ~+~ routine. I don't show it here in these slides, but we can configure FloatTracker to show us the arguments, and we can see we're getting =Inf + -Inf=.
 
-So where are those =Inf='s coming from? Well, fortunately, FloatTracker watches for that too. Here's the coalesced stack trace for =Inf= generation, and we can see where that value is coming from.
+So where are those =Inf='s coming from? Well, fortunately, FloatTracker watches for that too.
+
+Here's a chunk for an =Inf= event:
+
+#+begin_example
+  [Inf] check_error(Any[-1.5150702f31, 2]) at /Users/ashton/.julia/dev/FloatTracker/src/TrackedFloat.jl:11
+  ^(::TrackedFloat32, ::Int64) at /Users/ashton/.julia/dev/FloatTracker/src/TrackedFloat.jl:139
+  literal_pow() at ./intfuncs.jl:327
+  _broadcast_getindex_evalf() at ./broadcast.jl:670
+  _broadcast_getindex() at ./broadcast.jl:643
+  getindex() at ./broadcast.jl:597
+  macro expansion() at ./broadcast.jl:961
+  macro expansion() at ./simdloop.jl:77
+  copyto!() at ./broadcast.jl:960
+  copyto!() at ./broadcast.jl:913
+  copy() at ./broadcast.jl:885
+  materialize(^) at ./broadcast.jl:860
+  top-level scopeBase.getproperty(P, :u) at /Users/ashton/Research/FloatTrackerExamples/examples/sw_nan_tf.jl:14
+  eval() at ./boot.jl:368
+  include_string(identity) at ./loading.jl:1428
+  _include(::Function, ::Module, ::String) at ./loading.jl:1488
+  include(::Module, ::String) at ./Base.jl:419
+  exec_options(::Base.JLOptions) at ./client.jl:303
+  _start() at ./client.jl:522
+#+end_example
+
+And here's the cleaned up version:
+
+#+begin_example
+  [Inf] check_error(Any[-1.5150702f31, 2])  at FloatTracker/src/TrackedFloat.jl:11
+  ^(::TrackedFloat32, ::Int64)              at FloatTracker/src/TrackedFloat.jl:139
+  literal_pow()                             at ./intfuncs.jl:327
+  _broadcast_getindex_evalf()               at ./broadcast.jl:670
+  _broadcast_getindex()                     at ./broadcast.jl:643
+  getindex()                                at ./broadcast.jl:597
+  macro expansion()                         at ./broadcast.jl:961
+  macro expansion()                         at ./simdloop.jl:77
+  copyto!()                                 at ./broadcast.jl:960
+  copyto!()                                 at ./broadcast.jl:913
+  copy()                                    at ./broadcast.jl:885
+  materialize(^)                            at ./broadcast.jl:860
+  top-level scopeBase.getproperty(P, :u)    at FTExamples/examples/sw_nan_tf.jl:14
+#+end_example
+
+Here's the coalesced stack trace for =Inf= generation, and we can see where that value is coming from.
 
 Looks like the arguments here are -1.5150702f31^2—no wonder a Float32 couldn't handle that and went to Inf.
 
@@ -340,15 +428,7 @@ Now we leave it to a domain expert to figure out how to mitigate this. Some stra
 
 **** NaNs from instability
 
-# I'd like to highlight this parameter here: the =CFL= parameter. I'm no domain expert, but this value control the time step rate in the simulation. A lower value means a more granular, careful flow of time in the simulation, but it means the simulation doesn't complete as quickly.
-
-# In contrast, a higher =CFL= parameter means the simulation goes faster, but it can result in instability. If we set the =CFL= parameter /really/ high, we start seeing some instability in the simulation.
-
-# # TODO: show NaN-broken simulation pictures
-
 I'll note that while in our case the =CFL= parameter is a little unrealistic, it's not uncommon to have an issue with simulation instability.
-
-*Show Eric H.'s graph again*
 
 This is a similar sort of issue.
 
