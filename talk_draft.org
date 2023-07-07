@@ -71,20 +71,16 @@ Sounds like fun, no?
 
 After hours and hours of tedious, boring, grunt work, you finally figure out that a NaN is coming from a division where the dividend underflowed to 0. You fine-tune some of the arithmetic to avoid this problem and, eyes brimming full of hope and excitement, you re-run your program with the final fix in place.
 
-And it… works. Sort of. Something seems off about the results that you've gotten. Maybe the numbers don't look quite right. Maybe the program hangs for no apparent reason when one of the inputs changes—but you don't know what inputs matter for that. You're uncertain and uneasy about the results you're getting.
+And it… works. Sort of. Something seems off about the results that you've gotten. Not wanting to fall into the trap of, "the computer did it so it must be correct", you embark once again into the bowels of your arithmetic routines.
 
-Not wanting to fall into the trap of, "the computer did it so it must be correct", you—intrepid scientist you—embark once again into the bowels of your arithmetic routines.
-
-After a week of toil, you notice something strange: a NaN pops into existence at one point, but then quietly disappears leaving no hole in the output. After some searching, you uncover the killer: a conditional has swallowed the NaN whole.
+After another week of toil, you notice something strange: a NaN pops into existence at one point, but then quietly disappears leaving no hole in the output. After some searching, you uncover the killer: a conditional has swallowed the NaN whole.
 
 # Slide: 42 < NaN ⇒ false
 #        42 > NaN ⇒ false
 
 See the problem?
 
-You add a guard here for safety, then trace /that/ NaN back to Inf - Inf, which of course leads to the question: where did that Inf come from?
-
-Another week of painful debugging goes by until you /finally/ figure out where values got too big too fast, or where one of the inputs in the 10 GB input file was missing a decimal point, etc.
+You add a guard here for safety, but wonder: where did that NaN come from? Another week of painful debugging goes by until you /finally/ figure out where values got too big too fast, or where one of the inputs in the 10 GB input file was missing a decimal point, etc.
 
 This time when you run the program, the output matches the your intuition.
 
@@ -95,13 +91,11 @@ Hooray! Time to deploy this code to production!
 Well… not so fast.
 
 # https://www.thedrive.com/news/37366/why-that-autonomous-race-car-crashed-straight-into-a-wall
-You remember this mishap with the autonomous vehicle. See, what happened was that a faulty sensor returned a NaN, locking the steering column to the right.
+You remember this mishap with the autonomous vehicle. See, what happened was that a faulty sensor sent a NaN over a sensor bus. The steering module didn't know how to handle the NaN, so it went to its default position: locked to the right.
 
 You begin to wonder if there are any other parts of their code that could be susceptible to such problematic behavior. It might be nice if you could somehow fuzz the code to find =NaN=-susceptible regions. But trying to figure /that/ out would take a /ton/ of effort, right?
 
 Fortunately, we have tools to help!
-
-Floating-point numbers underpin so many critical computations. The IEEE 754 spec is a useful and performant way of representing numbers, but there are many counterintuitive aspects of both floating-point's intrinsic behavior as well as of the spec that can invalidate our results—or worse—silently cause errors. It can be difficult to find the root cause of these unwanted behaviors. Moreover, it can be difficult to harden our programs against exceptional values. Unexpected floating-point behavior has lead not only to race car crashes but also to rockets exploding or medical patients getting fatal doses of radiation.
 
 If, instead of doing all that manual work, you simply used our FloatTracker tool, you would have had logs that would have lead you immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help you fuzz your code and find cases where you could harden your routines against spurious NaNs that didn't show up in testing.
 
@@ -114,43 +108,9 @@ We'll now take a brief foray into where floating-point is liable to trip you up.
 
 ** The dark world of floating-point arithmetic
 
+The IEEE 754 spec is a useful and performant way of representing floating-point numbers, but there are many counterintuitive aspects of both floating-point's intrinsic behavior as well as of the 754 spec that can invalidate our results—or worse—silently cause incorrect behavior. It can be difficult to find the root cause of these bugs or harden our programs against exceptional values. Unexpected floating-point behavior has lead not only to race car crashes but also to rockets exploding or medical patients getting fatal doses of radiation.
+
 Let's take a quick look at why floating-point can be so tricky.
-
-# I'm thinking we can drop this example.
-
-# Consider this loop:
-
-# #+begin_src julia :results output
-#   i::Float32 = 0.0
-#   n::Int = 0
-#   while i < 1.0
-#     global i += 0.1
-#     global n += 1
-#   end
-
-#   println("Did $n iterations with a Float32")
-
-#   j::Float64 = 0.0
-#   m::Int = 0
-#   while j < 1.0
-#     global j += 0.1
-#     global m += 1
-#   end
-
-#   println("Did $m iterations with a Float64")
-# #+end_src
-
-# #+RESULTS:
-# : 0.0
-# : 0
-# : Did 10 iterations with a Float32
-# : 0.0
-# : 0
-# : Did 11 iterations with a Float64
-
-# Did you see that? A 64-bit float gives you /11/ iterations instead of 10 like we'd expect. Why does this happen? Well, it all goes back to how floating-point is an /approximation/ of real numbers. We only have 16-, 32-, or 64-bits to work with, so instead of a smooth number line, we actually have a series of /points/ that we can move between.
-
-# Show graph like from [cite:@torontoPracticallyAccurateFloatingPoint2014]
 
 There's necessarily some gap between the values that we are trying to represent and the values that we /can/ represent. This means that there is always some kind of error. Moreover, that error accumulates throughout a computation. There are ways to work around this error, and for simple calculations it's not that important, but sometimes it can push us just over the brink into /exceptional values/.
 
@@ -158,7 +118,7 @@ There's necessarily some gap between the values that we are trying to represent 
 
 There are two main exceptional values that you've likely run into: =Inf= and =NaN=. =Inf= of course represents a value too /large/ to fit into your representation. Once a value goes to =Inf=, there's no coming back.
 
-In this example, we take /algebraically equivalent/ expressions and get different answers.
+One implication of this is that we can take /algebraically equivalent/ expressions and get different answers.
 
 #+begin_src julia
   x::Float32 = 2f38
@@ -170,7 +130,7 @@ In this example, we take /algebraically equivalent/ expressions and get differen
 |   Inf |
 | 3e+38 |
 
-This means that addition is /not associative/! We are not working with real numbers here, people! If the first example with the loops didn't scare you, this one should scare you good and proper.
+This means that addition is /not associative/! We are not working with real numbers here, people!
 
 =Inf= often begets =NaN= (though that's not the only place where it can come from) which denotes some nonsensical computation.
 
@@ -181,13 +141,9 @@ This means that addition is /not associative/! We are not working with real numb
 #+RESULTS:
 : NaN
 
-Sometimes it also arises from bad sensor data, typos in data, etc. That race car's issue came from a NaN on a sensor bus.
+Sometimes it also arises from bad sensor data, typos in data, etc.
 
 =NaN= is a /sticky/ value: almost all operations with =NaN= result in a =NaN=. This is good because if a =NaN= crops up in our computation, we want to /see/ it in the result.
-
-# For example, in this simulation, somewhere a value goes to =NaN= and it starts breaking apart the simulation as subsequent time steps take into account neighboring data points.
-
-# Show Eric's animation?
 
 Now, I said that /almost all/ operations involving =NaN= can result in a =NaN=. There are cases where the NaN can disappear silently—we call this a "kill". A kill almost always is not what you want.
 
@@ -200,7 +156,6 @@ Our tool—FloatTracker—can detect where these exceptional values get generate
 Here's an example of some code that computes the /wrong/ result because of a NaN kill.
 
 #+begin_src julia
-
   function maximum(lst)
     max_seen = 0.0
     for x in lst
@@ -212,7 +167,6 @@ Here's an example of some code that computes the /wrong/ result because of a NaN
   end
 
   maximum([1.0, 5.0, 4.0, NaN, 4.0])
-
 #+end_src
 
 #+RESULTS:
@@ -220,13 +174,10 @@ Here's an example of some code that computes the /wrong/ result because of a NaN
 
 See that? Not only does the NaN in the input not get propagated, it gives us the /wrong/ answer! We'd never know that there's a 5 in the list!
 
-Fortunately, FloatTracker is easy to use. Let's revisit that maximum example:
+Fortunately, FloatTracker makes it easy to find the problem. Let's use our tool:
 
 #+begin_src julia
-
   using FloatTracker
-
-  config_logger(filename="max_example", buffersize=1)
 
   function maximum(lst)
     max_seen = 0.0
@@ -240,15 +191,9 @@ Fortunately, FloatTracker is easy to use. Let's revisit that maximum example:
 
   maximum([TrackedFloat32(x) for x in [1.0, 5.0, 4.0, NaN, 4.0]])
   ft_flush_logs()
-
 #+end_src
 
 #+RESULTS:
-
-We can rewrite it to use FloatTracker like so:
-
-#+begin_src julia
-#+end_src
 
 That gives us some logs that look like this:
 
@@ -263,13 +208,15 @@ The second line shows us that the culprit was ~<=~, and that it it came to a cal
 
 Some of you eagle-eyed participants might have noticed that the third line might look a little suspect: the line number is 0. This seems to happen when Julia starts inlining things. We haven't had /too/ much of a problem with this—the other information in the stack trace is usually more than enough to trace the call back to the issue. We'd like to improve it, but we're a little stuck with what kinds of stack traces we can get from Julia.
 
-Let's look at how /you/ might use it in a little more realistic scenario.
+Now we'll look at some real-world scenarios that we applied our tools in.
 
 ** Case studies
 
 *** ShallowWaters
 
 Consider ShallowWaters: ShallowWaters is a Julia library that lets you take a mesh of a sea bed and then run a time series simulation and get the speed of currents over that sea floor.
+
+# Simulations use a CFL parameter → too high leads to instability
 
 Like many (most?) simulations, ShallowWaters operates by modeling one time frame after another. There's a parameter—called the CFL parameter—that controls how fast information propagates through the system. It's roughly equivalent to how big of a time step you take.
 
@@ -283,7 +230,15 @@ But if we dial it up to high…
 
 /[Bad picture]/
 
-If we can figure out where the NaNs came from, maybe we can run our simulation faster without wrecking our results. FloatTracker helps us figure out where the problem lies.
+# Tracking down where NaNs come from can help us stabilize simulations without sacrificing simulation speed
+
+If we can figure out where the NaNs came from, maybe we can run our simulation faster without wrecking our results.
+
+# Also: NaNs in output does not necessarily result in a crash—finding kills is important too (no kills in this one) ⇏
+
+Moreover, it's noteworthy that NaNs do not necessarily result in a crash. We're fortunate that it's clear that something is off with this simulation. But what if that instability hides in something like the bad ~maximum~ function that we saw before? Finding NaN kills is important too.
+
+FloatTracker helps us both figure out where instability in the form of NaNs and Infs are coming from, as well as where kills are happening.
 
 All it takes to add FloatTracker is:
 
@@ -307,6 +262,8 @@ All it takes to add FloatTracker is:
 
 It's as simple as that. FloatTracker will log every operation that the ~TrackedFloat~ type touches. Moreover, all the results of /any/ operation with a ~TrackedFloat~ will be a ~TrackedFloat~ too, so our tracking will spread like a virus. There are some limitations to this approach, and we're working on more ergonomic ways of wrapping input.
 
+# Nice thing: type parameterization
+
 But ShallowWaters has a feature that made our work even easier than this: ShallowWaters lets us /parameterize/ the type of float used in the simulation. This seems to be the case with several libraries that we looked at. So we were able to enable FloatTracker with a simple modification to the code:
 
 #+begin_src julia
@@ -323,6 +280,8 @@ But ShallowWaters has a feature that made our work even easier than this: Shallo
 #+end_src
 
 With either strategy, we get some nice logs about where those NaNs are coming from.
+
+# We tracked down Inf - Inf ⇒ NaN; then tracked down most Infs to $big_number ^ 2
 
 Let's take a look at those logs now:
 
@@ -368,37 +327,19 @@ Let's clean up one of these hunks.
 
 There are a lot of logs—we'd like summary.
 
+# We used a visualization (CSTG) to summarize the huge log files
+
 To get a quick summary, we can /coalesce/ the logs into a handy graph that lets us see where most of the flows are going to/or from.
 
-Looks like /most/ of the problems are coming from the ~continuity_itself!~ function from the ~+~ routine. I don't show it here in these slides, but we can configure FloatTracker to show us the arguments, and we can see we're getting =Inf + -Inf=.
+Looks like /most/ of the problems are coming from the ~continuity_itself!~ function from the ~+~ routine.
 
 So where are those =Inf='s coming from? Well, fortunately, FloatTracker watches for that too.
 
-Here's a chunk for an =Inf= event:
+Let's go to to the CSTG summary first.
 
-#+begin_example
-  [Inf] check_error(Any[-1.5150702f31, 2]) at /Users/ashton/.julia/dev/FloatTracker/src/TrackedFloat.jl:11
-  ^(::TrackedFloat32, ::Int64) at /Users/ashton/.julia/dev/FloatTracker/src/TrackedFloat.jl:139
-  literal_pow() at ./intfuncs.jl:327
-  _broadcast_getindex_evalf() at ./broadcast.jl:670
-  _broadcast_getindex() at ./broadcast.jl:643
-  getindex() at ./broadcast.jl:597
-  macro expansion() at ./broadcast.jl:961
-  macro expansion() at ./simdloop.jl:77
-  copyto!() at ./broadcast.jl:960
-  copyto!() at ./broadcast.jl:913
-  copy() at ./broadcast.jl:885
-  materialize(^) at ./broadcast.jl:860
-  top-level scopeBase.getproperty(P, :u) at /Users/ashton/Research/FloatTrackerExamples/examples/sw_nan_tf.jl:14
-  eval() at ./boot.jl:368
-  include_string(identity) at ./loading.jl:1428
-  _include(::Function, ::Module, ::String) at ./loading.jl:1488
-  include(::Module, ::String) at ./Base.jl:419
-  exec_options(::Base.JLOptions) at ./client.jl:303
-  _start() at ./client.jl:522
-#+end_example
+Looks like there's one case where an addition is giving us an =Inf=, but 640 instances of =Inf= are coming from exponentiation.
 
-And here's the cleaned up version:
+Here's one of those stack traces:
 
 #+begin_example
   [Inf] check_error(Any[-1.5150702f31, 2])  at FloatTracker/src/TrackedFloat.jl:11
@@ -416,8 +357,6 @@ And here's the cleaned up version:
   top-level scopeBase.getproperty(P, :u)    at FTExamples/examples/sw_nan_tf.jl:14
 #+end_example
 
-Here's the coalesced stack trace for =Inf= generation, and we can see where that value is coming from.
-
 Looks like the arguments here are -1.5150702f31^2—no wonder a Float32 couldn't handle that and went to Inf.
 
 Now we leave it to a domain expert to figure out how to mitigate this. Some strategies:
@@ -425,12 +364,6 @@ Now we leave it to a domain expert to figure out how to mitigate this. Some stra
  - use a bigger bit-width
  - use a tool like Herbie to rewrite floating-point expressions to reduce error
  - manual reorder operations to keep values from getting too big, like that example we saw earlier
-
-**** NaNs from instability
-
-I'll note that while in our case the =CFL= parameter is a little unrealistic, it's not uncommon to have an issue with simulation instability.
-
-This is a similar sort of issue.
 
 *** Fuzzing: OrdinaryDiffEq
 
@@ -455,9 +388,20 @@ With little effort we found a =NaN= kill that would cause =OrdinaryDiffEq= to go
 
 Going back to the example of the race car crashing into the wall, this kind of fuzzing might have helped the drivers notice the odd behavior of the steering column if a NaN happened to be sent over the sensor bus. Who knows that it will help /you/ catch?
 
+*** Finch and advection
+
+Finch is a DSL for PDEs—in a way this is a nice compliment to the ODE library.
+
+We spent some time fuzzing Finch and found two places where Finch needed protection against user input:
+
+ 1. Inputting a mesh
+ 2. Setting bounds for the solver
+
+Beyond just finding points where Finch needs some guards, FloatTracker and CSTGs are useful for finding Infs and NaNs in unstable systems, just like with ShallowWaters.
+
 *** RxInfer
 
-Now, the following two case studies are both things that our team was able to do with our tool. You might be thinking, "but I'm a busy scientist! I don't have time to try out some cutting-edge research tool!"
+Now, the previous three case studies are all things that our team was able to do with our tool. You might be thinking, "but I'm a busy scientist! I don't have time to try out some cutting-edge research tool!"
 
 I'm going to tell you about one instance where one busy scientist took FloatTracker out for a spin and found a bug in their code—with basically no help from us!
 
@@ -469,9 +413,13 @@ Now it is impossible to trace back the origin of the very first ~NaN~ without pe
 RxInfer.jl#116
 #+end_quote
 
-We chimed in and said, "hey! we're building a tool that makes it easy to do just that!"
+We saw that and thought, that's exactly the scenario our imaginary busy scientist was facing. We chimed in and said, "hey! we're building a tool that makes it easy to do what you want!"
 
-They were doing work with some proprietary information, so we were not able to help them out much beyond pointing them at our tool. However, they /did/ try our tool out, and less than a day after we suggested using our tool, they got it up and running and found an issue.
+We asked them if we could look at the code, but they were doing work with some proprietary information, so we were not able to help them out much beyond pointing them at our tool. 
+
+RxInfer doesn't have type parameterization like ShallowWaters, but they were able to wrap all the inputs that they needed.
+
+Without help from us, they were able to find and fix a NaN-gen location easily and quickly. They also gave us some great feedback on the ergonomics of working with our tool.
 
 ** Intermezzo
 
