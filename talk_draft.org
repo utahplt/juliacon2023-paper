@@ -227,19 +227,17 @@ Let's look at how /you/ might use it in a little more realistic scenario.
 
 Consider ShallowWaters: ShallowWaters is a Julia library that lets you take a mesh of a sea bed and then run a time series simulation and get the speed of currents over that sea floor.
 
-Suppose you have it set up roughly like this:
+Like many (most?) simulations, ShallowWaters operates by modeling one time frame after another. There's a parameter—called the CFL parameter—that controls how fast information propagates through the system. It's roughly equivalent to how big of a time step you take.
 
-#+begin_src julia
-  using ShallowWaters
+Small CFL values give you accurate simulations, while big values give you faster renders. The downside is that instability can crop up if it's set too high.
 
-  P = run_model(cfl=0.8, iterations=100,
-                param1="nonperiodic", param2="double_gyre",
-                param3="seamount")
+For example, ShallowWaters with a modest CFL parameter might produce something like this.
 
-  savefig("output.fig")
-#+end_src
+/[Good picture]/
 
-That CFL parameter controls the speed of the simulation. If we dial it up too high we go from looking like this graph to this graph. Uh oh…
+But if we dial it up to high…
+
+/[Bad picture]/
 
 If we can figure out where the NaNs came from, maybe we can run our simulation faster without wrecking our results. FloatTracker helps us figure out where the problem lies.
 
@@ -248,6 +246,8 @@ All it takes to add FloatTracker is:
  1. Require the library
  2. Wrap inputs in ~TrackedFloat~ types
  3. Flush logs
+
+**** Live demo
 
 #+begin_src julia
   using ShallowWaters
@@ -278,49 +278,51 @@ But ShallowWaters has a feature that made our work even easier than this: Shallo
   ft_flush_logs()
 #+end_src
 
-# #+begin_src julia
-#   using ShallowWaters, PyPlot
-
-#   P = run_model(nx=100, L_ratio=1, cfl=1.5, Ndays=300,
-#                 bc="nonperiodic", wind_forcing_x="double_gyre",
-#                 topography="seamount")
-
-#   pcolormesh(P.η')
-#   savefig("height_pretty_nan_notf.png")
-
-#   speed = sqrt.(Ix(P.u.^2)[:,2:end-1] + Iy(P.v.^2)[2:end-1,:])
-#   pcolormesh(speed')
-#   savefig("speed_pretty_nan_notf.png")
-# #+end_src
-
-# This becomes:
-
-# #+begin_src julia
-#   using FloatTracker
-#   using ShallowWaters, PyPlot
-
-#   config_logger(filename="pretty_nan_tf", buffersize=100000)
-#   exclude_stacktrace([:prop,:kill])
-
-#   P = run_model(T=TrackedFloat32,
-#                 nx=100, L_ratio=1, cfl=2, Ndays=300,
-#                 bc="nonperiodic", wind_forcing_x="double_gyre",
-#                 topography="seamount")
-
-#   pcolormesh(P.η')
-#   savefig("height_pretty_nan_tf.png")
-
-#   speed = sqrt.(Ix(P.u.^2)[:,2:end-1] + Iy(P.v.^2)[2:end-1,:])
-#   pcolormesh(speed')
-#   savefig("speed_pretty_nan_tf.png")
-# #+end_src
-
-# We make just two simple changes:
-
-#  - we set up some logging for FloatTracker [highlight on slide]
-#  - we wrap the input in ~TrackedFloat~
-
 With either strategy, we get some nice logs about where those NaNs are coming from.
+
+Let's take a look at those logs now:
+
+#+begin_example
+  [NaN] check_error(Any[Inf32, -Inf32]) at FloatTracker/src/TrackedFloat.jl:11
+  +(::TrackedFloat32, ::TrackedFloat32) at FloatTracker/src/TrackedFloat.jl:103
+  momentum_v!(::ShallowWaters.DiagnosticVars{Float32, TrackedFloat32}, ::ShallowWaters.ModelSetup{Float32, TrackedFloat32}, ::Int64) at ShallowWaters/src/rhs.jl:275
+  rhs_nonlinear!(::Matrix{Float32}, ::Matrix{Float32}, ::Matrix{Float32}, ::ShallowWaters.DiagnosticVars{Float32, TrackedFloat32}, ::ShallowWaters.ModelSetup{Float32, TrackedFloat32}, ::Int64) at ShallowWaters/src/rhs.jl:51
+  rhs!() at ShallowWaters/src/rhs.jl:14
+  time_integration(::ShallowWaters.PrognosticVars{TrackedFloat32}, ::ShallowWaters.DiagnosticVars{Float32, TrackedFloat32}, ::ShallowWaters.ModelSetup{Float32, TrackedFloat32}) at ShallowWaters/src/time_integration.jl:77
+  run_model(::Type{Float32}, ::Parameter) at ShallowWaters/src/run_model.jl:37
+  #run_model#57() at ShallowWaters/src/run_model.jl:17
+  run_model##kw() at ShallowWaters/src/run_model.jl:12
+  run_model##kw(run_model) at ShallowWaters/src/run_model.jl:12
+  top-level scopeCore.tuple(:T, :cfl, :Ndays, :nx, :L_ratio, :bc, :wind_forcing_x, :topography) at /Users/ashton/Research/FloatTrackerExamples/examples/sw_nan_tf.jl:7
+  eval() at ./boot.jl:368
+  include_string(identity) at ./loading.jl:1428
+  _include(::Function, ::Module, ::String) at ./loading.jl:1488
+  include(::Module, ::String) at ./Base.jl:419
+  exec_options(::Base.JLOptions) at ./client.jl:303
+  _start() at ./client.jl:522
+#+end_example
+
+Let's clean up one of these hunks.
+
+#+begin_example
+  [NaN] check_error(Any[Inf32, -Inf32])  at FloatTracker/src/TrackedFloat.jl:11
+  +(::TrackedFloat32, ::TrackedFloat32)  at FloatTracker/src/TrackedFloat.jl:103
+  momentum_v!(…)                         at ShallowWaters/src/rhs.jl:275
+  rhs_nonlinear!(…)                      at ShallowWaters/src/rhs.jl:51
+  rhs!()                                 at ShallowWaters/src/rhs.jl:14
+  time_integration(…)                    at ShallowWaters/src/time_integration.jl:77
+  run_model(…)                           at ShallowWaters/src/run_model.jl:37
+  #run_model#57()                        at ShallowWaters/src/run_model.jl:17
+  run_model##kw()                        at ShallowWaters/src/run_model.jl:12
+  run_model##kw(run_model)               at ShallowWaters/src/run_model.jl:12
+  top-level scopeCore.tuple(…)           at FloatTrackerExamples/examples/sw_nan_tf.jl:7
+#+end_example
+
+ - It's a NaN event
+ - Inf + (-Inf)
+ - See where it's coming from
+
+There are a lot of logs—we'd like summary.
 
 To get a quick summary, we can /coalesce/ the logs into a handy graph that lets us see where most of the flows are going to/or from.
 
