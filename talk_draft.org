@@ -464,13 +464,26 @@ And then all we have to do is implement overloaded methods for this type:
 
  - First we run the function
  - Then we check to see if we had a NaN/Inf gen/prop/kill
+   + If we did, grab the stack trace and record it.
  - Finally return the result wrapped in a ~TrackedFloat~ type
 
-There's a little more to it than this to make the NaN injection work, but that's about it.
- 
+That's the basics of tracking exceptional values.
+
+To make the injection work, we actually run a series of checks before running the operation; if the checks pass, we inject. The basics of the checks that we do are:
+
+ - Are we replaying an injection recording? If yes, do what the replay says to do. Otherwise…
+ - Is injection turned on?
+ - Do we have NaNs left to inject?
+ - Roll a die to see if this operation succeeds; did we crit fail?
+ - Are we in an "injectable region"?
+   + Check to see if *any* of the functions in the config are on the stack *OR* *any* of the frames on the stack originate from a library we're interested in.
+   + This is the most expensive check, so we do it very last.
+
+Getting the stack trace is the most expensive part of tracking exceptional values as well as checking if we're good to go for injection, so we've taken care to trigger that as infrequently as possible.
+
 *** Using meta programming
 
-That, as you might assume, would be tedious to write out for every function, not to mention impossible to maintain. Fortunately, Julia lets us use /macros/, so we can automate an impressive amount of things.
+That wrapper function, as you might assume, would be tedious to write out for every function—not to mention impossible to maintain. Fortunately, Julia lets us use /macros/, so we can automate an impressive amount of things.
 
 You can write two nested ~for~ loops to quickly generate the code needed for this:
 
