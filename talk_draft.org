@@ -99,7 +99,13 @@ Fortunately, we have tools to help!
 
 If, instead of doing all that manual work, you simply used our FloatTracker tool, you would have had logs that would have lead you immediately to where the NaNs and Infs were being generated and where they were disappearing, as well as tools to help you fuzz your code and find cases where you could harden your routines against spurious NaNs that didn't show up in testing.
 
-FloatTracker is one part of the FPX toolkit. We have some tools for working with GPU-based programs as well, but this talk focuses on our work with FloatTracker and Coalesced Stack-Trace Graphs, or CSTGs.
+*** Explaination of the FlowFPX toolkit
+
+FloatTracker is one part of the FPX toolkit. It's written in Julia for analyzing Julia programs—we'll spend most of our time today talking about this tool. (This is /JuliaCon/ after all!)
+
+CSTG is a stand-alone tool that is really useful for analyzing the data that FloatTracker emits.
+
+We do have some tools for working with GPU-based programs as well: GPU FPX has been developed by my colleague Xinyi Lee for dynamically catching floating-point exceptions in the GPU. Please see her paper and talk if you'd like to know more about that.
 
 # Sign posting!
 We'll now take a brief foray into where floating-point is liable to trip you up. After that we'll talk about how to use our tool to make debugging your numerical programs a breeze. Then we'll wrap up with a quick look at some of the neat aspects of Julia that made building such a tool possible for our small research team.
@@ -427,18 +433,19 @@ I hope that inspires some confidence in you. Next time you find yourself wishing
 
 ** How we made this work
 
+:brainstorm:
+ - Intercept all operations involving FP
+   + Use Julia type dispatch to do this
+   + Optionally inject—show decision flow chart
+ - Table showing the different kind of events
+ - Buffer & log what we're interested in
+ - CSTG to summarize logs (optional—sometimes manual inspection of the logs is fine)
+   + CSTG works by taking each of the chunks of stack trace and making a path for each 
+:end:
+
 For the last part of the talk I'm going to show you how how we got FloatTracker to work. In principle we're not doing anything that couldn't be done in another language, but Julia makes it /really/ easy to create the kind of tool that we did.
 
-Julia, as you're aware, uses a /type-based dispatch mechanism/, and it's JIT compiler is tuned to optimize these sorts of calls. Moreover, the standard library is just made of functions, and we can define overloads of common arithmetic operators.
-
-For example, there are over 200 definitions for ~+~ out-of-the-box. Julia efficiently handles dispatching to the right value depending on what appears at runtime.
-
-With FloatTracker:
-
- - We take the built-in ~Float16~, ~Float32~, and ~Float64~ and we replace them with our own types ~TrackedFloat16~, ~TrackedFloat32~, and ~TrackedFloat64~.
- - Once that is done, we overload all the built-in operators and functions to intercept function calls and do the right thing
-
-*** Some more details
+*** Intercept floating-point operations
 
 We start by defining a new data type that wraps a regular float:
 
@@ -450,7 +457,7 @@ We start by defining a new data type that wraps a regular float:
   end
 #+end_src
 
-This means that a TrackedFloat32 is valid anywhere an ~AbstractFloat~ is allowed.
+This means that a TrackedFloat32 is valid anywhere an ~AbstractFloat~ is allowed. We do this for Float16, Float32, and Float64 and make our own tracked versions.
 
 And then all we have to do is implement overloaded methods for this type:
 
@@ -462,12 +469,18 @@ And then all we have to do is implement overloaded methods for this type:
   end
 #+end_src
 
+Type dispatch makes this possible!
+
+*FIXME: fill in about type dispatch*
+
  - First we run the function
  - Then we check to see if we had a NaN/Inf gen/prop/kill
    + If we did, grab the stack trace and record it.
  - Finally return the result wrapped in a ~TrackedFloat~ type
 
 That's the basics of tracking exceptional values.
+
+*** Inject NaNs
 
 To make the injection work, we actually run a series of checks before running the operation; if the checks pass, we inject. The basics of the checks that we do are:
 
@@ -480,6 +493,13 @@ To make the injection work, we actually run a series of checks before running th
    + This is the most expensive check, so we do it very last.
 
 Getting the stack trace is the most expensive part of tracking exceptional values as well as checking if we're good to go for injection, so we've taken care to trigger that as infrequently as possible.
+
+*** CSTG summarization
+
+ - Take all of the stack trace hunks and tally the lines
+ - Make a graph with thicker lines meaning more events followed that path
+
+*TODO: get that diff working!*
 
 *** Using meta programming
 

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="340.5 768.5 1713 550" width="1713" height="550">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="#121212">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="Injection_decision" stroke-dasharray="none" stroke="none" fill-opacity="1" fill="none" stroke-opacity="1">
+    <title>Injection decision</title>
+    <g id="Injection_decision_Layer_1">
+      <title>Layer 1</title>
+      <g id="Line_19">
+        <line x1="1692.1856" y1="1102" x2="1770.4144" y2="1102" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_17">
+        <line x1="1350.1856" y1="1102" x2="1414.9144" y2="1102" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_14">
+        <line x1="982.6856" y1="1102" x2="1072.9144" y2="1102" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_11">
+        <line x1="610.6856" y1="1102" x2="705.4144" y2="1102" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_9">
+        <line x1="478.5" y1="1189.7224" x2="478.5" y2="1243.1" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_7">
+        <line x1="478.5" y1="947.2224" x2="478.5" y2="1001.3776" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_5">
+        <line x1="610.6856" y1="859.5" x2="706.6" y2="859.5" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_2">
+        <path d="M 480.68733 772.4286 L 608.8725 856.151 C 610.7221 857.3591 611.24215 859.8377 610.0341 861.6873 C 609.73145 862.1507 609.3359 862.5463 608.8725 862.849 L 480.68733 946.5714 C 479.3583 947.4394 477.6417 947.4394 476.31267 946.5714 L 348.1275 862.849 C 346.27793 861.6409 345.75785 859.1623 346.9659 857.3127 C 347.26855 856.8493 347.6641 856.4537 348.1275 856.151 L 476.31267 772.4286 C 477.6417 771.5606 479.3583 771.5606 480.68733 772.4286 Z" fill="#d8dfe9"/>
+        <path d="M 480.68733 772.4286 L 608.8725 856.151 C 610.7221 857.3591 611.24215 859.8377 610.0341 861.6873 C 609.73145 862.1507 609.3359 862.5463 608.8725 862.849 L 480.68733 946.5714 C 479.3583 947.4394 477.6417 947.4394 476.31267 946.5714 L 348.1275 862.849 C 346.27793 861.6409 345.75785 859.1623 346.9659 857.3127 C 347.26855 856.8493 347.6641 856.4537 348.1275 856.151 L 476.31267 772.4286 C 477.6417 771.5606 479.3583 771.5606 480.68733 772.4286 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(384.585 839.282)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="14.241" y="15">Replaying a recording?</tspan>
+        </text>
+      </g>
+      <g id="Graphic_4">
+        <path d="M 723.5 829.5 L 986.5 829.5 C 988.7091 829.5 990.5 831.2909 990.5 833.5 L 990.5 885.5 C 990.5 887.7091 988.7091 889.5 986.5 889.5 L 723.5 889.5 C 721.2909 889.5 719.5 887.7091 719.5 885.5 L 719.5 833.5 C 719.5 831.2909 721.2909 829.5 723.5 829.5 Z" fill="#ffdb98"/>
+        <path d="M 723.5 829.5 L 986.5 829.5 C 988.7091 829.5 990.5 831.2909 990.5 833.5 L 990.5 885.5 C 990.5 887.7091 988.7091 889.5 986.5 889.5 L 723.5 889.5 C 721.2909 889.5 719.5 887.7091 719.5 885.5 L 719.5 833.5 C 719.5 831.2909 721.2909 829.5 723.5 829.5 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(724.5 850.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="27.372" y="15">Inject if the recording says to</tspan>
+        </text>
+      </g>
+      <g id="Graphic_6">
+        <path d="M 480.68733 1014.9286 L 608.8725 1098.651 C 610.7221 1099.859 611.24215 1102.3377 610.0341 1104.1873 C 609.73145 1104.6507 609.3359 1105.0463 608.8725 1105.349 L 480.68733 1189.0714 C 479.3583 1189.9394 477.6417 1189.9394 476.31267 1189.0714 L 348.1275 1105.349 C 346.27793 1104.141 345.75785 1101.6623 346.9659 1099.8127 C 347.26855 1099.3493 347.6641 1098.9537 348.1275 1098.651 L 476.31267 1014.9286 C 477.6417 1014.0606 479.3583 1014.0606 480.68733 1014.9286 Z" fill="#d8dfe9"/>
+        <path d="M 480.68733 1014.9286 L 608.8725 1098.651 C 610.7221 1099.859 611.24215 1102.3377 610.0341 1104.1873 C 609.73145 1104.6507 609.3359 1105.0463 608.8725 1105.349 L 480.68733 1189.0714 C 479.3583 1189.9394 477.6417 1189.9394 476.31267 1189.0714 L 348.1275 1105.349 C 346.27793 1104.141 345.75785 1101.6623 346.9659 1099.8127 C 347.26855 1099.3493 347.6641 1098.9537 348.1275 1098.651 L 476.31267 1014.9286 C 477.6417 1014.0606 479.3583 1014.0606 480.68733 1014.9286 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(384.585 1081.782)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="25.201" y="15">Injection turned on?</tspan>
+        </text>
+      </g>
+      <g id="Graphic_8">
+        <path d="M 347 1256 L 610 1256 C 612.20914 1256 614 1257.7909 614 1260 L 614 1312 C 614 1314.2091 612.20914 1316 610 1316 L 347 1316 C 344.79086 1316 343 1314.2091 343 1312 L 343 1260 C 343 1257.7909 344.79086 1256 347 1256 Z" fill="#ffa68b"/>
+        <path d="M 347 1256 L 610 1256 C 612.20914 1256 614 1257.7909 614 1260 L 614 1312 C 614 1314.2091 612.20914 1316 610 1316 L 347 1316 C 344.79086 1316 343 1314.2091 343 1312 L 343 1260 C 343 1257.7909 344.79086 1256 347 1256 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(348 1276.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="38.18" y="15">Use result of computation</tspan>
+        </text>
+      </g>
+      <g id="Graphic_10">
+        <path d="M 852.6873 1014.9286 L 980.8725 1098.651 C 982.7221 1099.859 983.2422 1102.3377 982.0341 1104.1873 C 981.7314 1104.6507 981.3359 1105.0463 980.8725 1105.349 L 852.6873 1189.0714 C 851.3583 1189.9394 849.6417 1189.9394 848.3127 1189.0714 L 720.1275 1105.349 C 718.2779 1104.141 717.75785 1101.6623 718.9659 1099.8127 C 719.26855 1099.3493 719.6641 1098.9537 720.1275 1098.651 L 848.3127 1014.9286 C 849.6417 1014.0606 851.3583 1014.0606 852.6873 1014.9286 Z" fill="#d8dfe9"/>
+        <path d="M 852.6873 1014.9286 L 980.8725 1098.651 C 982.7221 1099.859 983.2422 1102.3377 982.0341 1104.1873 C 981.7314 1104.6507 981.3359 1105.0463 980.8725 1105.349 L 852.6873 1189.0714 C 851.3583 1189.9394 849.6417 1189.9394 848.3127 1189.0714 L 720.1275 1105.349 C 718.2779 1104.141 717.75785 1101.6623 718.9659 1099.8127 C 719.26855 1099.3493 719.6641 1098.9537 720.1275 1098.651 L 848.3127 1014.9286 C 849.6417 1014.0606 851.3583 1014.0606 852.6873 1014.9286 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(756.585 1081.782)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="9.961" y="15">Do we have NaNs left to </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="73.065" y="33.448">inject?</tspan>
+        </text>
+      </g>
+      <g id="Line_12">
+        <path d="M 850.5 1189.7224 L 850.5 1200.7224 L 850.4922 1286.1016 L 632.9 1286 L 626.9 1286" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_13">
+        <path d="M 1220.1873 1014.9286 L 1348.3725 1098.651 C 1350.222 1099.859 1350.7422 1102.3377 1349.5341 1104.1873 C 1349.2314 1104.6507 1348.8359 1105.0463 1348.3725 1105.349 L 1220.1873 1189.0714 C 1218.8583 1189.9394 1217.1417 1189.9394 1215.8127 1189.0714 L 1087.6275 1105.349 C 1085.7779 1104.141 1085.2578 1101.6623 1086.4659 1099.8127 C 1086.7686 1099.3493 1087.1641 1098.9537 1087.6275 1098.651 L 1215.8127 1014.9286 C 1217.1417 1014.0606 1218.8583 1014.0606 1220.1873 1014.9286 Z" fill="#d8dfe9"/>
+        <path d="M 1220.1873 1014.9286 L 1348.3725 1098.651 C 1350.222 1099.859 1350.7422 1102.3377 1349.5341 1104.1873 C 1349.2314 1104.6507 1348.8359 1105.0463 1348.3725 1105.349 L 1220.1873 1189.0714 C 1218.8583 1189.9394 1217.1417 1189.9394 1215.8127 1189.0714 L 1087.6275 1105.349 C 1085.7779 1104.141 1085.2578 1101.6623 1086.4659 1099.8127 C 1086.7686 1099.3493 1087.1641 1098.9537 1087.6275 1098.651 L 1215.8127 1014.9286 C 1217.1417 1014.0606 1218.8583 1014.0606 1220.1873 1014.9286 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1124.085 1081.782)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="27.753" y="15">rand(chances) == 1</tspan>
+        </text>
+      </g>
+      <g id="Line_15">
+        <path d="M 1218 1189.7224 L 1218 1286.3008 L 965.3047 1286.3008 L 632.9 1286 L 626.9 1286" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_16">
+        <path d="M 1562.1873 1014.9286 L 1690.3725 1098.651 C 1692.222 1099.859 1692.7422 1102.3377 1691.5341 1104.1873 C 1691.2314 1104.6507 1690.8359 1105.0463 1690.3725 1105.349 L 1562.1873 1189.0714 C 1560.8583 1189.9394 1559.1417 1189.9394 1557.8127 1189.0714 L 1429.6275 1105.349 C 1427.778 1104.141 1427.2578 1101.6623 1428.4659 1099.8127 C 1428.7686 1099.3493 1429.1641 1098.9537 1429.6275 1098.651 L 1557.8127 1014.9286 C 1559.1417 1014.0606 1560.8583 1014.0606 1562.1873 1014.9286 Z" fill="#d8dfe9"/>
+        <path d="M 1562.1873 1014.9286 L 1690.3725 1098.651 C 1692.222 1099.859 1692.7422 1102.3377 1691.5341 1104.1873 C 1691.2314 1104.6507 1690.8359 1105.0463 1690.3725 1105.349 L 1562.1873 1189.0714 C 1560.8583 1189.9394 1559.1417 1189.9394 1557.8127 1189.0714 L 1429.6275 1105.349 C 1427.778 1104.141 1427.2578 1101.6623 1428.4659 1099.8127 C 1428.7686 1099.3493 1429.1641 1098.9537 1429.6275 1098.651 L 1557.8127 1014.9286 C 1559.1417 1014.0606 1560.8583 1014.0606 1562.1873 1014.9286 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1466.085 1081.782)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="23.121" y="15">Any functions on the </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="72.913" y="33.448">stack?</tspan>
+        </text>
+      </g>
+      <g id="Graphic_18">
+        <path d="M 1917.6873 1014.9286 L 2045.8725 1098.651 C 2047.722 1099.859 2048.2422 1102.3377 2047.034 1104.1873 C 2046.7314 1104.6507 2046.336 1105.0463 2045.8725 1105.349 L 1917.6873 1189.0714 C 1916.3583 1189.9394 1914.6417 1189.9394 1913.3127 1189.0714 L 1785.1275 1105.349 C 1783.278 1104.141 1782.7578 1101.6623 1783.9659 1099.8127 C 1784.2686 1099.3493 1784.664 1098.9537 1785.1275 1098.651 L 1913.3127 1014.9286 C 1914.6417 1014.0606 1916.3583 1014.0606 1917.6873 1014.9286 Z" fill="#d8dfe9"/>
+        <path d="M 1917.6873 1014.9286 L 2045.8725 1098.651 C 2047.722 1099.859 2048.2422 1102.3377 2047.034 1104.1873 C 2046.7314 1104.6507 2046.336 1105.0463 2045.8725 1105.349 L 1917.6873 1189.0714 C 1916.3583 1189.9394 1914.6417 1189.9394 1913.3127 1189.0714 L 1785.1275 1105.349 C 1783.278 1104.141 1782.7578 1101.6623 1783.9659 1099.8127 C 1784.2686 1099.3493 1784.664 1098.9537 1785.1275 1098.651 L 1913.3127 1014.9286 C 1914.6417 1014.0606 1916.3583 1014.0606 1917.6873 1014.9286 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1821.585 1081.782)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="25.337" y="15">Any modules on the </tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="72.913" y="33.448">stack?</tspan>
+        </text>
+      </g>
+      <g id="Line_20">
+        <path d="M 1560 1189.7224 L 1560 1285.7143 L 632.9 1286 L 626.9 1286" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Line_21">
+        <path d="M 1915.5 1189.7224 L 1915.5 1285.7143 L 1870 1285.7143 L 632.9 1286 L 626.9 1286" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_22">
+        <path d="M 1784 829.5 L 2047 829.5 C 2049.2091 829.5 2051 831.2909 2051 833.5 L 2051 885.5 C 2051 887.7091 2049.2091 889.5 2047 889.5 L 1784 889.5 C 1781.7909 889.5 1780 887.7091 1780 885.5 L 1780 833.5 C 1780 831.2909 1781.7909 829.5 1784 829.5 Z" fill="#badaa2"/>
+        <path d="M 1784 829.5 L 2047 829.5 C 2049.2091 829.5 2051 831.2909 2051 833.5 L 2051 885.5 C 2051 887.7091 2049.2091 889.5 2047 889.5 L 1784 889.5 C 1781.7909 889.5 1780 887.7091 1780 885.5 L 1780 833.5 C 1780 831.2909 1781.7909 829.5 1784 829.5 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(1785 850.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="109.02" y="15">Inject!</tspan>
+        </text>
+      </g>
+      <g id="Line_23">
+        <line x1="1915.5" y1="1014.2776" x2="1915.5" y2="902.4" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_24">
+        <rect x="644.484" y="845.672" width="34" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(649.484 850.672)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">Yes</tspan>
+        </text>
+      </g>
+      <g id="Graphic_25">
+        <rect x="465.5" y="963.6979" width="26" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(470.5 968.6979)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">No</tspan>
+        </text>
+      </g>
+      <g id="Graphic_26">
+        <rect x="465.5" y="1205.3449" width="26" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(470.5 1210.3449)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">No</tspan>
+        </text>
+      </g>
+      <g id="Graphic_27">
+        <rect x="645.7395" y="1088.172" width="34" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(650.7395 1093.172)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">Yes</tspan>
+        </text>
+      </g>
+      <g id="Graphic_28">
+        <rect x="1015.3198" y="1088.172" width="34" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1020.3198 1093.172)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">Yes</tspan>
+        </text>
+      </g>
+      <g id="Graphic_29">
+        <rect x="1369.1933" y="1088.172" width="34" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1374.1933 1093.172)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">Yes</tspan>
+        </text>
+      </g>
+      <g id="Graphic_30">
+        <rect x="1719.1413" y="1088.172" width="34" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1724.1413 1093.172)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">Yes</tspan>
+        </text>
+      </g>
+      <g id="Graphic_31">
+        <rect x="837.4967" y="1223.0173" width="26" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(842.4967 1228.0173)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">No</tspan>
+        </text>
+      </g>
+      <g id="Graphic_32">
+        <rect x="1205" y="1227.6402" width="26" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1210 1232.6402)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">No</tspan>
+        </text>
+      </g>
+      <g id="Graphic_33">
+        <rect x="1547" y="1224.7977" width="26" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1552 1229.7977)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">No</tspan>
+        </text>
+      </g>
+      <g id="Graphic_34">
+        <rect x="1902.5" y="1224.7977" width="26" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1907.5 1229.7977)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">No</tspan>
+        </text>
+      </g>
+      <g id="Graphic_35">
+        <rect x="1898.5" y="936.349" width="34" height="27.656006" fill="#ecf0f5"/>
+        <text transform="translate(1903.5 941.349)" fill="black">
+          <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">Yes</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
