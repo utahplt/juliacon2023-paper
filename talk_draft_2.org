@@ -1,22 +1,43 @@
 * Intro: the busy scientist
+** Finch (as an example)
+
+Suppose you're working on doing a heat simulation as seen in this example…
+
+… show Finch graphics …
+
+** RxInfer: You too can be a wizard
+
+That work with Finch was something that we accomplished with our tool. But you don't have to take /our/ word that's it's useful—the folks working on RxInfer used our tool to track down a tricky bug!
+
+… show quotes …
+
+Now that I've hopefully got you all excited about what we've done, let's talk about what we've done. To start, let's refresh what floating-point exceptions /are/. Then we'll dive deep into some instances where we've used our tool. Finally, we'll talk about how we implemented this.
+
 * Floating-point review
+
 ** Brief refresher for mostly Julia-focused people
  - Floating-point is an approximation of the reals—the gaps introduce error
  - Exceptional values are useful annoyances
    + Helpful to see when something has gone wrong, but annoying because they ruin our calculations
    + Can be mitigated by tweaking our arithmetic (if someone hasn't done this before, I think this will be eye-opening)
  - It can be hard to track down where these things come from—that's what we help with
+
 ** How we characterize floating-point events
  - gen, prop, kill, with one or two examples
+
 * FloatTracker introduction
+
 ** Live demo of adding FloatTracker to the maximum example
+
 Use the max example to illustrate simultaneously how a NaN kill can be dangerous and how FloatTracker helps us find the problem.
-* Case Studies
-** ShallowWaters
-** OrdinaryDiffEq
-** Finch
-** RxInfer
+
+* ShallowWaters: tracking
+
+* OrdinaryDiffEq: Fuzzing
+
 * Making FloatTracker work
+
+# rework this---try to mirror what shows up in the case studies
 ** Intercept floating-point exceptions
 ** Inject NaNs
 ** Summarize with CSTG
