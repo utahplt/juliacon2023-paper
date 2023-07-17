@@ -1,13 +1,27 @@
 * Intro: the busy scientist
+
 ** Finch (as an example)
 
-Suppose you're working on doing a heat simulation as seen in this example…
+ - Suppose you're working on doing a heat simulation as seen in this example.
+ - You tweak some parameters and suddenly…
 
-… show Finch graphics …
+[Show graphics]
+
+Ugh, so frustrating.
+
+Start printing out NaNs… this is very time-consuming.
+
+After a while, you find a place where the NaNs are coming from. You fix the problem, but the output still doesn't look quite right…
+
+You find a place where a NaN disappears…
+
+You wonder… maybe that's not the only problem with exceptional values in your code?
+
+Our tool does these things!
 
 ** RxInfer: You too can be a wizard
 
-That work with Finch was something that we accomplished with our tool. But you don't have to take /our/ word that's it's useful—the folks working on RxInfer used our tool to track down a tricky bug!
+Before we go further, let me say that this story played out in the "real world" with some real researchers…
 
 … show quotes …
 
@@ -31,18 +45,47 @@ Now that I've hopefully got you all excited about what we've done, let's talk ab
 
 Use the max example to illustrate simultaneously how a NaN kill can be dangerous and how FloatTracker helps us find the problem.
 
-* ShallowWaters: tracking
+* ShallowWaters
+
+** Setup
+
+ - CFL parameter to control simulation speed
+ - Tracking down where NaNs come from can help us stabilize simulations without sacrificing simulation speed
+ - NaN does not lead to a crash
+   + We're lucky the output looks so bad—kills can quietly disrupt a program
+ - Walk through CSTGs that we get
+
+Sometimes we want to know how the instability /evolves/ over time. We are still exploring different slicing schemes, but if we slice the graphs, we can diff them!
 
 * OrdinaryDiffEq: Fuzzing
 
+ - Started out by fuzzing NBodySimulator; turns out root cause was in OrdinaryDiffEq!
+ - We have some fine-grained tools to help you fuzz the places you're interested in
+ - We keep a recording of when and how we inject
+ - Here's the kill—fun fact, I started looking at a /different/ kill in the logs until I looked at the CSTG!
+ - The smoking gun: the outer loop goes until the list of ~tstops~ is empty, and the inner loop pulls items out of there, but that inner loop never runs!
+
 * Making FloatTracker work
 
-# rework this---try to mirror what shows up in the case studies
 ** Intercept floating-point exceptions
-** Inject NaNs
+
+ - Create our own types; all instances of ~TrackedFloat~
+ - ~AbstractTrackedFloat <: AbstractFloat~
+ - We do this for each of the built-in operators; type dispatch takes care of the rest!
+ - How we characterize events
+ - Log events: we give you some tools to control what and how much gets logged
+
 ** Summarize with CSTG
+
+Remember: CSTG is a separate tool.
+
+** Fuzzing: Inject NaNs
+
 ** Using metaprogramming
+
 * Conclusion
+
+* Acknowledgments
 
 # Local Variables:
 # jinx-local-words: "OrdinaryDiffEq RxInfer ShallowWaters"
