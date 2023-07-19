@@ -4,6 +4,11 @@
 \usepackage{amsmath}
 \usepackage{cleveref}
 
+%% extra links:
+%% - GPU Julia: https://cuda.juliagpu.org/stable/tutorials/introduction/
+%% - GPU x2: https://nextjournal.com/sdanisch/julia-gpu-programming
+%% - NaN vs missing https://discourse.julialang.org/t/is-there-any-reason-to-use-nan-instead-of-missing/84396
+
 % If using Emacs, put cursor on last closing paren and call "eval-last-sexp" (usually `C-x C-e') to regenerate
 %\iffalse
 %(save-excursion
@@ -275,6 +280,10 @@ It's not entirely obvious \emph{where} that \NaN{} came from---but more on that 
 
 \section{\FlowFPX{}}
 \label{s:flowfpx}
+
+%% TODO julia proposed consistent NaN handling,
+%%  do we propagate the exact NaN
+%%  https://github.com/JuliaLang/julia/issues/48523
 
 FILL intro: float tracker, viz tools, gpu
 
