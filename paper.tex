@@ -286,73 +286,97 @@ It's not entirely obvious \emph{where} that \NaN{} came from---but more on that 
 \section{\FlowFPX{}}
 \label{s:flowfpx}
 
+\FlowFPX{} is a growing set of tools to aid in tracking down \fp{} exceptions.
+The two primary tools we cover in this paper are \FT{} and CSTG:
+
+\begin{itemize}
+\item \FT{}'s role is twofold: to trace the lifetime of exceptional \fp{} values and to enable inside-out fuzzing.
+\item CSTG's role is to visualize the tracing output from \FT{} in compact form.
+\end{itemize}
+
+\GPUFPX\cite{llsflg-hpdc-2023} is another component of \FlowFPX{} that can track \fp{} exceptions inside a GPU kernel.
+Please see the cited paper for more details on \GPUFPX.
+Work to use \GPUFPX in tandem with \FT{} is ongoing.
+
 %% TODO julia proposed consistent NaN handling,
 %%  do we propagate the exact NaN
 %%  https://github.com/JuliaLang/julia/issues/48523
-
-FILL intro: float tracker, viz tools, gpu
+%%
+%% Ashton: @Ben we simply propagate whatever we got from the operation. If
+%% Julia's behavior around an operator change, that should be preserved even
+%% when using FloatTracker
 
 \subsection{\FT{}}
 \label{s:floattracker}
 
-\FT{} works by leveraging Julia's type-based method dispatch system to capture everything from calls to the standard library down to basic arithmetic operations.
-We do this by creating custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32} etc. counterparts.
-We then defined methods for every function in the \texttt{Base} module, including new implementations for operators like \texttt{+} and \texttt{*}.
-These new methods had to be defined for every combination of tracked/untracked arguments;
-fortunately Julia's metaprogramming capabilities make this relatively simple.
-
-The surrogate methods in place, every operation on a TrackedFloat can be intercepted.
-We have three primary goals when intercepting a float:
+\FT{} has two roles:
 
 \begin{enumerate}
-  \item Catch instances of \NaN{} kills
-  \item Monitor the propagation of \NaN{}s through the program
-  \item Optionally \emph{inject} \NaN{}s to fuzz the program under scrutiny against \NaN{}-kills
+  \item Track exceptional values
+  \item Fuzz \fp{} code from the inside-out
 \end{enumerate}
 
-% Good things to put in this section:
-% - start with the max example, perhaps?
-% - trace examples
-% - CSTGs
-%
-% Don't forget to talk about trace recording
+Building the mechanism to track exceptional values also gave us a way to inject exceptional values wherever \fp{} operations occur.
+We will examine each of these roles, how they are used, and how \FT{} realizes them.
 
-\subsubsection{Catching a \NaN{} Killer}
+%% What it does, then how it works
 
-With a \fp{} value wrapped in our \texttt{TrackedFloat} type, it is easy to monitor when a \NaN{} gets killed.
-Julia dispatches all arithmetic operations on that value to flow through FloatTracker, where we can inspect the arguments.
-Kills are relatively simple: if one or more \NaN{}s flow into a function but don't flow out (i.e. the answer isn't a \NaN{}) then that's a kill.
-For example:
+\subsubsection{Tracking Excptional Values}
+
+\FT{}'s first purpose is to monitor \fp{} operations for exceptional values.
+\FT{} interposes on every arithmetic operation and standard library call that involves a \fp{} and logs a stack trace to that point whenever an exception is generated, propagated, or killed.
+A programmer can then use these stack traces to pinpoint where an exceptional value like \NaN{} came into being or where a guard against a \NaN{} kill is needed.
+\FT{} can also log the arguments to the suspect call, so you can get \emph{normal, concrete} values to help you further discover what is going wrong.
+
+All the logs that \FT{} captures are straight from Julia's \texttt{stacktrace()} function.
+\FT{} writes these logs to file; one file for each kind of event.
+This way, if a user of \FT{} is attempting to determine where a \NaN{} or an \Inf{} came from, they can look in the file for all the gen events.
+Likewise, if the user wants to find where \NaN{}s get killed, then they can look in the kills file.
+
+While other tools like profilers might accomplish this tracking by writing extensions to the language's compiler or runtime, we were able to implement \FT{} entirely in user land.
+We created custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32}, and \texttt{Float64} counterparts.
+We then defined methods for every function in the \texttt{Base} module, including new implementations for operators like \texttt{+} and \texttt{*}.
+This lets us intercept all \fp{} operations working on our \texttt{TrackedFloat} types.
 
 \begin{lstlisting}[language = Julia]
-  NaN + 42     -> NaN    # not a kill
-  Inf - Inf    -> NaN    # gen, but not a kill
-  min(NaN, 42) -> NaN    # not a kill
-  NaN < 42     -> false  # NaN kill!
+function Base.+(x::TrackedFloat64, y::TrackedFloat64)
+  result = x.val + y.val
+  check_error(+, result, x.val, y.val)
+  TrackedFloat64(result)
+end
 \end{lstlisting}
 
-There are a few exceptions to the rule of ``\NaN{} in and no \NaN{} out $\rightarrow$ kill''---some instances that we report as being a \NaN{} kill might be instead a \emph{\NaN{}-repair}, i.e. where the user explicitly checks for a \NaN{} and gets some non-\NaN{} value as a result.
-Once clear instance of this is the \texttt{isnan} function.
-Calling \texttt{isnan} and getting a boolean is expected behavior, and is usually used in error handling or in \emph{explicit} handling of unexpected values.
-FloatTracker still reports these cases in the kill logs so as to be complete---the user must not blindly assume that every instance of a \NaN{} kill is bad and might be a case of \NaN{} repair.
+These new methods had to be defined for every combination of tracked/untracked arguments;
+fortunately Julia's metaprogramming abilities made it simple for us to scale without the code becoming unwieldy.
+We made a macro that first loops through all the \texttt{TrackedFloat} types that we wished to implement, and then looped through all of the operators that we wished to support.
+This approached saved us over 10x the lines a non-macro approach would have required.\footnote{We implemented overrides for 645 function/type combinations. At roughly 5 lines per variant, this is 3225 lines of code. Our implementation at time of writing weighs in at 218 lines of code, which is \emph{including} whitespace and comments.}
+This approach was inspired by \texttt{Sherlogs.jl}.\cite{kMilanklSherlogsJl2021}
 
-% FIXME: we don't (yet) talk much about NaN repair in the rest of the paper.
+With the overrides in place, we can examine the arguments to a \fp{} operation to determine if an interesting event occurred.
+Here is how we classify events around a \NaN{}:
 
-% TODO?
+\begin{tabular}{ll}
+  Arguments & Result & Event Type \\
+  \hrule
+  No \NaN{} & \NaN{} & Gen \\
+  \NaN{} & \NaN{} & Prop \\
+  \NaN{} & No \NaN{} & Kill \\
+\end{tabular}
 
-\subsubsection{\NaN{} propagation monitoring}
+The same classification rules apply to \Inf{} and would apply to any other value of interest.
 
-Remember in our first example with the \texttt{bad\_max} and \texttt{good\_max} functions how we didn't have a way to tell \emph{where} the \NaN{}s originally came from?
-That can be a tedious task.
-However, FloatTracker makes this a lot easier by watching the life cycle of a \NaN{}.
+\subsubsection{Fuzzing}
 
-% TODO
+The second role of \FT{} is to fuzz code from the inside out.
+While it is wholly possible to fuzz a program by giving it random inputs, this might not help you find \emph{all} the places where an exceptional value could crop up during a calculation.\cite{ddghlllprr-correctness-2022}
 
-% FIXME: don't forget to talk about CSTGs
+The exception tracking infrastructure that we have gives us a simple way to inject exceptional values wherever we want in our code.
+We have a global configuration system that allows us to turn on fuzzing.
+Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}.\footnote{At time of writing, \FT{} only injects \NaN{}, but it is trivial to extend the set of values to inject.}
+Our full decision process is as follows:
 
-\subsubsection{\NaN{} injection}
-
-% TODO
+\begin{enumerate}
+\end{enumerate}
 
 \subsection{Visualization}
 \label{s:cstg}
@@ -757,5 +781,5 @@ We would also like to thank the developers of \code{RxInfer.jl} for feedback on 
 % using the new jinx package for spell-checking!
 
 % Local Variables:
-% jinx-local-words: "CFL CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq RxInfer ShallowWaters TrackedFloat isnan"
+% jinx-local-words: "CFL CSTG's CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq RxInfer ShallowWaters TrackedFloat isnan"
 % End:
