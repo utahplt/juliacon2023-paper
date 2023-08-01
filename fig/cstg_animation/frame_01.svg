@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="871.5 -1373.02 205 41.52" width="205" height="41.52">
+  <defs/>
+  <g id="CSTG_Description" stroke="none" fill-opacity="1" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>CSTG Description</title>
+    <g id="CSTG_Description_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_45">
+        <path d="M 877 -1366 L 1071 -1366 C 1072.6569 -1366 1074 -1364.6569 1074 -1363 L 1074 -1337 C 1074 -1335.3431 1072.6569 -1334 1071 -1334 L 877 -1334 C 875.3431 -1334 874 -1335.3431 874 -1337 L 874 -1363 C 874 -1364.6569 875.3431 -1366 877 -1366 Z" fill="#b48ead"/>
+        <path d="M 877 -1366 L 1071 -1366 C 1072.6569 -1366 1074 -1364.6569 1074 -1363 L 1074 -1337 C 1074 -1335.3431 1072.6569 -1334 1071 -1334 L 877 -1334 C 875.3431 -1334 874 -1335.3431 874 -1337 L 874 -1363 C 874 -1364.6569 875.3431 -1366 877 -1366 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <text transform="translate(879 -1371.02)" fill="#2d3440">
+          <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame A</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

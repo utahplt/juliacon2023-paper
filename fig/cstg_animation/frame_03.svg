@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="881.5 -775.02 205 225.52" width="205" height="225.52">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="#121212">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="CSTG_Description" stroke="none" fill-opacity="1" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>CSTG Description</title>
+    <g id="CSTG_Description_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_293">
+        <g id="Graphic_51">
+          <path d="M 887 -768 L 1081 -768 C 1082.6569 -768 1084 -766.65685 1084 -765 L 1084 -739 C 1084 -737.34315 1082.6569 -736 1081 -736 L 887 -736 C 885.3431 -736 884 -737.34315 884 -739 L 884 -765 C 884 -766.65685 885.3431 -768 887 -768 Z" fill="#b48ead"/>
+          <path d="M 887 -768 L 1081 -768 C 1082.6569 -768 1084 -766.65685 1084 -765 L 1084 -739 C 1084 -737.34315 1082.6569 -736 1081 -736 L 887 -736 C 885.3431 -736 884 -737.34315 884 -739 L 884 -765 C 884 -766.65685 885.3431 -768 887 -768 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(889 -773.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame A</tspan>
+          </text>
+        </g>
+        <g id="Graphic_50">
+          <path d="M 887 -676 L 1081 -676 C 1082.6569 -676 1084 -674.65685 1084 -673 L 1084 -647 C 1084 -645.34315 1082.6569 -644 1081 -644 L 887 -644 C 885.3431 -644 884 -645.34315 884 -647 L 884 -673 C 884 -674.65685 885.3431 -676 887 -676 Z" fill="#a3be8c"/>
+          <path d="M 887 -676 L 1081 -676 C 1082.6569 -676 1084 -674.65685 1084 -673 L 1084 -647 C 1084 -645.34315 1082.6569 -644 1081 -644 L 887 -644 C 885.3431 -644 884 -645.34315 884 -647 L 884 -673 C 884 -674.65685 885.3431 -676 887 -676 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(889 -681.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame B</tspan>
+          </text>
+        </g>
+        <g id="Line_52">
+          <line x1="984" y1="-736" x2="984" y2="-688.9" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Graphic_53">
+          <path d="M 887 -584 L 1081 -584 C 1082.6569 -584 1084 -582.65685 1084 -581 L 1084 -555 C 1084 -553.34315 1082.6569 -552 1081 -552 L 887 -552 C 885.3431 -552 884 -553.34315 884 -555 L 884 -581 C 884 -582.65685 885.3431 -584 887 -584 Z" fill="#eccb8b"/>
+          <path d="M 887 -584 L 1081 -584 C 1082.6569 -584 1084 -582.65685 1084 -581 L 1084 -555 C 1084 -553.34315 1082.6569 -552 1081 -552 L 887 -552 C 885.3431 -552 884 -553.34315 884 -555 L 884 -581 C 884 -582.65685 885.3431 -584 887 -584 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(889 -589.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame C</tspan>
+          </text>
+        </g>
+        <g id="Line_54">
+          <line x1="984" y1="-644" x2="984" y2="-596.9" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Graphic_55">
+          <text transform="translate(990.4184 -725.96686)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">1</tspan>
+          </text>
+        </g>
+        <g id="Graphic_56">
+          <text transform="translate(990.4184 -633.96686)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">1</tspan>
+          </text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

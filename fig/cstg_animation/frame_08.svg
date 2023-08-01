@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="1930.5 -1162.02 205 317.52" width="205" height="317.52">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.0666667 0 L 0 -.4 L 0 .4 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.6 0 L 0 -.6 L 0 .6 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="CSTG_Description" stroke="none" fill-opacity="1" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>CSTG Description</title>
+    <g id="CSTG_Description_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_298">
+        <g id="Graphic_106">
+          <path d="M 1936 -1155 L 2130 -1155 C 2131.6569 -1155 2133 -1153.6569 2133 -1152 L 2133 -1126 C 2133 -1124.3431 2131.6569 -1123 2130 -1123 L 1936 -1123 C 1934.3431 -1123 1933 -1124.3431 1933 -1126 L 1933 -1152 C 1933 -1153.6569 1934.3431 -1155 1936 -1155 Z" fill="#b48ead"/>
+          <path d="M 1936 -1155 L 2130 -1155 C 2131.6569 -1155 2133 -1153.6569 2133 -1152 L 2133 -1126 C 2133 -1124.3431 2131.6569 -1123 2130 -1123 L 1936 -1123 C 1934.3431 -1123 1933 -1124.3431 1933 -1126 L 1933 -1152 C 1933 -1153.6569 1934.3431 -1155 1936 -1155 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1938 -1160.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame A</tspan>
+          </text>
+        </g>
+        <g id="Graphic_105">
+          <path d="M 1936 -1063 L 2130 -1063 C 2131.6569 -1063 2133 -1061.6569 2133 -1060 L 2133 -1034 C 2133 -1032.3431 2131.6569 -1031 2130 -1031 L 1936 -1031 C 1934.3431 -1031 1933 -1032.3431 1933 -1034 L 1933 -1060 C 1933 -1061.6569 1934.3431 -1063 1936 -1063 Z" fill="#a3be8c"/>
+          <path d="M 1936 -1063 L 2130 -1063 C 2131.6569 -1063 2133 -1061.6569 2133 -1060 L 2133 -1034 C 2133 -1032.3431 2131.6569 -1031 2130 -1031 L 1936 -1031 C 1934.3431 -1031 1933 -1032.3431 1933 -1034 L 1933 -1060 C 1933 -1061.6569 1934.3431 -1063 1936 -1063 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1938 -1068.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame B</tspan>
+          </text>
+        </g>
+        <g id="Line_104">
+          <line x1="2033" y1="-1123" x2="2033" y2="-1078.3" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="6"/>
+        </g>
+        <g id="Graphic_103">
+          <path d="M 1936 -971 L 2130 -971 C 2131.6569 -971 2133 -969.6569 2133 -968 L 2133 -942 C 2133 -940.3431 2131.6569 -939 2130 -939 L 1936 -939 C 1934.3431 -939 1933 -940.3431 1933 -942 L 1933 -968 C 1933 -969.6569 1934.3431 -971 1936 -971 Z" fill="#eccb8b"/>
+          <path d="M 1936 -971 L 2130 -971 C 2131.6569 -971 2133 -969.6569 2133 -968 L 2133 -942 C 2133 -940.3431 2131.6569 -939 2130 -939 L 1936 -939 C 1934.3431 -939 1933 -940.3431 1933 -942 L 1933 -968 C 1933 -969.6569 1934.3431 -971 1936 -971 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1938 -976.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame C</tspan>
+          </text>
+        </g>
+        <g id="Line_102">
+          <line x1="2033" y1="-1031" x2="2033" y2="-983.5" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Graphic_101">
+          <text transform="translate(2039.4184 -1112.9669)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">3</tspan>
+          </text>
+        </g>
+        <g id="Graphic_100">
+          <text transform="translate(2039.4184 -1020.9669)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">2</tspan>
+          </text>
+        </g>
+        <g id="Graphic_99">
+          <path d="M 1936 -879 L 2130 -879 C 2131.6569 -879 2133 -877.6569 2133 -876 L 2133 -850 C 2133 -848.3431 2131.6569 -847 2130 -847 L 1936 -847 C 1934.3431 -847 1933 -848.3431 1933 -850 L 1933 -876 C 1933 -877.6569 1934.3431 -879 1936 -879 Z" fill="#d18770"/>
+          <path d="M 1936 -879 L 2130 -879 C 2131.6569 -879 2133 -877.6569 2133 -876 L 2133 -850 C 2133 -848.3431 2131.6569 -847 2130 -847 L 1936 -847 C 1934.3431 -847 1933 -848.3431 1933 -850 L 1933 -876 C 1933 -877.6569 1934.3431 -879 1936 -879 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1938 -884.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame D</tspan>
+          </text>
+        </g>
+        <g id="Line_98">
+          <line x1="2033" y1="-939" x2="2033" y2="-891.5" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Graphic_97">
+          <text transform="translate(2039.4184 -928.9669)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">2</tspan>
+          </text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

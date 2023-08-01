@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="1348.5 -370.02 205 317.52" width="205" height="317.52">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.6 0 L 0 -.6 L 0 .6 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="CSTG_Description" stroke="none" fill-opacity="1" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>CSTG Description</title>
+    <g id="CSTG_Description_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_297">
+        <g id="Graphic_96">
+          <path d="M 1354 -363 L 1548 -363 C 1549.6569 -363 1551 -361.65685 1551 -360 L 1551 -334 C 1551 -332.34315 1549.6569 -331 1548 -331 L 1354 -331 C 1352.3431 -331 1351 -332.34315 1351 -334 L 1351 -360 C 1351 -361.65685 1352.3431 -363 1354 -363 Z" fill="#b48ead"/>
+          <path d="M 1354 -363 L 1548 -363 C 1549.6569 -363 1551 -361.65685 1551 -360 L 1551 -334 C 1551 -332.34315 1549.6569 -331 1548 -331 L 1354 -331 C 1352.3431 -331 1351 -332.34315 1351 -334 L 1351 -360 C 1351 -361.65685 1352.3431 -363 1354 -363 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1356 -368.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame A</tspan>
+          </text>
+        </g>
+        <g id="Graphic_95">
+          <path d="M 1354 -271 L 1548 -271 C 1549.6569 -271 1551 -269.65685 1551 -268 L 1551 -242 C 1551 -240.34315 1549.6569 -239 1548 -239 L 1354 -239 C 1352.3431 -239 1351 -240.34315 1351 -242 L 1351 -268 C 1351 -269.65685 1352.3431 -271 1354 -271 Z" fill="#a3be8c"/>
+          <path d="M 1354 -271 L 1548 -271 C 1549.6569 -271 1551 -269.65685 1551 -268 L 1551 -242 C 1551 -240.34315 1549.6569 -239 1548 -239 L 1354 -239 C 1352.3431 -239 1351 -240.34315 1351 -242 L 1351 -268 C 1351 -269.65685 1352.3431 -271 1354 -271 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1356 -276.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame B</tspan>
+          </text>
+        </g>
+        <g id="Line_94">
+          <line x1="1451" y1="-331" x2="1451" y2="-283.5" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Graphic_93">
+          <path d="M 1354 -179 L 1548 -179 C 1549.6569 -179 1551 -177.65685 1551 -176 L 1551 -150 C 1551 -148.34315 1549.6569 -147 1548 -147 L 1354 -147 C 1352.3431 -147 1351 -148.34315 1351 -150 L 1351 -176 C 1351 -177.65685 1352.3431 -179 1354 -179 Z" fill="#eccb8b"/>
+          <path d="M 1354 -179 L 1548 -179 C 1549.6569 -179 1551 -177.65685 1551 -176 L 1551 -150 C 1551 -148.34315 1549.6569 -147 1548 -147 L 1354 -147 C 1352.3431 -147 1351 -148.34315 1351 -150 L 1351 -176 C 1351 -177.65685 1352.3431 -179 1354 -179 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1356 -184.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame C</tspan>
+          </text>
+        </g>
+        <g id="Line_92">
+          <line x1="1451" y1="-239" x2="1451" y2="-191.5" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Graphic_91">
+          <text transform="translate(1457.4184 -320.96686)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">2</tspan>
+          </text>
+        </g>
+        <g id="Graphic_90">
+          <text transform="translate(1457.4184 -228.96686)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">2</tspan>
+          </text>
+        </g>
+        <g id="Graphic_89">
+          <path d="M 1354 -87 L 1548 -87 C 1549.6569 -87 1551 -85.65685 1551 -84 L 1551 -58 C 1551 -56.343146 1549.6569 -55 1548 -55 L 1354 -55 C 1352.3431 -55 1351 -56.343146 1351 -58 L 1351 -84 C 1351 -85.65685 1352.3431 -87 1354 -87 Z" fill="#d18770"/>
+          <path d="M 1354 -87 L 1548 -87 C 1549.6569 -87 1551 -85.65685 1551 -84 L 1551 -58 C 1551 -56.343146 1549.6569 -55 1548 -55 L 1354 -55 C 1352.3431 -55 1351 -56.343146 1351 -58 L 1351 -84 C 1351 -85.65685 1352.3431 -87 1354 -87 Z" stroke="#2d3440" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(1356 -92.02)" fill="#2d3440">
+            <tspan font-family="JuliaMono" font-size="24" fill="#2d3440" x="44.6" y="29">Frame D</tspan>
+          </text>
+        </g>
+        <g id="Line_88">
+          <line x1="1451" y1="-147" x2="1451" y2="-99.5" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Graphic_87">
+          <text transform="translate(1457.4184 -136.96686)" fill="black">
+            <tspan font-family="JuliaMono" font-size="16" fill="black" x="0" y="19">2</tspan>
+          </text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

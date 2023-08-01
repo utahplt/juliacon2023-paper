@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="261.46857 -2.65625 1242.1029 175.3125" width="1242.1029" height="175.3125">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 9 8" markerWidth="9" markerHeight="8" color="#121212">
+      <g>
+        <path d="M 6.469565 0 L 0 -2.426087 L 0 2.426087 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="NonNavigable_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="#bf616a">
+      <g>
+        <path d="M 7.0608696 0 L 0 0 M 4.0347826 2.0173913 L 0 -2.0173913 M 0 2.0173913 L 4.0347826 -2.0173913" fill="none" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="Lifecycle_of_a_NaN" fill-opacity="1" stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none">
+    <title>Lifecycle of a NaN</title>
+    <g id="Lifecycle_of_a_NaN_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_24">
+        <path d="M 268.06232 0 L 444.1873 0 C 446.36194 13315714e-23 448.1248 1.7628788 448.1248 3.9375 L 448.1248 166.0625 C 448.1248 168.23712 446.36194 170 444.1873 170 L 268.06232 170 C 265.8877 170 264.12482 168.23712 264.12482 166.0625 L 264.12482 3.9375 C 264.12482 1.7628788 265.8877 -8570852e-21 268.06232 -8437695e-21 Z" fill="#bedfa5"/>
+        <path d="M 268.06232 0 L 444.1873 0 C 446.36194 13315714e-23 448.1248 1.7628788 448.1248 3.9375 L 448.1248 166.0625 C 448.1248 168.23712 446.36194 170 444.1873 170 L 268.06232 170 C 265.8877 170 264.12482 168.23712 264.12482 166.0625 L 264.12482 3.9375 C 264.12482 1.7628788 265.8877 -8570852e-21 268.06232 -8437695e-21 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3125"/>
+        <text transform="translate(270.68732 6.5625)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="31.5" fill="black" x="56.2685" y="30">Gen</tspan>
+        </text>
+      </g>
+      <g id="Graphic_23">
+        <path d="M 572.0623 0 L 748.1873 0 C 750.3619 13315714e-23 752.1248 1.7628788 752.1248 3.9375 L 752.1248 166.0625 C 752.1248 168.23712 750.3619 170 748.1873 170 L 572.0623 170 C 569.8877 170 568.1248 168.23712 568.1248 166.0625 L 568.1248 3.9375 C 568.1248 1.7628788 569.8877 -8570852e-21 572.0623 -8437695e-21 Z" fill="#ecb9e4"/>
+        <path d="M 572.0623 0 L 748.1873 0 C 750.3619 13315714e-23 752.1248 1.7628788 752.1248 3.9375 L 752.1248 166.0625 C 752.1248 168.23712 750.3619 170 748.1873 170 L 572.0623 170 C 569.8877 170 568.1248 168.23712 568.1248 166.0625 L 568.1248 3.9375 C 568.1248 1.7628788 569.8877 -8570852e-21 572.0623 -8437695e-21 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3125"/>
+        <text transform="translate(574.6873 6.5625)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="31.5" fill="black" x="51.89" y="30">Prop</tspan>
+        </text>
+      </g>
+      <g id="Graphic_22">
+        <path d="M 876.0623 0 L 1052.1873 0 C 1054.362 13315714e-23 1056.1248 1.7628788 1056.1248 3.9375 L 1056.1248 166.0625 C 1056.1248 168.23712 1054.362 170 1052.1873 170 L 876.0623 170 C 873.8877 170 872.1248 168.23712 872.1248 166.0625 L 872.1248 3.9375 C 872.1248 1.7628788 873.8877 -8570852e-21 876.0623 -8437695e-21 Z" fill="#ecb9e4"/>
+        <path d="M 876.0623 0 L 1052.1873 0 C 1054.362 13315714e-23 1056.1248 1.7628788 1056.1248 3.9375 L 1056.1248 166.0625 C 1056.1248 168.23712 1054.362 170 1052.1873 170 L 876.0623 170 C 873.8877 170 872.1248 168.23712 872.1248 166.0625 L 872.1248 3.9375 C 872.1248 1.7628788 873.8877 -8570852e-21 876.0623 -8437695e-21 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3125"/>
+        <text transform="translate(878.6873 6.5625)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="31.5" fill="black" x="51.89" y="30">Prop</tspan>
+        </text>
+      </g>
+      <g id="Graphic_21">
+        <path d="M 1180.0623 0 L 1356.1873 0 C 1358.362 13315714e-23 1360.1248 1.7628788 1360.1248 3.9375 L 1360.1248 166.0625 C 1360.1248 168.23712 1358.362 170 1356.1873 170 L 1180.0623 170 C 1177.8877 170 1176.1248 168.23712 1176.1248 166.0625 L 1176.1248 3.9375 C 1176.1248 1.7628788 1177.8877 -8570852e-21 1180.0623 -8437695e-21 Z" fill="#ffa58a"/>
+        <path d="M 1180.0623 0 L 1356.1873 0 C 1358.362 13315714e-23 1360.1248 1.7628788 1360.1248 3.9375 L 1360.1248 166.0625 C 1360.1248 168.23712 1358.362 170 1356.1873 170 L 1180.0623 170 C 1177.8877 170 1176.1248 168.23712 1176.1248 166.0625 L 1176.1248 3.9375 C 1176.1248 1.7628788 1177.8877 -8570852e-21 1180.0623 -8437695e-21 Z" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3125"/>
+        <text transform="translate(1182.6873 6.5625)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="31.5" fill="black" x="64.44275" y="30">Kill</tspan>
+        </text>
+      </g>
+      <g id="Line_20">
+        <line x1="448.78107" y1="85" x2="556.6257" y2="85" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1.3142857"/>
+      </g>
+      <g id="Line_19">
+        <line x1="752.7811" y1="85" x2="860.6257" y2="85" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1.3142857"/>
+      </g>
+      <g id="Line_18">
+        <line x1="1056.7811" y1="85" x2="1164.6257" y2="85" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1.3142857"/>
+      </g>
+      <g id="Graphic_17">
+        <text transform="translate(465.5299 25.18704)" fill="#121212">
+          <tspan font-family="Helvetica Neue" font-size="23.657" fill="#121212" x="19.282028" y="23">NaN </tspan>
+          <tspan font-family="Helvetica Neue" font-size="23.657" fill="#121212" x="17.093756" y="51.662393">Born</tspan>
+        </text>
+      </g>
+      <g id="Graphic_16">
+        <text transform="translate(746.642 32.345434)" fill="#121212">
+          <tspan font-family="Helvetica Neue" font-size="18" fill="#121212" x="46.571" y="17">NaN </tspan>
+          <tspan font-family="Helvetica Neue" font-size="18" fill="#121212" x="17.393002" y="38.504">Propagated</tspan>
+        </text>
+      </g>
+      <g id="Graphic_15">
+        <text transform="translate(1053.1538 32.345434)" fill="#121212">
+          <tspan font-family="Helvetica Neue" font-size="18" fill="#121212" x="46.571" y="17">NaN </tspan>
+          <tspan font-family="Helvetica Neue" font-size="18" fill="#121212" x="17.393002" y="38.504">Propagated</tspan>
+        </text>
+      </g>
+      <g id="Line_14">
+        <line x1="1360.781" y1="85" x2="1450.3114" y2="85" marker-end="url(#NonNavigable_Marker)" stroke="#bf616a" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2.6285714"/>
+      </g>
+      <g id="Graphic_13">
+        <text transform="translate(1409.5714 29.989196)" fill="#bf616a">
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="18" fill="#bf616a" x="24.210287" y="18">NaN </tspan>
+          <tspan font-family="Helvetica Neue" font-weight="bold" font-size="18" fill="#bf616a" x="18.585287" y="40.522125">Killed</tspan>
+        </text>
+      </g>
+      <g id="Graphic_25">
+        <text transform="translate(276.92482 51)" fill="black">
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="29">x ← -42.0</tspan>
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="64">y ← √x</tspan>
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="99">y holds NaN</tspan>
+        </text>
+      </g>
+      <g id="Graphic_26">
+        <text transform="translate(602.5248 68.5)" fill="black">
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="29">NaN + 42</tspan>
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="64">⇒ NaN</tspan>
+        </text>
+      </g>
+      <g id="Graphic_27">
+        <text transform="translate(899.3248 68.5)" fill="black">
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="29">NaN - NaN</tspan>
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="64">⇒ NaN</tspan>
+        </text>
+      </g>
+      <g id="Graphic_28">
+        <text transform="translate(1210.5248 68.5)" fill="black">
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="29">NaN &lt; 42</tspan>
+          <tspan font-family="JuliaMono" font-size="24" fill="black" x="0" y="64">⇒ false</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

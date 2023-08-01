@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="-939.634 756 748.134 631" width="748.134" height="631">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="#121212">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="#121212">
+      <g>
+        <path d="M 8 0 L 0 -3 L 0 3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_3" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.92 0 L 0 -.72 L 0 .72 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_4" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -2 4 4" markerWidth="4" markerHeight="4" color="#121212">
+      <g>
+        <path d="M 1.728 0 L 0 -.648 L 0 .648 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="Prettified_CSTG_for_NaN_Inf_gens_with_ShallowWaters" fill-opacity="1" fill="none" stroke-dasharray="none" stroke="none" stroke-opacity="1">
+    <title>Prettified CSTG for NaN/Inf gens with ShallowWaters</title>
+    <g id="Prettified_CSTG_for_NaN_Inf_gens_with_ShallowWaters_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_77">
+        <g id="Graphic_24">
+          <rect x="-673.5045" y="856.5" width="326.7952" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-668.5045 857.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="2.3975983" y="14">run_model(::Type{Float32}, ::Parameter)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="48.0216" y="32.656006">ShallowWaters/run_model.jl:37</tspan>
+          </text>
+        </g>
+        <g id="Graphic_25">
+          <rect x="-810.395" y="954.5" width="277.5" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-805.395 955.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="57.75" y="14">time_integration(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="3.822" y="32.656006">ShallowWaters/time_integration.jl:77</tspan>
+          </text>
+        </g>
+        <g id="Graphic_26">
+          <rect x="-471.5" y="954.5" width="277.5" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-466.5 955.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="57.75" y="14">time_integration(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="3.822" y="32.656006">ShallowWaters/time_integration.jl:78</tspan>
+          </text>
+        </g>
+        <g id="Graphic_27">
+          <rect x="-768.8668" y="1052.5" width="194.44374" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-763.8668 1053.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="68.22187" y="14">rhs!()</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="8.52587" y="32.656006">ShallowWaters/rhs.jl:14</tspan>
+          </text>
+        </g>
+        <g id="Graphic_28">
+          <rect x="-449.75" y="1052.5" width="234" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-444.75 1053.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="56" y="14">continuity!(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="5.184" y="32.656006">ShallowWaters/continuity.jl:96</tspan>
+          </text>
+        </g>
+        <g id="Graphic_29">
+          <rect x="-877.5136" y="1150.5" width="194.44374" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-872.5136 1151.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="24.22187" y="14">rhs_nonlinear!(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="8.52587" y="32.656006">ShallowWaters/rhs.jl:50</tspan>
+          </text>
+        </g>
+        <g id="Graphic_31">
+          <rect x="-657.0045" y="1150.5" width="194.44374" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-652.0045 1151.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="24.22187" y="14">rhs_nonlinear!(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="8.52587" y="32.656006">ShallowWaters/rhs.jl:51</tspan>
+          </text>
+        </g>
+        <g id="Graphic_33">
+          <rect x="-882.0045" y="1248.5" width="203.42554" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-877.0045 1249.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="40.71277" y="14">momentum_u!(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="8.568769" y="32.656006">ShallowWaters/rhs.jl:246</tspan>
+          </text>
+        </g>
+        <g id="Graphic_32">
+          <rect x="-661.4954" y="1248.5" width="203.42554" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-656.4954 1249.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="40.71277" y="14">momentum_v!(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="8.568769" y="32.656006">ShallowWaters/rhs.jl:275</tspan>
+          </text>
+        </g>
+        <g id="Graphic_34">
+          <rect x="-937.134" y="1346.5" width="313.6845" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-932.134 1347.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="3.8422394" y="14">-(::TrackedFloat32, ::TrackedFloat32)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="43.53024" y="32.656006">FloatTracker/TrackedFloat:102</tspan>
+          </text>
+        </g>
+        <g id="Graphic_35">
+          <rect x="-534.59675" y="1346.5" width="313.6845" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-529.59675 1347.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="3.8422394" y="14">+(::TrackedFloat32, ::TrackedFloat32)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="43.53024" y="32.656006">FloatTracker/TrackedFloat:102</tspan>
+          </text>
+        </g>
+        <g id="Graphic_36">
+          <rect x="-449.75" y="1199.5" width="234" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-444.75 1200.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="28" y="14">continuity_itself!(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="5.184" y="32.656006">ShallowWaters/continuity.jl:65</tspan>
+          </text>
+        </g>
+        <g id="Line_37">
+          <line x1="-541.4255" y1="894.5" x2="-629.2973" y2="947.809" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_38">
+          <line x1="-671.645" y1="992.5" x2="-671.645" y2="1039.6" marker-end="url(#FilledArrow_Marker)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="2"/>
+        </g>
+        <g id="Line_39">
+          <line x1="-692.7091" y1="1090.5" x2="-751.8763" y2="1143.8691" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_40">
+          <line x1="-780.2917" y1="1188.5" x2="-780.2917" y2="1238.6" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_41">
+          <line x1="-780.2917" y1="1286.5" x2="-780.2917" y2="1336.6" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_42">
+          <line x1="-649.9574" y1="1090.5" x2="-588.91676" y2="1143.9763" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_43">
+          <line x1="-559.78263" y1="1188.5" x2="-559.78263" y2="1238.6" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_44">
+          <line x1="-524.49147" y1="1286.5" x2="-421.76264" y2="1341.807" marker-end="url(#FilledArrow_Marker_2)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_45">
+          <line x1="-475.7214" y1="894.5" x2="-379.19672" y2="947.8355" marker-end="url(#FilledArrow_Marker_3)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Line_46">
+          <line x1="-332.75" y1="992.5" x2="-332.75" y2="1038.72" marker-end="url(#FilledArrow_Marker_3)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Line_47">
+          <line x1="-332.75" y1="1090.5" x2="-332.75" y2="1185.72" marker-end="url(#FilledArrow_Marker_3)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Line_48">
+          <line x1="-338.5669" y1="1237.5" x2="-367.90362" y2="1333.3237" marker-end="url(#FilledArrow_Marker_3)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="4"/>
+        </g>
+        <g id="Graphic_54">
+          <rect x="-673.5045" y="758.5" width="326.7952" height="38" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <text transform="translate(-668.5045 759.448)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="86.3976" y="14">top-level tuple(…)</tspan>
+            <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="72.7656" y="32.656006">examples/sw_nan_tf.jl:7</tspan>
+          </text>
+        </g>
+        <g id="Line_55">
+          <line x1="-510.1069" y1="796.5" x2="-510.1069" y2="840.36" marker-end="url(#FilledArrow_Marker_4)" stroke="#121212" stroke-linecap="butt" stroke-linejoin="round" stroke-width="5"/>
+        </g>
+        <g id="Graphic_57">
+          <rect x="-527.1069" y="803.6323" width="34" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-522.1069 808.6323)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">231</tspan>
+          </text>
+        </g>
+        <g id="Graphic_58">
+          <rect x="-603.3285" y="910.3399" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-598.3285 915.3399)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">69</tspan>
+          </text>
+        </g>
+        <g id="Graphic_59">
+          <rect x="-442.87046" y="908.2175" width="34" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-437.87046 913.2175)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">162</tspan>
+          </text>
+        </g>
+        <g id="Graphic_60">
+          <rect x="-684.645" y="1004.5233" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-679.645 1009.5233)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">69</tspan>
+          </text>
+        </g>
+        <g id="Graphic_61">
+          <rect x="-735.22735" y="1103.2976" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-730.22735 1108.2976)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">39</tspan>
+          </text>
+        </g>
+        <g id="Graphic_62">
+          <rect x="-793.2917" y="1200.5275" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-788.2917 1205.5275)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">39</tspan>
+          </text>
+        </g>
+        <g id="Graphic_63">
+          <rect x="-793.2917" y="1299.7326" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-788.2917 1304.7326)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">39</tspan>
+          </text>
+        </g>
+        <g id="Graphic_64">
+          <rect x="-631.39866" y="1104.3199" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-626.39866 1109.3199)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">30</tspan>
+          </text>
+        </g>
+        <g id="Graphic_65">
+          <rect x="-572.7826" y="1199.851" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-567.7826 1204.851)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">30</tspan>
+          </text>
+        </g>
+        <g id="Graphic_66">
+          <rect x="-487.37684" y="1299.6526" width="26" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-482.37684 1304.6526)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">30</tspan>
+          </text>
+        </g>
+        <g id="Graphic_67">
+          <rect x="-349.75" y="999.2179" width="34" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-344.75 1004.2179)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">162</tspan>
+          </text>
+        </g>
+        <g id="Graphic_69">
+          <rect x="-349.75" y="1123.1929" width="34" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-344.75 1128.1929)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">162</tspan>
+          </text>
+        </g>
+        <g id="Graphic_70">
+          <rect x="-370.1753" y="1271.388" width="34" height="27.656006" fill="#eceff5"/>
+          <text transform="translate(-365.1753 1276.388)" fill="black">
+            <tspan font-family="Iosevka Output" font-size="16" fill="black" x="0" y="14">162</tspan>
+          </text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
