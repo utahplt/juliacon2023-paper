@@ -63,6 +63,8 @@
 
 \begin{document}
 
+\setlength{\parindent}{1.2em}
+
 \input{header}
 \maketitle
 
@@ -355,9 +357,9 @@ This approach was inspired by \texttt{Sherlogs.jl}.\cite{kMilanklSherlogsJl2021}
 With the overrides in place, we can examine the arguments to a \fp{} operation to determine if an interesting event occurred.
 Here is how we classify events around a \NaN{}:
 
-\begin{tabular}{ll}
+\begin{tabular}{lll}
   Arguments & Result & Event Type \\
-  \hrule
+  \hline
   No \NaN{} & \NaN{} & Gen \\
   \NaN{} & \NaN{} & Prop \\
   \NaN{} & No \NaN{} & Kill \\
@@ -376,6 +378,7 @@ Then, each time we intercept a \fp{} operation, we check to see if we should inj
 Our full decision process is as follows:
 
 \begin{enumerate}
+  \item Foo
 \end{enumerate}
 
 \subsection{Visualization}
