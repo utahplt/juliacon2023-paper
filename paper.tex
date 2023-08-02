@@ -326,6 +326,7 @@ We will examine each of these roles, how they are used, and how \FT{} realizes t
 %% What it does, then how it works
 
 \subsubsection{Tracking Exceptional Values}
+\label{s:trackingexceptionalvalues}
 
 \FT{}'s first purpose is to monitor \fp{} operations for exceptional values.
 \FT{} interposes on every arithmetic operation and standard library call that involves a \fp{} and logs a stack trace to that point whenever an exception is generated, propagated, or killed.
@@ -336,6 +337,8 @@ All the logs that \FT{} captures are straight from Julia's \texttt{stacktrace()}
 \FT{} writes these logs to file; one file for each kind of event.
 This way, if a user of \FT{} is attempting to determine where a \NaN{} or an \Inf{} came from, they can look in the file for all the gen events.
 Likewise, if the user wants to find where \NaN{}s get killed, then they can look in the kills file.
+
+% note: there's a section on performance in the "discussion" section at the end, so we can leave it out here I think
 
 While other tools like profilers might accomplish this tracking by writing extensions to the language's compiler or runtime, we were able to implement \FT{} entirely in user land.
 We created custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32}, and \texttt{Float64} counterparts.
@@ -391,34 +394,19 @@ We have a global configuration system that allows us to turn on fuzzing and conf
 \item[\texttt{record::String}] Name of a file to write injection events to for later replay.
 \end{description}
 
-Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}.
-\cref{fig:injection_decision} illustrates how we decide whether or not to inject a \NaN{}, which is as follows:
-
-\begin{enumerate}
-  \item Are we replaying an injection recording? If yes, inject iff the recording says to inject.
-  \item Is injection turned on? Don't inject if no.
-  \item Are there any NaNs left for us to inject? Don't inject if we're out.
-  \item Roll a \texttt{odds}-sided die---if we get anything other than 1, don't inject.
-  \item Check the stack trace: are we within the dynamic extent of any of the functions mentioned in \texttt{functions}? I.e. if we have a set of functions that we have expressed interest in via the \texttt{functions} configuration option, do any of them show up anywhere on the stack? If we have some functions, but none of them are on the stack, don't inject.
-  \item Check the top-most stack frame: (modulo the stack frames incurred by \FT{} intercepting the function call) is it in the list of modules mentioned in \texttt{modules}? If we have some modules we're interested in, but the top frame is \emph{not} from the set of interesting modules, don't inject.
-  \item If we've made it this far, inject and decrement \texttt{n\_inject}.
-\end{enumerate}
+Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}. First we check if we're replaying a recording: if we are, just do as the recording says. Otherwise, we check to make sure we have \NaN{}s remaining to inject and we roll a die to see if we should inject. We also check the current stack trace against the lists of functions and libraries to inject in. If all looks good, we inject.
 
 In our experience, requesting the stack trace from Julia is the most expensive part of this operation.
-Therefore, we defer all the way until step 5 to request a stack trace.
-This expensive region is show with the purple box in \cref{fig:injection_decision}.
+Therefore, we defer the stack checks as late as we can.
+Once the fuzzer runs out of \NaN{}s, it effectively turns off, so the rest of the fuzzing session proceeds much more quickly.
+That said, gathering stack traces still incurs a heavy overhead during logging when interesting events occur;
+we recommend limiting the number and kinds of events logged for optimal performance.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=3in]{./fig/injection_decision_white_labels.png}
-  \caption{Decision flowchart for injecting NaNs. Purple box indicates expensive checks.}
-  \label{fig:injection_decision}
-\end{figure}
-
-\subsection{Visualization}
+\subsection{CSTG}
 \label{s:cstg}
 
-FILL cstg output, how to read, float tracker interface,
+Coalesced Stack Trace Graphs, or CSTGs\cite{humphreySystematicDebuggingMethods2014} provide a way to visualize large amounts of stack traces in a compact form.
+\FT{} produces
 
 
 \subsection{\GPUFPX{}}
@@ -778,11 +766,22 @@ if compiled with Clang, but most gpus use closed NVCC compiler~\cite{l-ase-2019}
 \label{s:discussion}
 % future work
 
+\subsection{Performance}
+\ref{s:discussion-performance}
+
+% TODO: citations!!!!
+% TODO: real numbers!!!
+\FT{} incurs significant overhead on the order of 100x slower than a non-instrumented run of the same program.
+To put this number into context, Valgrind runs with a similar level of slowdown.
+
+In addition to the cost incurred by intercepting \fp{} operations, gathering stack traces is expensive---we measured a significant slowdown on the order of 10x relative to a non-logging setup of \FT{}.
+We recommend that users of \FT{} make use of the \texttt{maxLogs} and \texttt{exclude_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
+
 \subsection{Tracking more than \NaN{}s and \Inf{}s}
 FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to \NaN{} or \Inf{}.
 We spent most of the time engineering and testing \NaN{} tracking and injection.
 Adding \Inf{} tracking took a few hours.
-Adding other values of interest would be issues of relatively simple engineering.
+Adding other values of interest presents no fundamental difficulties.
 
 \subsection{Enhanced Fuzzing}
 
@@ -819,4 +818,5 @@ We would also like to thank the developers of \code{RxInfer.jl} for feedback on 
 
 % Local Variables:
 % jinx-local-words: "CFL CSTG's CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq RxInfer ShallowWaters Sherlogs TrackedFloat isnan"
+% citar-bibliography: ("./ref.bib")
 % End:
