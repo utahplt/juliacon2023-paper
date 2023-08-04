@@ -384,15 +384,15 @@ We have a global configuration system that allows us to turn on fuzzing and conf
 
 \FT{} exposes these configuration options:
 
-\begin{description}
-\item[\texttt{active::Bool}] Inject only if this is true.
-\item[\texttt{n\_inject::Int64}] Inject at most this many \NaN{}s.
-\item[\texttt{odds::Int64}] Inject if \texttt{rand(odds) == 1}.
-\item[\texttt{functions::Array}] Inject if we are within the dynamic extent of any of these functions.
-\item[\texttt{libraries::Array}] Inject if the top-most stack frame\footnote{After stripping off the stack frames that come from \FT{} itself.} comes from any of these libraries.
-\item[\texttt{replay::String}] Name of a file to read an injection recording from.
-\item[\texttt{record::String}] Name of a file to write injection events to for later replay.
-\end{description}
+\begin{itemize}
+\item \textbf{\texttt{active::Bool} Inject only if this is true.
+\item \texttt{n\_inject::Int64} Inject at most this many \NaN{}s.
+\item \texttt{odds::Int64} Inject if \texttt{rand(odds) == 1}.
+\item \texttt{functions::Array} Inject if we are within the dynamic extent of any of these functions.
+\item \texttt{libraries::Array} Inject if the top-most stack frame\footnote{After stripping off the stack frames that come from \FT{} itself.} comes from any of these libraries.
+\item \texttt{replay::String} Name of a file to read an injection recording from.
+\item \texttt{record::String} Name of a file to write injection events to for later replay.
+\end{itemize}
 
 Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}. First we check if we're replaying a recording: if we are, just do as the recording says. Otherwise, we check to make sure we have \NaN{}s remaining to inject and we roll a die to see if we should inject. We also check the current stack trace against the lists of functions and libraries to inject in. If all looks good, we inject.
 
@@ -423,35 +423,10 @@ CSTG's output looks like the output seen in \cref{fig:sw_nan_cstg}, which was ge
 We will go into more detail about ShallowWaters in \cref{s:sw}.
 This graph has been edited for clarity and to fit into the size constraints of this paper.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
-  \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
-  \label{fig:sw_nan_cstg}
-\end{figure}
-
 These graphs are meant to be read bottom-up: the bottom nodes are the roots where exceptional values manifested.
 Higher nodes in the graph show function calls progressively closer to the top-level call that spawned them.
 Thick lines and high numbers indicate flows with the highest volume leading to errors---though thin areas are still worth investigating.
 CSTG provides a map to aid in contextualizing a stack trace in a log file.
-
-\subsubsection{Graph diffing}
-
-CSTG can diff two graphs to show how the flows changed.
-For example, we took the \FT{} logs from running ShallowWaters\cite{klowerNumberFormatsError2020} \footnote{\Cref{s:sw}}, and split the logs at the 10\% mark.
-We used CSTG to diff the flow graphs between the first 10\% of the run of the program and the remaining 90\%.
-The diff can be seen in \cref{fig:cstg_diff_demo}.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=3in]{./fig/cstg_diff_pretty.png}
-  \caption{Diff between the early and latter stages of ShallowWaters}
-  \label{fig:cstg_diff_demo}
-\end{figure}
-
-The green lines indicate flows that were \emph{new} in the latter 90\% of the program's run.
-The red lines indicate flows that were \emph{only in} the first 10\% of the program's run.
-What this means depends on the particular program; a domain expert can use these clues to e.g. find where instability started in the first part of the program, and where that instability got reinforced later on.
 
 \subsection{\GPUFPX{}}
 \label{s:gpufpx}
@@ -496,15 +471,25 @@ See \cref{s:ocean} for an example of \GPUFPX{} in action, and \ref{f:gpufpx} for
 \section{Case Studies}
 \label{s:casestudies}
 
-\FlowFPX{} is effective for debugging all sorts of \NaN{}-related issues.
-We have used it to reveal silent \NaN{}s, uncover the root cause of \NaN{}s,
-and fuzz for weak points in several case studies.
+We have used \FlowFPX{} to debug and harden various programs against exceptional values, which we now present in the following case studies.
 
+\begin{itemize}
+\item \Cref{s:sw} uses the \FT{} and CSTG to uncover the source of \NaN{} and \Inf{} in a simulation.
+\item \Cref{s:ode} uses the fuzzing abilities of \FT{} to harden an existing library against unexpected exceptional values.
+\item \Cref{s:finch} is another case where fuzzing uncovered a hard-to-find bug.
+\item \Cref{s:ocean} showcases using \GPUFPX{} in a simulation.
+\end{itemize}
 
-\subsection{Surprise \NaN{}s: ShallowWaters}
+Besides case studies that we ourselves did, \cref{s:safari} is an ``in the wild'' usage of \FT{} that helped researchers uncover the source of a \NaN{} in their own code.
+
+\subsection{ShallowWaters}
 \label{s:sw}
 
-Most physics simulations of this sort include a parameter called the Courant-Friedrichs-Lewy (``CFL'') parameter, which roughly describes the size of the time step to take in running the simulation.
+For our first case study, we looked at the \texttt{ShallowWaters} library~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021}, which runs a simulates the flow of water over a seabed.
+This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
+That said, it works for our purposes as a proving ground for FloatTracker.
+
+Many physics simulations of this sort include a parameter called the Courant-Friedrichs-Lewy (``CFL'') parameter, which roughly describes the size of the time step to take in running the simulation.
 Normally this value sits between 0 and 1---smaller values mean the simulation runs slower but with higher accuracy, whereas higher values mean the simulation takes bigger time steps and consequently runs faster, but results might be inaccurate.
 The primary reason for problems arising comes from information not having enough time to propagate through the simulation before the next time step is taken.
 
@@ -512,11 +497,8 @@ It is not uncommon to encounter cases where setting the CFL parameter too high r
 Driving the CFL parameter low enough to excise the \NaN{}s can make the simulation too long and unwieldy to be comfortable to use.
 Identifying where \NaN{}s begin to arise can help point the way to where some mathematical refinement can be used to make the simulation both fast and accurate enough for practical use.
 
-For our first case study, we looked at the \texttt{ShallowWaters} library~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021}, which runs a simulates the flow of water over a seabed.
-This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
-That said, it works for our purposes as a proving ground for FloatTracker.
-We dialed the CFL parameter up to high values (as high as 10) and we started seeing \NaN{}s in the result.
-Note that the program did not crash: instead, it began producing bad output.
+We dialed the CFL parameter up to extraordinarily high values and we started seeing \NaN{}s in the result.
+\code{ShallowWaters} detected the instability, but not before producing some bad output.
 
 \begin{figure}
   \centering
@@ -589,7 +571,13 @@ The point is, we were able to quickly and automatically arrive at this excellent
 
 Running FloatTracker can produce a lot of logs.
 To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
-% FIXME: cite CSTG
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
+  \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
+  \label{fig:sw_nan_cstg}
+\end{figure}
 
 We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 Here is what the two graphs look like:\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
@@ -601,7 +589,24 @@ Here is what the two graphs look like:\footnote{As with the call stack logs, the
   \label{fig:sw_inf_cstg}
 \end{figure}
 
+Another one of CSTGs abilities is \emph{graph diffing}.
+We took the \FT{} logs from running ShallowWaters and split the logs at the 10\% mark.
+We used CSTG to diff the flow graphs between the first 10\% of the run of the program and the remaining 90\%.
+The diff can be seen in \cref{fig:cstg_diff_demo}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=3in]{./fig/cstg_diff_pretty.png}
+  \caption{Diff between the early and latter stages of ShallowWaters}
+  \label{fig:cstg_diff_demo}
+\end{figure}
+
+The green lines indicate flows that were \emph{new} in the latter 90\% of the program's run.
+The red lines indicate flows that were \emph{only in} the first 10\% of the program's run.
+What this means depends on the particular program; a domain expert can use these clues to e.g. find where instability started in the first part of the program, and where that instability got reinforced later on.
+
 \subsection{\NaN{} fuzzing to find a kill: OrdinaryDiffEq}
+\label{s:ode}
 
 The second thing we evaluated was an N-Body simulation library.
 We didn't find any sensible configuration of input parameters that lead to \NaN{} kills like in the ShallowWaters library.
@@ -699,16 +704,6 @@ Additionally, \FT{} and \CSTG{}s have been useful for identifying \NaN{}s that
 appear in unstable systems.
 %% advection2d, high cfl and high T (time) led to NaN during simulation
 
-
-\subsection{A Bug-Hunting Safari}
-
-% Notes on RxInfer
-
-We searched GitHub for open issues in Julia libraries involving difficult-to-find \NaN{}s.
-In our first batch of issues, we found the \code{RxInfer.jl} library with an issue revolving around \NaN{} detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
-We offered our tool for the package authors to use, and within a day the authors were able to track down the location of a \NaN{} and fix the issue---all with minimal guidance.
-
-
 \subsection{\GPUFPX{}: Oceananigans}
 \label{s:ocean}
 
@@ -766,6 +761,13 @@ of the reliability of the example.
   \caption{Example \GPUFPX{} output}
   \label{f:gpufpx}
 \end{figure}
+
+\subsection{A Bug-Hunting Safari}
+\ref{s:safari}
+
+\FT{} has proven to be useful for more than its creators---we discovered an open issue in the \code{RxInfer.jl} library with an issue revolving around \NaN{} detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
+Even though we were unable to provide hands-on guidance as the code in question was proprietary, the authors of \code{RxInfer.jl} were able use \FT{} themselves, and within a day they tracked down the location of a \NaN{} gen.
+The \code{RxInfer.jl} authors provided us with valuable feedback on \FT{}'s API.
 
 
 \section{Related Work}
