@@ -4,7 +4,6 @@
 \usepackage{amsmath}
 \usepackage{cleveref}
 \usepackage{microtype}
-% \usepackage{fontspec}
 
 %% extra links:
 %% - GPU Julia: https://cuda.juliagpu.org/stable/tutorials/introduction/
@@ -385,7 +384,7 @@ We have a global configuration system that allows us to turn on fuzzing and conf
 \FT{} exposes these configuration options:
 
 \begin{itemize}
-\item \textbf{\texttt{active::Bool} Inject only if this is true.
+\item \texttt{active::Bool} Inject only if this is true.
 \item \texttt{n\_inject::Int64} Inject at most this many \NaN{}s.
 \item \texttt{odds::Int64} Inject if \texttt{rand(odds) == 1}.
 \item \texttt{functions::Array} Inject if we are within the dynamic extent of any of these functions.
@@ -605,42 +604,20 @@ The green lines indicate flows that were \emph{new} in the latter 90\% of the pr
 The red lines indicate flows that were \emph{only in} the first 10\% of the program's run.
 What this means depends on the particular program; a domain expert can use these clues to e.g. find where instability started in the first part of the program, and where that instability got reinforced later on.
 
-\subsection{\NaN{} fuzzing to find a kill: OrdinaryDiffEq}
+\subsection{OrdinaryDiffEq}
 \label{s:ode}
 
-The second thing we evaluated was an N-Body simulation library.
-We didn't find any sensible configuration of input parameters that lead to \NaN{} kills like in the ShallowWaters library.
-We turned to the \NaN{} injection capabilities of FloatTracker to fuzz the library to find any lurking bugs.
-% FIXME: add hyper-ref to § 4.1: ShallowWaters
+To exercise the fuzzing abilities of \FT{}, we tried fuzzing \texttt{NBodySimulator}\footnote{\url{https://github.com/SciML/NBodySimulator.jl}} from the SciML team, which simulates the gravitational interactions between two or more massive bodies.
+However, when we used \FT{}, we got no \fp{} operations.
+We discovered that \texttt{NBodySimulator} merely sets up the system of equations to solve, then hands all the work of running the simulation off to the \texttt{OrdinaryDiffEq}\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}} library from the same team.
 
-We configured FloatTracker to inject a single \NaN{} to see if we could find any \NaN{} kills.
-On some runs we noticed that we would get a kill and the program would warn about a \NaN{} and prepare to exit.
-Contrary to the error message's claim, however, the program went into an infinite loop.
+We configured \FT{} to inject a single \NaN{} somewhere within the scope of the \texttt{NBodySimulator} and \texttt{OrdinaryDiffEq} libraries.
+We found a run where something curious happened: the library reported that it had detected a \NaN{} and would then exit.
+However, after printing that message, the program went into an infinite loop.
 
-The logs lead us to a routine in the widely-used \texttt{OrdinaryDiffEq} library.
-During initialization, a \NaN{} got injected during the execution of \texttt{-} between two \texttt{TrackedFloat}s:
-
-\begin{verbatim}
-…
--            at FloatTracker/src/TrackedFloat.jl:89
-#__init#628  at OrdinaryDiffEq/src/solve.jl:106
-…
-\end{verbatim}
-
-That injection point is here on third line of this snippet, which corresponds to line 106 from the \texttt{solve.jl} file in the \texttt{OrdinaryDiffEq} library:
-
-\begin{lstlisting}[language = Julia]
-tType = eltype(prob.tspan)
-tspan = prob.tspan
-tdir = sign(tspan[end] - tspan[1])
-
-t = tspan[1]
-\end{lstlisting}
-
-\texttt{sign} correctly propagates \NaN{}s, so \texttt{tdir} now contains a \NaN{}.
-
-We \emph{could} trace this variable through the code, but that would be a lot of grunt work.
-Instead, we can look at the \NaN{} kill logs to get a clue as to where we should look next:
+% FIXME: should I show that CSTG here in the paper?
+We used CSTGs to get an idea of what the important flows were in the run of this errant behavior.
+With an idea of what was going on, we took a look at the logs and found a \NaN{} kill inside the \texttt{solve.jl} file in the \texttt{OrdinaryDiffEq} library.
 
 \begin{verbatim}
 …
@@ -649,12 +626,8 @@ solve!  at OrdinaryDiffEq/src/solve.jl:515
 …
 \end{verbatim}
 
-We get a very large kill file from this run, and the two lines from above show up repeatedly.
-Thus, this is a good candidate location for where the cause of the loop is.
-
 The relevant part of \texttt{solve.jl} looks like this:
 
-% Note for Ashton:
 % file here: ~/Research/ode_debug/dev/OrdinaryDiffEq/src/solve.jl
 % see line 514
 
@@ -662,17 +635,21 @@ The relevant part of \texttt{solve.jl} looks like this:
 while !isempty(time_stops)
   while tdir * t < first(time_stops)
     # do integration work
+    # pop_off(time_stops)
   end
-  pop_if_work_done(time_stops)
 end
 \end{lstlisting}
 
 The problem here is on line 2 when \texttt{tdir} is \NaN{}: multiplication propagates \NaN{}s, and comparison kills it, so the condition on the inner \texttt{while} loop is \emph{always} false.
-No work got done in the inner loop, and so the conditional \texttt{pop} routine never reduced the size of the \texttt{time\_stops} vector.
+No work got done in the inner loop, and so the size of the \texttt{time\_stops} vector never decreases.
 
 Our kill logs led us right to this line; this is a perfect example of how \NaN{} kills can influence control flow to go awry.
 In this case, the problem was apparent besides what our logs told us and it manifested as an infinite loop.
 More dangerous cases can occur when the influence of a bad comparison is not as readily observable.
+In any case, \FT{} can help monitor for kills and help fuzz to find kills before they arise in production.
+
+We were able to use the injection recording and the gen logs to track down where the first \NaN{} was injected to cause the infinite loop.
+This made it simple for us to create an example to reproduce the behavior, which we included in the GitHub issue that we opened.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl/issues/1939}}
 
 \subsection{Finch}
 \label{s:finch}
@@ -734,7 +711,6 @@ The report is a starting point for further investigation
 of the reliability of the example.
 %% TODO exactly how?
 
-
 \begin{figure}[t]\centering
   \begin{tabular}[t]{ll}
     \begin{tabular}[t]{lr}
@@ -769,7 +745,6 @@ of the reliability of the example.
 Even though we were unable to provide hands-on guidance as the code in question was proprietary, the authors of \code{RxInfer.jl} were able use \FT{} themselves, and within a day they tracked down the location of a \NaN{} gen.
 The \code{RxInfer.jl} authors provided us with valuable feedback on \FT{}'s API.
 
-
 \section{Related Work}
 \label{s:related}
 
@@ -777,11 +752,15 @@ Error analysis, typical answer.
 Difficult.
 CITE
 
-Toronto McCarthy lightweight plotting approach.
-No tool support.
+Toronto and McCarthy\cite{torontoPracticallyAccurateFloatingPoint2014} developed a methodology for assessing where arithmetic operations are liable to magnify \fp{} error.
+They do not provide any tooling to find \emph{where} the error is causing problems, but they do provide guidance on what to do to mitigate error.
 
-Herbie, improving accuracy automatically.
-ParetoHerbie
+Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a tool for automatically rewriting arithmetic expressions to reduce \fp{} error.
+\FT{} tracks down exceptional \fp{} values; once the location of a gen is found, Herbie could be employed to rewrite the arithmetic expression, if \fp{} error is the cause of the exceptional value.
+Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} provides a helpful interactive interface to the tooling that Herbie provides.
+
+% Herbie, improving accuracy automatically.
+% ParetoHerbie
 
 %% http://eprints.maths.manchester.ac.uk/2873/1/fami22.pdf
 %% https://drive.google.com/drive/folders/1HkgMpxi6hsqLSZj9tSnuCxnFExPPjmvx?usp=sharing
@@ -789,12 +768,13 @@ ParetoHerbie
 %% https://ieeexplore.ieee.org/document/8916392
 %% https://link.springer.com/chapter/10.1007/978-3-319-73721-8_24
 
-Demmel, somewhere!
-%% https://arxiv.org/pdf/2207.09281.pdf
+Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
+They also suggest a fuzzing technique that we build upon with \FT{}:
+instead of fuzzing the \emph{inputs} to a program, we fuzz by randomly injecting exceptional values at \emph{any} point where there is an arithmetic operation. Demmel suggests that this approach is useful since any \fp{} operation could lead to an exceptional value if the inputs are in dangerous ranges.
 
-Sherlogs, ShallowWaters
-%% https://github.com/milankl/Sherlogs.jl
-%% sherlogs
+\texttt{Sherlogs}\footnote{\url{https://github.com/milankl/Sherlogs.jl}} by Milan Klöwer inspired the use of a custom number type to intercept operations on a number.
+In contrast to \FT{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \texttt{Sherlogs} tracks and reports the range of values seen over the course of a computation.
+This is intended to provide insight into whether or not a library could tolerate a lower-precision \fp{} format.
 
 FPSpy x86 binaries [10]
 Dinda etal hpdc 2020
@@ -820,8 +800,6 @@ BinFPE exn checking, slower than GPU-FPX,
 \cite{llg-soap-2022}.
 FPChecker, early pioneer, fpx in gpus, llvm-level instrumentation
 if compiled with Clang, but most gpus use closed NVCC compiler~\cite{l-ase-2019}.
-
-
 
 \section{Discussion}
 \label{s:discussion}

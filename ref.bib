@@ -343,3 +343,39 @@ url = {https://www.osti.gov/biblio/1989443}}
   abstract = {Parallel computational frameworks for high performance computing (HPC) are central to the advancement of simulation based studies in science and engineering. Unfortunately, finding and fixing bugs in these frameworks can be extremely time consuming. Left unchecked, these bugs can drastically diminish the amount of new science that can be performed. This paper presents our systematic study of the Uintah Computational Framework, and our approaches to debug it more incisively. Our key insight is to leverage the modular structure of Uintah which lends itself to systematic debugging. In particular, we have developed a new approach based on Coalesced Stack Trace Graphs (CSTGs) that summarize the system behavior in terms of key control flows manifested through function invocation chains. We illustrate several scenarios how CSTGs could help efficiently localize bugs, and present a case study of how we found and fixed a real Uintah bug using CSTGs.},
   file = {/Users/ashton/Zotero/storage/37MQ5W3U/Humphrey et al. - 2014 - Systematic Debugging Methods for Large-Scale HPC C.pdf}
 }
+
+@inproceedings{panchekhaAutomaticallyImprovingAccuracy2015,
+  title = {Automatically Improving Accuracy for Floating Point Expressions},
+  booktitle = {Proceedings of the 36th {{ACM SIGPLAN Conference}} on {{Programming Language Design}} and {{Implementation}}},
+  author = {Panchekha, Pavel and Sanchez-Stern, Alex and Wilcox, James R. and Tatlock, Zachary},
+  date = {2015-06-03},
+  series = {{{PLDI}} '15},
+  pages = {1--11},
+  publisher = {{Association for Computing Machinery}},
+  location = {{New York, NY, USA}},
+  doi = {10.1145/2737924.2737959},
+  url = {https://dl.acm.org/doi/10.1145/2737924.2737959},
+  urldate = {2023-08-08},
+  abstract = {Scientific and engineering applications depend on floating point arithmetic to approximate real arithmetic. This approximation introduces rounding error, which can accumulate to produce unacceptable results. While the numerical methods literature provides techniques to mitigate rounding error, applying these techniques requires manually rearranging expressions and understanding the finer details of floating point arithmetic. We introduce Herbie, a tool which automatically discovers the rewrites experts perform to improve accuracy. Herbie's heuristic search estimates and localizes rounding error using sampled points (rather than static error analysis), applies a database of rules to generate improvements, takes series expansions, and combines improvements for different input regions. We evaluated Herbie on examples from a classic numerical methods textbook, and found that Herbie was able to improve accuracy on each example, some by up to 60 bits, while imposing a median performance overhead of 40\%. Colleagues in machine learning have used Herbie to significantly improve the results of a clustering algorithm, and a mathematical library has accepted two patches generated using Herbie.},
+  isbn = {978-1-4503-3468-6},
+  keywords = {Floating point,numerical accuracy,program rewriting},
+  file = {/Users/ashton/Zotero/storage/3JNZIJHA/Panchekha et al. - 2015 - Automatically improving accuracy for floating poin.pdf}
+}
+
+@online{misbackOdysseyInteractiveWorkbench2023,
+  title = {Odyssey: {{An Interactive Workbench}} for {{Expert-Driven Floating-Point Expression Rewriting}}},
+  shorttitle = {Odyssey},
+  author = {Misback, Edward and Chan, Caleb and Saiki, Brett and Jun, Eunice and Tatlock, Zachary and Panchekha, Pavel},
+  date = {2023-05-17},
+  eprint = {2305.10599},
+  eprinttype = {arxiv},
+  eprintclass = {cs, math},
+  url = {http://arxiv.org/abs/2305.10599},
+  urldate = {2023-08-08},
+  abstract = {In recent years, researchers have proposed a number of automated tools to identify and improve floating-point rounding error in mathematical expressions. However, users struggle to effectively apply these tools. In this paper, we describe an iterative design process, working with novices, experts, and tool developers, to investigate user needs during the expression rewriting process. We find that users want to compare expressions on multiple input ranges, integrate and guide various rewriting tools, and understand where errors come from. We organize this investigation’s results into a three-stage workflow and implement that workflow in a new, extensible workbench dubbed Odyssey. Odyssey enables users to: (1) diagnose problems in an expression, (2) generate solutions automatically or by hand, and (3) tune their results. Odyssey tracks a working set of expressions and turns a state-of-the-art automated tool “inside out,” giving the user access to internal heuristics, algorithms, and functionality. In a user study, Odyssey enabled five expert numerical analysts to solve challenging rewriting problems where state-of-the-art automated tools fail. In particular, the experts unanimously praised Odyssey’s novel support for interactive range modification and local error visualization.},
+  langid = {english},
+  pubstate = {preprint},
+  keywords = {Computer Science - Human-Computer Interaction,Computer Science - Programming Languages,Mathematics - Numerical Analysis},
+  note = {Comment: 16 pages, 7 figures, 2 tables},
+  file = {/Users/ashton/Zotero/storage/LHWE7KR5/Misback et al. - 2023 - Odyssey An Interactive Workbench for Expert-Drive.pdf}
+}
