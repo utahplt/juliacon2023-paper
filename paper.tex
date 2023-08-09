@@ -470,13 +470,14 @@ See \cref{s:ocean} for an example of \GPUFPX{} in action, and \ref{f:gpufpx} for
 \section{Case Studies}
 \label{s:casestudies}
 
-We have used \FlowFPX{} to debug and harden various programs against exceptional values, which we now present in the following case studies.
+In this section we'll discuss some case studies where tools from \FlowFPX{} aided in finding or fixing \fp{} issues.
+Our case studies are as follows:
 
 \begin{itemize}
-\item \Cref{s:sw} uses the \FT{} and CSTG to uncover the source of \NaN{} and \Inf{} in a simulation.
-\item \Cref{s:ode} uses the fuzzing abilities of \FT{} to harden an existing library against unexpected exceptional values.
-\item \Cref{s:finch} is another case where fuzzing uncovered a hard-to-find bug.
-\item \Cref{s:ocean} showcases using \GPUFPX{} in a simulation.
+\item \Cref{s:sw} covers a simulation that produces \NaN{}s in the output---a common and frustrating occurrence for many a scientist.
+\item \Cref{s:ode} puts a widely-used mathematics library under a fuzzer to harden it against bad behavior in the presence of exceptional \fp{} values.
+\item \Cref{s:finch} puts another program under the fuzzer.  % <- ugh, rewrite
+\item \Cref{s:ocean} is a simulation that runs on the GPU---this puts it out of reach of \FT{} but not for other components of the \FlowFPX{} tool set.
 \end{itemize}
 
 Besides case studies that we ourselves did, \cref{s:safari} is an ``in the wild'' usage of \FT{} that helped researchers uncover the source of a \NaN{} in their own code.
@@ -770,7 +771,7 @@ In contrast to \FT{} which monitors for exceptional values and logs stack traces
 This is intended to provide insight into whether or not a library could tolerate a lower-precision \fp{} format.
 
 % TODO: make sure that what I said about what FPSpy can track is true.
-FPSpy~\cite{dindaSpyingFloatingPoint2020} is an \texttt{LD_PRELOAD} shared library that works on unmodified x86 binaries.
+FPSpy~\cite{dindaSpyingFloatingPoint2020} is an \texttt{LD\_PRELOAD} shared library that works on unmodified x86 binaries.
 It can monitor a program during execution for any \fp{} arithmetic issues, such as division by zero, denormalization, underflow, and overflow.
 \FT{} in contrast focuses on the lifetime of exceptional values; \FT{} can notice when a \NaN{} gets killed, for instance, while that is not an event that FPSpy appears to be able to track.
 FPSpy has the advantage of being lightweight enough to run on production code for certain loads.
@@ -820,7 +821,7 @@ Please see the CSTG paper for more on the differences between the two.
 % future work
 
 \subsection{Performance}
-\ref{s:discussion-performance}
+\label{s:discussion-performance}
 
 % TODO: citations!!!!
 % TODO: real numbers!!!
