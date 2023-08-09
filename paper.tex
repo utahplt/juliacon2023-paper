@@ -748,58 +748,72 @@ The \code{RxInfer.jl} authors provided us with valuable feedback on \FT{}'s API.
 \section{Related Work}
 \label{s:related}
 
-Error analysis, typical answer.
-Difficult.
-CITE
+\subsection{Floating-point error analysis}
+
+Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
+Their solution includes a characterization equivalent to our gen-prop-kill framework. % pg. 18---good way to cite this page specifically?
+They also suggest a fuzzing technique that we realize in \FT{}:
+instead of fuzzing the \emph{inputs} to a program, we fuzz by randomly injecting exceptional values at \emph{any} point where there is an arithmetic operation. Demmel suggests that this approach is useful since any \fp{} operation could lead to an exceptional value if the inputs are in dangerous ranges.
 
 Toronto and McCarthy\cite{torontoPracticallyAccurateFloatingPoint2014} developed a methodology for assessing where arithmetic operations are liable to magnify \fp{} error.
-They do not provide any tooling to find \emph{where} the error is causing problems, but they do provide guidance on what to do to mitigate error.
+Their work includes error visualization and work on how to avoid error-magnifying ``badlands''.
+They focus on rewriting arithmetic expressions to avoid error which could lead to exceptional values, rather than on exceptional values themselves.
 
-Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a tool for automatically rewriting arithmetic expressions to reduce \fp{} error.
+In a similar vein, Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a tool for automatically rewriting arithmetic expressions to reduce \fp{} error.
 \FT{} tracks down exceptional \fp{} values; once the location of a gen is found, Herbie could be employed to rewrite the arithmetic expression, if \fp{} error is the cause of the exceptional value.
 Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} provides a helpful interactive interface to the tooling that Herbie provides.
 
-% Herbie, improving accuracy automatically.
-% ParetoHerbie
+\subsection{Diagnosing floating-point exceptions}
 
-%% http://eprints.maths.manchester.ac.uk/2873/1/fami22.pdf
-%% https://drive.google.com/drive/folders/1HkgMpxi6hsqLSZj9tSnuCxnFExPPjmvx?usp=sharing
-%% https://docs.google.com/presentation/d/1ueqzb5QY9YHmtY2DfY_hpN9oufSOcXErLWsJOZQxgzo/edit?usp=sharing
-%% https://ieeexplore.ieee.org/document/8916392
-%% https://link.springer.com/chapter/10.1007/978-3-319-73721-8_24
-
-Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
-They also suggest a fuzzing technique that we build upon with \FT{}:
-instead of fuzzing the \emph{inputs} to a program, we fuzz by randomly injecting exceptional values at \emph{any} point where there is an arithmetic operation. Demmel suggests that this approach is useful since any \fp{} operation could lead to an exceptional value if the inputs are in dangerous ranges.
-
-\texttt{Sherlogs}\footnote{\url{https://github.com/milankl/Sherlogs.jl}} by Milan Klöwer inspired the use of a custom number type to intercept operations on a number.
+The Julia library \texttt{Sherlogs}\footnote{\url{https://github.com/milankl/Sherlogs.jl}} by Milan Klöwer inspired the use of a custom number type to intercept operations on a number.
 In contrast to \FT{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \texttt{Sherlogs} tracks and reports the range of values seen over the course of a computation.
 This is intended to provide insight into whether or not a library could tolerate a lower-precision \fp{} format.
 
-FPSpy x86 binaries [10]
-Dinda etal hpdc 2020
+% TODO: make sure that what I said about what FPSpy can track is true.
+FPSpy~\cite{dindaSpyingFloatingPoint2020} is an \texttt{LD_PRELOAD} shared library that works on unmodified x86 binaries.
+It can monitor a program during execution for any \fp{} arithmetic issues, such as division by zero, denormalization, underflow, and overflow.
+\FT{} in contrast focuses on the lifetime of exceptional values; \FT{} can notice when a \NaN{} gets killed, for instance, while that is not an event that FPSpy appears to be able to track.
+FPSpy has the advantage of being lightweight enough to run on production code for certain loads.
 
-FPChecker, " considers CPU OpenMP and MPI codes, again using LLVM
-instrumentation"~\cite{ltlg-iiswc-2022}
-% FPChecker has a nice table of tools; some already mentioned here
+\subsection{Stack trace graphs}
 
-6-8,24,25
-Arnab Das scalable yet rigorous
-Marc Daumas Certification of Bounds Expres
-David Delmas Towards an Industrial Use of
-Alexey Solovyev FPTaylor Results table
-Titolo absint
+CSTG~\cite{humphreySystematicDebuggingMethods2014} is built on the work of and related to the STAT~\cite{arnoldStackTraceAnalysis2007} tool developed by Laurence Livermore National Laboratory.
+Please see the CSTG paper for more on the differences between the two.
 
+\subsection{Floating-point exceptions on the GPU}
 
-CSTG~\cite{humphreySystematicDebuggingMethods2014}.
-What else???
+\GPUFPX{}…
 
-GPU-FPX state of art, companion project~\cite{llsflg-hpdc-2023}.
-Latest in line of work.
-BinFPE exn checking, slower than GPU-FPX, 
-\cite{llg-soap-2022}.
-FPChecker, early pioneer, fpx in gpus, llvm-level instrumentation
-if compiled with Clang, but most gpus use closed NVCC compiler~\cite{l-ase-2019}.
+% Error analysis, typical answer.
+% Difficult.
+% CITE
+
+% % Herbie, improving accuracy automatically.
+% % ParetoHerbie
+
+% %% http://eprints.maths.manchester.ac.uk/2873/1/fami22.pdf
+% %% https://drive.google.com/drive/folders/1HkgMpxi6hsqLSZj9tSnuCxnFExPPjmvx?usp=sharing
+% %% https://docs.google.com/presentation/d/1ueqzb5QY9YHmtY2DfY_hpN9oufSOcXErLWsJOZQxgzo/edit?usp=sharing
+% %% https://ieeexplore.ieee.org/document/8916392
+% %% https://link.springer.com/chapter/10.1007/978-3-319-73721-8_24
+
+% FPChecker, " considers CPU OpenMP and MPI codes, again using LLVM
+% instrumentation"~\cite{ltlg-iiswc-2022}
+% % FPChecker has a nice table of tools; some already mentioned here
+
+% 6-8,24,25
+% Arnab Das scalable yet rigorous
+% Marc Daumas Certification of Bounds Expres
+% David Delmas Towards an Industrial Use of
+% Alexey Solovyev FPTaylor Results table
+% Titolo absint
+
+% GPU-FPX state of art, companion project~\cite{llsflg-hpdc-2023}.
+% Latest in line of work.
+% BinFPE exn checking, slower than GPU-FPX, 
+% \cite{llg-soap-2022}.
+% FPChecker, early pioneer, fpx in gpus, llvm-level instrumentation
+% if compiled with Clang, but most gpus use closed NVCC compiler~\cite{l-ase-2019}.
 
 \section{Discussion}
 \label{s:discussion}
@@ -856,6 +870,6 @@ We would also like to thank the developers of \code{RxInfer.jl} for feedback on 
 % using the new jinx package for spell-checking!
 
 % Local Variables:
-% jinx-local-words: "CFL CSTG's CSTGs Courant Friedrichs JuliaHub Lewy OrdinaryDiffEq RxInfer ShallowWaters Sherlogs TrackedFloat isnan"
+% jinx-local-words: "CFL CSTG's CSTGs Courant Demmel Friedrichs Herbie JuliaHub Klöwer Lewy OrdinaryDiffEq RxInfer ShallowWaters Sherlogs TrackedFloat isnan"
 % citar-bibliography: ("./ref.bib")
 % End:

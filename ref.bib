@@ -379,3 +379,36 @@ url = {https://www.osti.gov/biblio/1989443}}
   note = {Comment: 16 pages, 7 figures, 2 tables},
   file = {/Users/ashton/Zotero/storage/LHWE7KR5/Misback et al. - 2023 - Odyssey An Interactive Workbench for Expert-Drive.pdf}
 }
+
+@inproceedings{arnoldStackTraceAnalysis2007,
+  title = {Stack {{Trace Analysis}} for {{Large Scale Debugging}}},
+  booktitle = {2007 {{IEEE International Parallel}} and {{Distributed Processing Symposium}}},
+  author = {Arnold, Dorian C. and Ahn, Dong H. and de Supinski, Bronis R. and Lee, Gregory L. and Miller, Barton P. and Schulz, Martin},
+  options = {useprefix=true},
+  date = {2007-03},
+  pages = {1--10},
+  issn = {1530-2075},
+  doi = {10.1109/IPDPS.2007.370254},
+  abstract = {We present the Stack Trace Analysis Tool (STAT) to aid in debugging extreme-scale applications. STAT can reduce problem exploration spaces from thousands of processes to a few by sampling stack traces to form process equivalence classes, groups of processes exhibiting similar behavior. We can then use full-featured debuggers on representatives from these behavior classes for root cause analysis. STAT scalably collects stack traces over a sampling period to assemble a profile of the application's behavior. STAT routines process the samples to form a call graph prefix tree that encodes common behavior classes over the program's process space and time. STAT leverages MRNet, an infrastructure for tool control and data analyses, to overcome scalability barriers faced by heavy-weight debuggers. We present STAT's design and an evaluation that shows STAT gathers informative process traces from thousands of processes with sub-second latencies, a significant improvement over existing tools. Our case studies of production codes verify that STAT supports the quick identification of errors that were previously difficult to locate.},
+  eventtitle = {2007 {{IEEE International Parallel}} and {{Distributed Processing Symposium}}},
+  keywords = {Assembly,Data analysis,Debugging,Delay,Large-scale systems,Production,Sampling methods,Scalability,Space exploration,Tree graphs},
+  file = {/Users/ashton/Zotero/storage/TJG4AGTU/Arnold et al. - 2007 - Stack Trace Analysis for Large Scale Debugging.pdf;/Users/ashton/Zotero/storage/WEW7XYTV/4227982.html}
+}
+
+@inproceedings{dindaSpyingFloatingPoint2020,
+  title = {Spying on the {{Floating Point Behavior}} of {{Existing}}, {{Unmodified Scientific Applications}}},
+  booktitle = {Proceedings of the 29th {{International Symposium}} on {{High-Performance Parallel}} and {{Distributed Computing}}},
+  author = {Dinda, Peter and Bernat, Alex and Hetland, Conor},
+  date = {2020-06-23},
+  pages = {5--16},
+  publisher = {{ACM}},
+  location = {{Stockholm Sweden}},
+  doi = {10.1145/3369583.3392673},
+  url = {https://dl.acm.org/doi/10.1145/3369583.3392673},
+  urldate = {2023-08-09},
+  abstract = {Scientific (and other) applications are critically dependent on calculations done using IEEE floating point arithmetic. A number of concerns have been raised about correctness in such applications given the numerous gotchas the IEEE standard presents for developers, as well as the complexity of its implementation at the hardware and compiler levels. The standard and its implementations do provide mechanisms for analyzing floating point arithmetic as it executes, making it possible to find and track problematic operations. However, this capability is seldom used in practice. In response, we have developed FPSpy, a tool that provides this capability when operating underneath existing, unmodified x64 application binaries on Linux, including those using thread- and process-level parallelism. FPSpy can observe application behavior without any cooperation from the application or developer, and can potentially be deployed as part of a job launch process. We present the design, implementation, and performance evaluation of FPSpy. FPSpy operates conservatively, getting out of the way if the application itself begins to use any of the OS or hardware features that FPSpy depends on. Its overhead can be throttled, allowing a tradeoff between which and how many unusual events are to be captured, and the slowdown incurred by the application, with the low point providing virtually zero slowdown. We evaluated FPSpy by using it to methodically study seven widely-used applications/frameworks from a range of domains (five of which are in the NSF XSEDE top-20), as well as the NAS and PARSEC benchmark suites. All told, these comprise about 7.5 million lines of source code in a wide range of languages, and parallelism models (including OpenMP and MPI). FPSpy was able to produce trace information for all of them. The traces show that problematic floating point events occur in both the applications and the benchmarks. Analysis of the rounding behavior captured in our traces also suggests the feasibility of an approach to adding adaptive precision underneath existing, unmodified binaries.},
+  eventtitle = {{{HPDC}} '20: {{The}} 29th {{International Symposium}} on {{High-Performance Parallel}} and {{Distributed Computing}}},
+  isbn = {978-1-4503-7052-3},
+  langid = {english},
+  file = {/Users/ashton/Zotero/storage/BH95UQWA/hpdc20.pdf}
+}
