@@ -752,7 +752,7 @@ The \code{RxInfer.jl} authors provided us with valuable feedback on \FT{}'s API.
 \subsection{Floating-point error analysis}
 
 Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
-Their solution includes a characterization equivalent to our gen-prop-kill framework. % pg. 18---good way to cite this page specifically?
+They describe a proposal to pack numeric codes into an \texttt{INFO\_ARRAY} that mirrors our gen-prop-kill framework.
 They also suggest a fuzzing technique that we realize in \FT{}:
 instead of fuzzing the \emph{inputs} to a program, we fuzz by randomly injecting exceptional values at \emph{any} point where there is an arithmetic operation. Demmel suggests that this approach is useful since any \fp{} operation could lead to an exceptional value if the inputs are in dangerous ranges.
 
@@ -783,7 +783,20 @@ Please see the CSTG paper for more on the differences between the two.
 
 \subsection{Floating-point exceptions on the GPU}
 
-\GPUFPX{}…
+FPChecker~\cite{l-ase-2019} is a tool to report \fp{} exceptions occurring on the GPU.
+FPChecker relies on LLVM-level instrumentation of GPU kernels, and so cannot run on the plethora of closed-source GPU kernels in usage today.
+
+BinFPE~\cite{llg-soap-2022} is another tool in the same space;
+BinFPE performs SASS-level analysis of GPU kernels, but is limited in that it is slow and does not catch errors that alter control flow.
+The latter deficiency is particularly worrisome, as we have seen, silent \NaN{} kills can invalidate results without the user noticing.
+
+\GPUFPX{}~\cite{llsflg-hpdc-2023} improves on the work of FPChecker and BinFPE by being more performant and catching a wider set of errors, including those that alter control flow.
+\GPUFPX{} is a shared library that, like FPSpy uses \texttt{LD\_PRELOAD} to work on unmodified binaries.
+\GPUFPX{} runs on CUDA cores from NVIDIA and reports total numbers of exceptional values.
+Like \FT{}, \GPUFPX{} can catch \NaN{} gens and kills, but it does this on the GPU where \FT{} doesn't apply.
+Despite these improvements, \GPUFPX{} is limited by the closed-source nature of common GPU cores, and cannot report at the rich level of source detail that \FT{} can.
+
+Work is ongoing to use \GPUFPX{} and \FT{} in tandem.
 
 % Error analysis, typical answer.
 % Difficult.
@@ -871,6 +884,6 @@ We would also like to thank the developers of \code{RxInfer.jl} for feedback on 
 % using the new jinx package for spell-checking!
 
 % Local Variables:
-% jinx-local-words: "CFL CSTG's CSTGs Courant Demmel Friedrichs Herbie JuliaHub Klöwer Lewy OrdinaryDiffEq RxInfer ShallowWaters Sherlogs TrackedFloat isnan"
+% jinx-local-words: "BinFPE CFL CSTG's CSTGs Courant Demmel FPChecker Friedrichs Herbie JuliaHub Klöwer Lewy OrdinaryDiffEq RxInfer ShallowWaters Sherlogs TrackedFloat isnan"
 % citar-bibliography: ("./ref.bib")
 % End:
