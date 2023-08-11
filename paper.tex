@@ -140,7 +140,8 @@ IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and ope
 
 \Fp{} is essentially scientific notation---\fp{} numbers are represented by packing a sign bit, an exponent, and an fraction part (also called the ``significand'' or ``mantissa'') into contiguous bit fields.
 The advantages of this representation are that allows for compact representation of both very small and very large numbers in a narrow range of bits---a 64-bit float can represent numbers as big as $2^{1024}$ and as small as $2^{-1074}$.
-This range is sufficient to represent both Planck's constant as well as Avogadro's constant with reasonable accuracy, making 
+
+This range is sufficient to represent both Planck's constant as well as Avogadro's constant with reasonable accuracy, making IEEE 754 \fp{} adequate for a wide range of numerical computations.
 The flip side is that not every real number within that wide range is representable as a \fp{} value---there is almost always some gap between the real number that we wish to represent and the \fp{} number that can represent.
 Whenever a value we have doesn't have a precise representation, we must \emph{round} that real value to the nearest \fp{} value.
 We call this gap error, and error, along with the finite nature of \fp{} values, means that we can run into some funny situations.
