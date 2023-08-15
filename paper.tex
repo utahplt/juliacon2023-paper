@@ -24,10 +24,13 @@
 
 \begin{abstract}
   Reliable numerical computations are central to high-performance computing and machine learning.
+  However, floating-point numbers exhibit non-intuitive behaviors that make writing correct numerical computation difficult.
+  In particular, \emph{floating-point exceptions} occur when no mathematically sensible result is available, and it is difficult to find \emph{where} these exceptions occur.
+  Unhandled exceptions can cause programs crash, exhibit bad behavior, or worse, silently produce good-looking but incorrect data.
   We present FlowFPX: a tool set for debugging floating-point code.
-  FlowFPX is composed of two primary parts: FloatTracker, a Julia-based tool for tracking the onset and flow of floating-point exceptions; and CSTG, a stack trace visualizer.
-  FlowTracker's design exploits Julia's operator overloading to trace exception flows and even inject exceptions to accelerate testing.
-  We present intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging and repair.
+  FlowFPX can track floating-point exceptions occurring in Julia code to their sources.
+  FlowFPX also detects otherwise silent exceptions which can foul program outputs.
+  FlowFPX produces intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging.
 \end{abstract}
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -53,18 +56,18 @@ Reliable numeric computations are central to high-performance computing,
 machine learning, and scientific applications.
 Yet, the \fp{} arithmetic that powers these computations is fundamentally
 unreliable~(\cref{s:background}).
-Exceptional values, namely Not a Number (\Nan{}) and infinity (\Inf{}),
+Exceptional values, such as Not a Number (\Nan{}) and infinity (\Inf{}),
 can and often do arise thanks to culprits such as roundoff error,
 catastrophic cancellation, singular matrices, and vanishing
 derivatives~\cite{sdjmrstp-pc-2022,ddghlllprr-correctness-2022,gllprt-correctness-2021,fpchecker-reports,llg-soap-2022,bllmg-xloop-2022}.
 When exceptions happen, domain experts must take time away from their main
 focus and trek down a rabbit hole to find the source of the error.
 There is little tool support to assist in this difficult task,
-thus (unsurpringly) a quick GitHub search reports over 4,000 open issues
+thus (unsurprisingly) a quick GitHub search reports over 4,000 open issues
 related to \NaN{} or \Inf{} exceptions~\cite{github-issues}.
 
 We introduce \FlowFPX{}, a toolkit for debugging
-\fp{} exceptions in an easy and intuitive way~(\cref{s:flowfpx}):
+\fp{} exceptions~(\cref{s:flowfpx}):
 \begin{itemize}
   \item
     The centerpiece of \FlowFPX{} is \FT{}, a dynamic analysis tool that uses
@@ -77,12 +80,8 @@ We introduce \FlowFPX{}, a toolkit for debugging
   \item A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
 \end{itemize}
 %
-Together, the \FlowFPX{} tools have helped debug exceptions in a variety
+\FlowFPX{} has helped debug exceptions in a variety
 of applications: from ocean simulations to heat models~(\cref{s:casestudies}).
-That said, there is much more to explore.
-\FlowFPX{} is a growing project and we welcome feedback from domain experts
-on how to best suit their workflow.
-
 This paper concludes with related work~(\cref{s:related}) and a
 brief discussion~(\cref{s:discussion}).
 
@@ -773,7 +772,7 @@ We spent most of the time engineering and testing \NaN{} tracking and injection.
 Adding \Inf{} tracking took a few hours.
 Adding other values of interest presents no fundamental difficulties.
 
-\subsection{Enhanced Fuzzing}
+\subsection{Enhanced fuzzing}
 
 While fuzzing is useful for discovering issues, its success rate
 is low because \emph{every} \fp{} operation is a candidate
@@ -794,6 +793,12 @@ decide whether they are protected or not.
 
 \FT{}'s scope is limited to Julia code: it cannot track the lifetime of exceptional values that are born, live, or die in external libraries, such as C programs.
 One approach would be to create an API for \FT{} so that programs using these external libraries could leverage \FT{}'s tooling to monitor the interface between Julia and e.g. external C programs.
+
+\subsection{Future work}
+
+\FlowFPX{} is a growing project and we welcome feedback from domain experts
+on how to best suit their workflow.
+If you try any of our tools, please send us comments, suggestions, and bug reports via the tools' repositories on GitHub.
 
 \section{Acknowledgments}
 
