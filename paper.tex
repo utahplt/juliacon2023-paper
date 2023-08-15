@@ -89,9 +89,7 @@ brief discussion~(\cref{s:discussion}).
 \label{s:background}
 
 \Fp{} provides a finite approximation of the real numbers in a format that is efficient for calculation on a computer.
-IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and operations---these days, most machines and languages follow the IEEE 754 standard, and we make no effort to generalize our work beyond what IEEE 754 specifies.
-
-\Fp{} is essentially scientific notation---\fp{} numbers are represented by packing a sign bit, an exponent, and an fraction part (also called the ``significand'' or ``mantissa'') into contiguous bit fields.
+\Fp{} is essentially scientific notation---\fp{} numbers are represented by packing a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into contiguous bit fields.
 The advantages of this representation are that allows for compact representation of both very small and very large numbers in a narrow range of bits---a 64-bit float can represent numbers as big as $2^{1024}$ and as small as $2^{-1074}$.
 This range is sufficient to represent numbers as small as Planck's constant or as big as Avogadro's constant with reasonable accuracy.
 
@@ -120,6 +118,8 @@ p + a:    6.02214076e23  : 0100010011011 ... 111
 \end{lstlisting}
 
 This is a fairly extreme example; even when the numbers are closer in magnitude, most operations on \fp{} numbers induce loss of accuracy.
+
+IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and operations---these days, most machines and languages follow the IEEE 754 standard, and we make no effort to generalize our work beyond what IEEE 754 specifies.
 
 \subsection{Exceptions and exceptional values}
 
