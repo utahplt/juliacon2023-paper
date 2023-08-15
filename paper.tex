@@ -12,6 +12,9 @@
 
 \begin{document}
 
+%% TODO items
+%%  - [ ] Normalize casing in all sections, sub-sections, etc
+
 % Misc typographical tweaks.
 \setlength{\parindent}{1.2em}
 % \setmonofont{JuliaMono}[Extension = .ttf, Path = ./, UprightFont = *-Regular, ItalicFont = *-Italic]
@@ -240,17 +243,7 @@ Work to use \GPUFPX in tandem with \FT{} is ongoing.
 \subsection{\FT{}}
 \label{s:floattracker}
 
-\FT{} has two roles:
-
-\begin{enumerate}
-  \item Track exceptional values
-  \item Fuzz \fp{} code from the inside-out
-\end{enumerate}
-
-Building the mechanism to track exceptional values also gave us a way to inject exceptional values wherever \fp{} operations occur.
-We will examine each of these roles, how they are used, and how \FT{} realizes them.
-
-%% What it does, then how it works
+\FT{} is implemented as a Julia library, and is available for download on JuliaHub.\footnote{\url{https://juliahub.com/ui/Packages/FloatTracker/dBXig/1.0.0}}
 
 \subsubsection{Tracking Exceptional Values}
 \label{s:trackingexceptionalvalues}
@@ -265,9 +258,37 @@ All the logs that \FT{} captures are straight from Julia's \texttt{stacktrace()}
 This way, if a user of \FT{} is attempting to determine where a \NaN{} or an \Inf{} came from, they can look in the file for all the gen events.
 Likewise, if the user wants to find where \NaN{}s get killed, then they can look in the kills file.
 
-% note: there's a section on performance in the "discussion" section at the end, so we can leave it out here I think
+\subsubsection{Fuzzing}
 
-While other tools like profilers might accomplish this tracking by writing extensions to the language's compiler or runtime, we were able to implement \FT{} entirely in user land.
+The second role of \FT{} is to fuzz code from the inside out.
+While it is wholly possible to fuzz a program by giving it random inputs, this might not help you find \emph{all} the places where an exceptional value could crop up during a calculation.\cite{ddghlllprr-correctness-2022}
+
+The exception tracking infrastructure that we have gives us a simple way to inject exceptional values wherever we want in our code.
+We have a global configuration system that allows us to turn on fuzzing and configure where, when, and how many \NaN{}s\footnote{At time of writing, \FT{} only injects \NaN{}, but it is trivial to extend the set of values to inject.} to inject.
+
+\FT{} exposes these configuration options:
+
+\begin{itemize}
+\item \texttt{active::Bool} Inject only if this is true.
+\item \texttt{n\_inject::Int64} Inject at most this many \NaN{}s.
+\item \texttt{odds::Int64} Inject if \texttt{rand(odds) == 1}.
+\item \texttt{functions::Array} Inject if we are within the dynamic extent of any of these functions.
+\item \texttt{libraries::Array} Inject if the top-most stack frame\footnote{After stripping off the stack frames that come from \FT{} itself.} comes from any of these libraries.
+\item \texttt{replay::String} Name of a file to read an injection recording from.
+\item \texttt{record::String} Name of a file to write injection events to for later replay.
+\end{itemize}
+
+Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}. First we check if we're replaying a recording: if we are, just do as the recording says. Otherwise, we check to make sure we have \NaN{}s remaining to inject and we roll a die to see if we should inject. We also check the current stack trace against the lists of functions and libraries to inject in. If all looks good, we inject.
+
+In our experience, requesting the stack trace from Julia is the most expensive part of this operation.
+Therefore, we defer the stack checks as late as we can.
+Once the fuzzer runs out of \NaN{}s, it effectively turns off, so the rest of the fuzzing session proceeds much more quickly.
+That said, gathering stack traces still incurs a heavy overhead during logging when interesting events occur;
+we recommend limiting the number and kinds of events logged for optimal performance.
+
+\subsubsection{\FT{} internals}
+
+While other tools like profilers might accomplish the tracking that \FT{} does by writing extensions to the language's compiler or runtime, we were able to implement \FT{} entirely in user land.
 We created custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32}, and \texttt{Float64} counterparts.
 We then defined methods for every function in the \texttt{Base} module, including new implementations for operators like \texttt{+} and \texttt{*}.
 This lets us intercept all \fp{} operations working on our \texttt{TrackedFloat} types.
@@ -300,34 +321,6 @@ Here is how we classify events around a \NaN{}:
 \end{center}
 
 The same classification rules apply to \Inf{} and would apply to any other value of interest.
-
-\subsubsection{Fuzzing}
-
-The second role of \FT{} is to fuzz code from the inside out.
-While it is wholly possible to fuzz a program by giving it random inputs, this might not help you find \emph{all} the places where an exceptional value could crop up during a calculation.\cite{ddghlllprr-correctness-2022}
-
-The exception tracking infrastructure that we have gives us a simple way to inject exceptional values wherever we want in our code.
-We have a global configuration system that allows us to turn on fuzzing and configure where, when, and how many \NaN{}s\footnote{At time of writing, \FT{} only injects \NaN{}, but it is trivial to extend the set of values to inject.} to inject.
-
-\FT{} exposes these configuration options:
-
-\begin{itemize}
-\item \texttt{active::Bool} Inject only if this is true.
-\item \texttt{n\_inject::Int64} Inject at most this many \NaN{}s.
-\item \texttt{odds::Int64} Inject if \texttt{rand(odds) == 1}.
-\item \texttt{functions::Array} Inject if we are within the dynamic extent of any of these functions.
-\item \texttt{libraries::Array} Inject if the top-most stack frame\footnote{After stripping off the stack frames that come from \FT{} itself.} comes from any of these libraries.
-\item \texttt{replay::String} Name of a file to read an injection recording from.
-\item \texttt{record::String} Name of a file to write injection events to for later replay.
-\end{itemize}
-
-Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}. First we check if we're replaying a recording: if we are, just do as the recording says. Otherwise, we check to make sure we have \NaN{}s remaining to inject and we roll a die to see if we should inject. We also check the current stack trace against the lists of functions and libraries to inject in. If all looks good, we inject.
-
-In our experience, requesting the stack trace from Julia is the most expensive part of this operation.
-Therefore, we defer the stack checks as late as we can.
-Once the fuzzer runs out of \NaN{}s, it effectively turns off, so the rest of the fuzzing session proceeds much more quickly.
-That said, gathering stack traces still incurs a heavy overhead during logging when interesting events occur;
-we recommend limiting the number and kinds of events logged for optimal performance.
 
 \subsection{CSTG}
 \label{s:cstg}
@@ -707,7 +700,8 @@ FPSpy has the advantage of being lightweight enough to run on production code fo
 \subsection{Stack trace graphs}
 
 CSTG~\cite{humphreySystematicDebuggingMethods2014} is built on the work of and related to the STAT~\cite{arnoldStackTraceAnalysis2007} tool developed by Laurence Livermore National Laboratory.
-Please see the CSTG paper for more on the differences between the two.
+STAT is a tool for collecting, analyzing, and visualizing stack traces from thousands of concurrent processes, and is designed to highlight anomalies quickly.
+It produces visualizations similar to those of CSTG, thought CSTG offers more compact views.
 
 \subsection{Floating-point exceptions on the GPU}
 
@@ -773,6 +767,7 @@ In addition to the cost incurred by intercepting \fp{} operations, gathering sta
 We recommend that users of \FT{} make use of the \texttt{maxLogs} and \texttt{exclude\_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
 
 \subsection{Tracking more than \NaN{}s and \Inf{}s}
+
 FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to \NaN{} or \Inf{}.
 We spent most of the time engineering and testing \NaN{} tracking and injection.
 Adding \Inf{} tracking took a few hours.
@@ -795,21 +790,24 @@ decide whether they are protected or not.
 
 %% TODO example, start here at glbvertex https://github.com/paralab/Finch/blob/master/src/grid.jl#L360
 
-\subsection{Static FPX, Gradual Types}
+\subsection{Tracking exceptions in external libraries}
 
-FILL
-
+\FT{}'s scope is limited to Julia code: it cannot track the lifetime of exceptional values that are born, live, or die in external libraries, such as C programs.
+One approach would be to create an API for \FT{} so that programs using these external libraries could leverage \FT{}'s tooling to monitor the interface between Julia and e.g. external C programs.
 
 \section{Acknowledgments}
 
+We would like to thank Alex Larsen and Rob Durst for their help with reading drafts of the paper and feedback on the presentation.
 We would also like to thank the developers of \code{RxInfer.jl} for feedback on \FlowFPX{}.
+Finally, many thanks to Milan Klöwer, the author of the \texttt{Sherlogs} library, for inspiration on the architecture of \FT{}.
 
 \input{bib.tex}
 
 \end{document}
 
-% Below is some Emacs-specific stuff. If you're using Emacs, you should try
-% using the new jinx package for spell-checking!
+% Below is some Emacs-specific stuff to help me (Ashton) write this paper. If
+% you're using Emacs, you should try using the new jinx package for
+% spell-checking!
 
 % Local Variables:
 % jinx-local-words: "BinFPE CFL CSTG's CSTGs Courant Demmel FPChecker Friedrichs Herbie JuliaHub Klöwer Lewy OrdinaryDiffEq RxInfer ShallowWaters Sherlogs TrackedFloat isnan"
