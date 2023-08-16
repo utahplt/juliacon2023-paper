@@ -12,9 +12,6 @@
 
 \begin{document}
 
-%% TODO items
-%%  - [ ] Normalize casing in all sections, sub-sections, etc
-
 % Misc typographical tweaks.
 \setlength{\parindent}{1.2em}
 % \setmonofont{JuliaMono}[Extension = .ttf, Path = ./, UprightFont = *-Regular, ItalicFont = *-Italic]
@@ -85,7 +82,7 @@ of applications: from ocean simulations to heat models~(\cref{s:casestudies}).
 This paper concludes with related work~(\cref{s:related}) and a
 brief discussion~(\cref{s:discussion}).
 
-\section{Floating Point Exception Primer}
+\section{Floating-Point Exception Primer}
 \label{s:background}
 
 \Fp{} provides a finite approximation of the real numbers in a format that is efficient for calculation on a computer.
@@ -121,7 +118,7 @@ This is a fairly extreme example; even when the numbers are closer in magnitude,
 
 IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and operations---these days, most machines and languages follow the IEEE 754 standard, and we make no effort to generalize our work beyond what IEEE 754 specifies.
 
-\subsection{Exceptions and exceptional values}
+\subsection{Exceptions and Exceptional Values}
 
 IEEE 754 defines \emph{\fp{} exceptions}, which are events that occur when something goes wrong in a calculation.
 William Kahan says,
@@ -285,7 +282,7 @@ Once the fuzzer runs out of \NaN{}s, it effectively turns off, so the rest of th
 That said, gathering stack traces still incurs a heavy overhead during logging when interesting events occur;
 we recommend limiting the number and kinds of events logged for optimal performance.
 
-\subsubsection{\FT{} internals}
+\subsubsection{\FT{} Internals}
 
 While other tools like profilers might accomplish the tracking that \FT{} does by writing extensions to the language's compiler or runtime, we were able to implement \FT{} entirely in user land.
 We created custom types \texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64} that wrap their corresponding \texttt{Float16}, \texttt{Float32}, and \texttt{Float64} counterparts.
@@ -487,7 +484,7 @@ Tracking down why that value got so large is beyond the scope of FloatTracker ri
 Most likely we will need some domain-expertise to find a solution to this problem.
 The point is, we were able to quickly and automatically arrive at this excellent starting point with FloatTracker.
 
-\subsubsection{CSTGs help us get a bigger picture}
+\subsubsection{CSTGs Help Us Get a Bigger Picture}
 
 Running FloatTracker can produce a lot of logs.
 To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
@@ -659,7 +656,7 @@ of the reliability of the example.
   \label{f:gpufpx}
 \end{figure}
 
-\subsection{A Bug-Hunting Safari}
+\subsection{RxInfer: No Help Needed}
 \label{s:safari}
 
 \FT{} has proven to be useful for more than its creators---we discovered an open issue in the \code{RxInfer.jl} library with an issue revolving around \NaN{} detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
@@ -669,7 +666,7 @@ The \code{RxInfer.jl} authors provided us with valuable feedback on \FT{}'s API.
 \section{Related Work}
 \label{s:related}
 
-\subsection{Floating-point error analysis}
+\subsection{Floating-Point Error Analysis}
 
 Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
 They describe a proposal to pack numeric codes into an \texttt{INFO\_ARRAY} that mirrors our gen-prop-kill framework.
@@ -696,13 +693,13 @@ It can monitor a program during execution for any \fp{} arithmetic issues, such 
 \FT{} in contrast focuses on the lifetime of exceptional values; \FT{} can notice when a \NaN{} gets killed, for instance, while that is not an event that FPSpy appears to be able to track.
 FPSpy has the advantage of being lightweight enough to run on production code for certain loads.
 
-\subsection{Stack trace graphs}
+\subsection{Stack Trace Graphs}
 
 CSTG~\cite{humphreySystematicDebuggingMethods2014} is built on the work of and related to the STAT~\cite{arnoldStackTraceAnalysis2007} tool developed by Laurence Livermore National Laboratory.
 STAT is a tool for collecting, analyzing, and visualizing stack traces from thousands of concurrent processes, and is designed to highlight anomalies quickly.
 It produces visualizations similar to those of CSTG, thought CSTG offers more compact views.
 
-\subsection{Floating-point exceptions on the GPU}
+\subsection{Floating-Point Exceptions on the GPU}
 
 FPChecker~\cite{l-ase-2019} is a tool to report \fp{} exceptions occurring on the GPU.
 FPChecker relies on LLVM-level instrumentation of GPU kernels, and so cannot run on the plethora of closed-source GPU kernels in usage today.
@@ -765,14 +762,14 @@ To put this number into context, Valgrind runs with a similar level of slowdown.
 In addition to the cost incurred by intercepting \fp{} operations, gathering stack traces is expensive---we measured a significant slowdown on the order of 10x relative to a non-logging setup of \FT{}.
 We recommend that users of \FT{} make use of the \texttt{maxLogs} and \texttt{exclude\_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
 
-\subsection{Tracking more than \NaN{}s and \Inf{}s}
+\subsection{Tracking More than \NaN{}s and \Inf{}s}
 
 FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to \NaN{} or \Inf{}.
 We spent most of the time engineering and testing \NaN{} tracking and injection.
 Adding \Inf{} tracking took a few hours.
 Adding other values of interest presents no fundamental difficulties.
 
-\subsection{Enhanced fuzzing}
+\subsection{Enhanced Fuzzing}
 
 While fuzzing is useful for discovering issues, its success rate
 is low because \emph{every} \fp{} operation is a candidate
@@ -789,12 +786,12 @@ decide whether they are protected or not.
 
 %% TODO example, start here at glbvertex https://github.com/paralab/Finch/blob/master/src/grid.jl#L360
 
-\subsection{Tracking exceptions in external libraries}
+\subsection{Tracking Exceptions in External Libraries}
 
 \FT{}'s scope is limited to Julia code: it cannot track the lifetime of exceptional values that are born, live, or die in external libraries, such as C programs.
 One approach would be to create an API for \FT{} so that programs using these external libraries could leverage \FT{}'s tooling to monitor the interface between Julia and e.g. external C programs.
 
-\subsection{Future work}
+\subsection{Future Work}
 
 \FlowFPX{} is a growing project and we welcome feedback from domain experts
 on how to best suit their workflow.
