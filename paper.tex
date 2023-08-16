@@ -85,16 +85,21 @@ brief discussion~(\cref{s:discussion}).
 \section{Floating-Point Exception Primer}
 \label{s:background}
 
-\Fp{} provides a finite approximation of the real numbers in a format that is efficient for calculation on a computer.
 \Fp{} is essentially scientific notation---\fp{} numbers are represented by packing a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into contiguous bit fields.
 The advantages of this representation are that allows for compact representation of both very small and very large numbers in a narrow range of bits---a 64-bit float can represent numbers as big as $2^{1024}$ and as small as $2^{-1074}$.
 This range is sufficient to represent numbers as small as Planck's constant or as big as Avogadro's constant with reasonable accuracy.
 
-The flip side is that not every real number within that wide range is representable as a \fp{} value---there is almost always some gap between the real number that we wish to represent and the \fp{} number that can represent.
-Whenever a value we have doesn't have a precise representation, we must \emph{round} that real value to the nearest \fp{} value.
-We call this gap error, and error, along with the finite nature of \fp{} values, means that we can run into some funny situations.
+\begin{figure}[h]
+  \label{fig:real_vs_float}
+  \includegraphics[width=\columnwidth]{ fig/real_vs_fp.png }
+  \caption{The real number line vs the points representable with \fp{}.}
+\end{figure}
 
-For example, if two numbers' exponents differ by too large an amount, adding or subtracting the smaller from the bigger can result in just the bigger number.
+The flip side is that not every real number within that wide range is representable as a \fp{} value---there is almost always some gap between the real number that we wish to represent and the \fp{} number that approximates that value.
+Whenever a value we have doesn't have a precise representation, we must \emph{round} that real value to the nearest \fp{} value, which introduces some error in our calculations.
+In addition to this error, the finite nature of \fp{} values means that we can run into some situations that wouldn't arise when working with real numbers.
+
+For example, if two numbers' exponents differ by too large an amount, adding or subtracting the smaller from the bigger will leave us with just the bigger number.
 Below we take the Planck constant and add it to Avogadro's constant and are left bit-for-bit with Avogadro's constant, as if we had never done any addition at all: there is no way to pack all the significant figures from true value that differs minutely from Avogadro's number into a 64-bit \fp{} number.
 
 \begin{lstlisting}[language = Julia]
@@ -106,7 +111,7 @@ println("avogadro: $a  : $(bitstring(a))")
 println("p + a:    $(p + a)  : $(bitstring(p + a))")
 \end{lstlisting}
 
-This outputs:
+You can see in the output that \texttt{p + a} is bit-for-bit equivalent to \texttt{a}:
 
 \begin{lstlisting}
 planck:   6.62607015e-34 : 0011100100001 ... 001
@@ -116,7 +121,11 @@ p + a:    6.02214076e23  : 0100010011011 ... 111
 
 This is a fairly extreme example; even when the numbers are closer in magnitude, most operations on \fp{} numbers induce loss of accuracy.
 
-IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and operations---these days, most machines and languages follow the IEEE 754 standard, and we make no effort to generalize our work beyond what IEEE 754 specifies.
+\subsection{Floating-Point Standards}
+
+Prior to 1985, incomparable techniques for representing \fp{} values proliferated as mainframes and later personal computers emerged.
+This made writing portable \fp{} code challenging.~\cite{houghIEEEStandard7542019}
+IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and operations across different architectures---these days, most machines and languages follow the IEEE 754 standard, and we make no effort to generalize our work beyond what IEEE 754 specifies.
 
 \subsection{Exceptions and Exceptional Values}
 
@@ -127,55 +136,50 @@ William Kahan says,
 An arithmetic exception arises when [there is] no result that would be acceptable universally.
 \end{quote}
 
-For example, dividing by zero is an exception, as is exceeding your \fp{} format's range.
-These are exceptions because it is impossible to say what the right answer \emph{should} have been: perhaps that zero was meant to be a value that got really \emph{close} to zero, and suddenly rounded towards zero before division.
-Or maybe that value that got really big \emph{does} need to get that big, but you need to start using a larger format for your \fp{} values.
+For example, dividing by zero is an exception, as is exceeding a \fp{} format's range.
+These are exceptions because it is impossible to say what the right answer \emph{should} have been: perhaps that zero was meant to be a value that got really \emph{close} to zero,\footnote{The third kind of exceptional value is called a \emph{subnormal} value.} and suddenly rounded towards zero before division.
+Or maybe that value that got really big \emph{does} need to get that big, but you need to start using a larger bit width for your \fp{} values.
 Whatever, the case, there isn't a universally acceptable answer, so a \fp{} exception gets raised.
 
-IEEE 754 doesn't always obligate the programmer to handle these exceptions, however, so we end up with \emph{exceptional values}, which are the results of exception-raising operations.
-The two values we work with in this paper are \Inf{} and \NaN{}, which result from overflow and nonsensical operations respectively.\footnote{The third kind of exceptional value is called a \emph{subnormal} value. Please see~\cite{torontoPracticallyAccurateFloatingPoint2014} for a good introduction to subnormal values, as well as other details of \fp{} representation.}
+IEEE 754 doesn't force the programmer to always handle these exceptions, however, so we end up with \emph{exceptional values}, which are the results of exception-raising operations.
+The two values we work with in this paper are \Inf{}\footnote{There are actually two infinities: $+\infty$ and $-\infty$; they behave the same for our purposes, so we will refer to them just as ``\Inf{}''.} and \NaN{}, which result from overflow and nonsensical operations respectively.
+\Cref{fig:nan-gens} lists some of the situations that lead to exceptional values.
 
-IEEE 754 lists the following operations (among a few others) where \NaN{}s result:
-
-\begin{figure}[h]
+\begin{figure}[ht]
+  \centering
   \label{fig:nan-gens}
-  \begin{itemize}
-  \item $\frac{0}{0}$ or $\frac{\infty}{\infty}$
-  \item $0 * \infty$
-  \item $x \% y$ when $x = \infty$ or $y = 0$
-  \item $+\infty + -\infty$ or $\infty - \infty$
-  \item The square root or logarithm of a negative number
-  \end{itemize}
-  \caption{\NaN{}-producing operations}
+  % \begin{tabular}{c | p{0.5 \columnwidth}}
+  \begin{tabular}{c | c}
+    \NaN{} & \Inf{} \\
+    \hline
+    $\tfrac{0}{0}$ & $\tfrac{x}{0},\, x \neq 0$ \\
+    $0 * \infty$ & $\log{(0)}$ \\
+    $\text{\texttt{NaN}} + x$ & $\infty + x,\, x \neq \text{\texttt{NaN}}$ \\
+    $\infty - \infty$ & Any result exceeding \\
+    & representation capacity
+  \end{tabular}
+  \caption{Examples of operations leading to exceptional values}
 \end{figure}
 
-There are actually two infinities, $+\infty$ and $-\infty$, but they behave the same for our purposes, so we will refer to them just as ``\Inf{}''.
-Like \NaN{}s, \Inf{} can crop up when bad math happens: $\frac{x}{0} \rightarrow \infty$ when $x \ne 0$.
-\Inf{} can also arise when numbers get too big or too small for the choice of representation.
+For more details on exceptional values, see~\cite{knuthArtComputerProgramming1997,torontoPracticallyAccurateFloatingPoint2014} as well as the \textit{Handbook of Floating-Point Arithmetic}.~\cite{mullerHandbookFloatingPointArithmetic2018}
 
-There are many excellent resources\cite{knuthArtComputerProgramming1997,torontoPracticallyAccurateFloatingPoint2014} on understanding the theory behind \fp{} as well as how error is measured and accumulates.
-Please see those works for more details.
-What we have described above should suffice for the remainder of this paper.
-
-% Here is a short, illustrative example about the problem.
-\subsection{To Kill a Floating Point}
+\subsection{Lifetimes of Unhandled Exceptions}
 \label{s:to-kill-a-fp}
-% If anyone has a better "kill" pun/reference than "To Kill a Mockingbird", I'm all ears.
 
-Exceptional values have a life cycle: they are born, live, and die, as seen in \cref{f:gpk}.
+Exceptional values have a life cycle: instead a program-halting exception, an exceptional value comes into being at the point of an undefined operation and propagates through the rest of the computation.
+Often they go on to manifest in the output of the code, but sometimes they can ``die'' by disappearing silently.
+We characterize this life cycle in \cref{fig:gpk}.
 
-\begin{figure}
+\begin{figure}[ht]
   \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
   \caption{Gen, Prop, Kill: Lifetime of a \NaN{} value}
   \label{f:gpk}
 \end{figure}
 
-When a \NaN{} or an \Inf{} comes into being as the result of a bad math operation, we call this a generation, or \emph{gen} for short.
+When a \NaN{} or an \Inf{} comes into being as the result of an undefined operation, we call this a generation, or \emph{gen} for short.
 
-The IEEE 754 specification for \fp{} numbers governs how \NaN{}s are handled as arguments to arithmetic functions~\cite{IEEEStandardBinary1985}.
 Most of the time, when any or all of the arguments are \NaN{}, the result is also a \NaN{}.
 We call this a propagation, or \emph{prop} for short.
-
 This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
 
 However, there are a few places where exceptional values flow into an expression, but not out.
@@ -202,7 +206,8 @@ end
 \end{lstlisting}
 
 Both \texttt{bad\_max} and \texttt{good\_max} compute the maximum in a list.
-However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate \NaN{}s, so you might not get the result you expected:
+However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate \NaN{}s: \texttt{NaN <= 4} returns \texttt{false}, not \NaN{}.
+Because of this, you might not get the result you expected:
 
 \begin{lstlisting}[language = Julia]
 bad_max([1, 5, NaN, 4])     # returns 4
@@ -211,22 +216,21 @@ good_max([1, 5, NaN, 4])    # returns NaN
 
 Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a \NaN{} in the list, the result is also wrong!
 The built-in \texttt{max} function correctly propagates \NaN{}s, so we can see from its return that we got a \NaN{} somewhere.
-It's not entirely obvious \emph{where} that \NaN{} came from---but more on that later.   % this promise answered in "NaN propagation monitoring"
+It's not entirely obvious \emph{where} that \NaN{} came from.
 
 \section{\FlowFPX{}}
 \label{s:flowfpx}
 
-\FlowFPX{} is a growing set of tools to aid in tracking down \fp{} exceptions.
+\FlowFPX{} is a set of tools to aid in tracking down \fp{} exceptions.
 The two primary tools we cover in this paper are \FT{} and CSTG:
 
 \begin{itemize}
-\item \FT{}'s role is twofold: to trace the lifetime of exceptional \fp{} values and to enable inside-out fuzzing.
-\item CSTG's role is to visualize the tracing output from \FT{} in compact form.
+\item \FT{} traces the lifetime of exceptional \fp{} values and enables inside-out fuzzing.
+\item CSTG visualizes the tracing output from \FT{} in compact form.
 \end{itemize}
 
-\GPUFPX\cite{llsflg-hpdc-2023} is another component of \FlowFPX{} that can track \fp{} exceptions inside a GPU kernel.
-Please see the cited paper for more details on \GPUFPX.
-Work to use \GPUFPX in tandem with \FT{} is ongoing.
+\GPUFPX~\cite{llsflg-hpdc-2023} is another component of \FlowFPX{} that can track \fp{} exceptions inside a GPU kernel.
+See the cited paper for more details on \GPUFPX.
 
 %% TODO julia proposed consistent NaN handling,
 %%  do we propagate the exact NaN

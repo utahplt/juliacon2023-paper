@@ -27,8 +27,8 @@
                      (fp-example-points 20 4 1.52)))
   (displayln (cons (apply min xs) (apply max xs)))
   (plot
-   #:out-file "/Users/ashton/Desktop/foo.svg"
-   #:out-kind 'svg
+   #:out-file "/Users/ashton/Research/writing/juliacon2023-paper/fig/real_vs_fp.png"
+   #:out-kind 'png
    #:x-min -50
    #:x-max 50
    #:y-min 0
