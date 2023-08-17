@@ -424,11 +424,11 @@ This produced almost 17000 lines of logs in the gens file. Below is a sample sta
 
 \begin{verbatim}
 -([-Inf, -Inf])   FT/TrackedFloat.jl:106
-momentum_u!       ShallowWaters/rhs.jl:246
-rhs_nonlinear!    ShallowWaters/rhs.jl:50
-rhs!              ShallowWaters/rhs.jl:14 [inlined]
-time_integration  ShallowWaters/time_integration.jl:77
-run_model         ShallowWaters/run_model.jl:37
+momentum_u!       SW/rhs.jl:246
+rhs_nonlinear!    SW/rhs.jl:50
+rhs!              SW/rhs.jl:14 [inlined]
+time_integration  SW/time_integration.jl:77
+run_model         SW/run_model.jl:37
 top-level
 \end{verbatim}
 
@@ -443,7 +443,7 @@ We can look at the file of the $\infty$ gens where we see the following: (format
 literal_pow()              intfuncs.jl:325
 …
 materialize(^)             broadcast.jl:860
-top-level getproperty(…)  examples/sw_nan_tf.jl:14
+top-level getproperty(...) examples/sw_nan_tf.jl:14
 …
 \end{verbatim}
 
@@ -476,7 +476,7 @@ We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 We can see in \cref{fig:sw_nan_cstg} that a thick line goes from the top-level call down to a call to \texttt{+} goes down the right side of the graph.
 This indicates that the majority of the flows took this path.
 That means we might be able to fix the majority of our problems by inspecting that particular flow.
-\Cref{fig:sw_inf_cstg} shows us that all but two flows started with a call to \texttt{^}---a promising place to start looking for improvements.
+\Cref{fig:sw_inf_cstg} shows us that all but two flows started with a call to \texttt{\^}---a promising place to start looking for improvements.
 
 \subsubsection{CSTG Diffing}
 
@@ -495,7 +495,7 @@ The diff can be seen in \cref{fig:cstg_diff_demo}.
 The green lines indicate flows that were \emph{new} in the latter 90\% of the logs.
 The red lines indicate flows that were \emph{only in} the first 10\% of the logs.
 What this means depends on the particular program; a domain expert can use these clues to e.g. find where instability started in the first part of the program, and where that instability got reinforced later on.
-In this case, we can see that \texttt{momentum_u!} only showed up in the beginning of the logs---we might look there for ways to prevent instability from beginning.
+In this case, we can see that \texttt{momentum\_u!} only showed up in the beginning of the logs---we might look there for ways to prevent instability from beginning.
 
 \subsection{OrdinaryDiffEq}
 \label{s:ode}
@@ -513,7 +513,7 @@ The stack traces for that kill originated from inside the \texttt{solve.jl} file
 
 \begin{verbatim}
 <([NaN, 3.0e6])  at FT/TrackedFloat.jl:193
-solve!           at OrdinaryDiffEq/solve.jl:515
+solve!           at ODE/solve.jl:515
 …
 \end{verbatim}
 
@@ -560,10 +560,12 @@ Fuzzing with \FT{} revealed two places where Finch needed
 protection against user input.
 The first was when reading an input mesh.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/16}{2023-06-06}}
 A \NaN{} injected in the mesh led to a crash further on:
+
 \begin{verbatim}
   BoundsError: attempt to access 1-element
    Vector{Int64} at index [2]
 \end{verbatim}
+
 Defensive programming solves the issue.
 The second place was in setting bounds for the
 solver.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/17}{2023-06-06}}
@@ -634,7 +636,6 @@ of the reliability of the example.
 
 \FT{} has proven to be useful for more than its creators---we discovered an open issue in the \code{RxInfer.jl} library with an issue revolving around \NaN{} detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
 Even though we were unable to provide hands-on guidance as the code in question was proprietary, the authors of \code{RxInfer.jl} were able use \FT{} themselves, and within a day they tracked down the location of a \NaN{} gen.
-The \code{RxInfer.jl} authors provided us with valuable feedback on \FT{}'s API.
 
 \section{Related Work}
 \label{s:related}
@@ -646,9 +647,9 @@ They describe a proposal to pack numeric codes into an \texttt{INFO\_ARRAY} that
 They also suggest a fuzzing technique that we realize in \FT{}:
 instead of fuzzing the \emph{inputs} to a program, we fuzz by randomly injecting exceptional values at \emph{any} point where there is an arithmetic operation. Demmel suggests that this approach is useful since any \fp{} operation could lead to an exceptional value if the inputs are in dangerous ranges.
 
-Toronto and McCarthy\cite{torontoPracticallyAccurateFloatingPoint2014} developed a methodology for assessing where arithmetic operations are liable to magnify \fp{} error.
-Their work includes error visualization and work on how to avoid error-magnifying ``badlands''.
-They focus on rewriting arithmetic expressions to avoid error which could lead to exceptional values, rather than on exceptional values themselves.
+Toronto and McCarthy\cite{torontoPracticallyAccurateFloatingPoint2014} develop a methodology for assessing where arithmetic operations are liable to magnify \fp{} error.
+They include error visualization and work on how to avoid error-magnifying ``badlands''.
+They focus on rewriting arithmetic expressions to avoid error which could lead to exceptional values, rather than on the exceptional values themselves.
 
 In a similar vein, Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a tool for automatically rewriting arithmetic expressions to reduce \fp{} error.
 \FT{} tracks down exceptional \fp{} values; once the location of a gen is found, Herbie could be employed to rewrite the arithmetic expression, if \fp{} error is the cause of the exceptional value.
@@ -656,7 +657,7 @@ Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} provides a helpful interact
 
 \subsection{Diagnosing floating-point exceptions}
 
-The Julia library \texttt{Sherlogs}\footnote{\url{https://github.com/milankl/Sherlogs.jl}} by Milan Klöwer inspired the use of a custom number type to intercept operations on a number.
+The Julia library \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021} inspired the use of a custom number type to intercept operations on a number.
 In contrast to \FT{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \texttt{Sherlogs} tracks and reports the range of values seen over the course of a computation.
 This is intended to provide insight into whether or not a library could tolerate a lower-precision \fp{} format.
 
@@ -743,6 +744,8 @@ we recommend limiting the number and kinds of events logged for optimal performa
 \subsection{Tracking More than \NaN{}s and \Inf{}s}
 
 FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to \NaN{} or \Inf{}.
+For example, \FT{} could be made to monitor extreme values: in some circumstances it would be useful to notice when a value started climbing above or falling below a certain threshold.
+
 We spent most of the time engineering and testing \NaN{} tracking and injection.
 Adding \Inf{} tracking took a few hours.
 Adding other values of interest presents no fundamental difficulties.
@@ -757,8 +760,8 @@ Even operations that are already well-defended against \NaN{}s are candidates.
 First, fine-grained control to let users decide where not to inject.
 Second, tools for understanding the context of an injection point
 after the fact.
-Program slicing is especially relevant to the latter point (and effectively
-what we did by hand when fuzzing Finch~\cref{s:finch}).
+Program slicing is especially relevant to the latter point and effectively
+what we did by hand when fuzzing Finch (\cref{s:finch}).
 For each operation, an expert needs to study the values that feed into it to
 decide whether they are protected or not.
 
