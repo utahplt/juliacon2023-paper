@@ -1,8 +1,8 @@
 title: "FlowFPX: Nimble Tools for Debugging Floating-Point Exceptions"
 keywords:
   - Julia
-  - Floating point
-  - Numerical computing
+  - floating-point
+  - debugging
 authors:
   - name: Taylor Allred
     email: taylor.allred21@gmail.com

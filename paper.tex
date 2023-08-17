@@ -13,21 +13,23 @@
 \begin{document}
 
 % Misc typographical tweaks.
-\setlength{\parindent}{1.2em}
+\setlength{\parindent}{10pt}
 % \setmonofont{JuliaMono}[Extension = .ttf, Path = ./, UprightFont = *-Regular, ItalicFont = *-Italic]
 
 \input{header}
 \maketitle
 
 \begin{abstract}
-  Reliable numerical computations are central to high-performance computing and machine learning.
-  However, floating-point numbers exhibit non-intuitive behaviors that make writing correct numerical computation difficult.
-  In particular, \emph{floating-point exceptions} occur when no mathematically sensible result is available, and it is difficult to find \emph{where} these exceptions occur.
-  Unhandled exceptions can cause programs crash, exhibit bad behavior, or worse, silently produce good-looking but incorrect data.
-  We present FlowFPX: a tool set for debugging floating-point code.
-  FlowFPX can track floating-point exceptions occurring in Julia code to their sources.
-  FlowFPX also detects otherwise silent exceptions which can foul program outputs.
-  FlowFPX produces intuitive visualizations of summarized exception flows including how they are generated, propagated and killed, thus helping with debugging.
+  Reliable numerical computations are central to scientific computing,
+  but the floating-point arithmetic that enables large-scale models
+  is fundamentally unreliable.
+  Numeric exceptions are a common occurrence and can propagate through
+  code, leading to flawed results.
+  This paper presents FlowFPX, a toolkit for systematically debugging
+  floating-point exceptions by recording their flow,
+  coalescing exception contexts, and fuzzing in select locations.
+  These tools help scientists discover when exceptions happen
+  and track down their origin, smoothing the way to a reliable codebase.
 \end{abstract}
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -51,124 +53,106 @@
 
 Reliable numeric computations are central to high-performance computing,
 machine learning, and scientific applications.
-Yet, the \fp{} arithmetic that powers these computations is fundamentally
+Yet the \fp{} arithmetic that powers these computations is fundamentally
 unreliable~(\cref{s:background}).
 Exceptional values, such as Not a Number (\Nan{}) and infinity (\Inf{}),
 can and often do arise thanks to culprits such as roundoff error,
 catastrophic cancellation, singular matrices, and vanishing
 derivatives~\cite{sdjmrstp-pc-2022,ddghlllprr-correctness-2022,gllprt-correctness-2021,fpchecker-reports,llg-soap-2022,bllmg-xloop-2022}.
-When exceptions happen, domain experts must take time away from their main
-focus and trek down a rabbit hole to find the source of the error.
-There is little tool support to assist in this difficult task,
+Developers are responsible for guarding against exceptions, but this task
+is difficult because many operations can generate and propagate exceptions.
+Worst of all, operations such as less-than (\code{<}) can kill an exceptional value,
+leaving no trace of the problem.
+There is little tool support to assist in exception debugging,
 thus (unsurprisingly) a quick GitHub search reports over 4,000 open issues
 related to \NaN{} or \Inf{} exceptions~\cite{github-issues}.
 
-We introduce \FlowFPX{}, a toolkit for debugging
-\fp{} exceptions~(\cref{s:flowfpx}):
+This paper introduces \FlowFPX{}, a toolkit for debugging
+\fp{} exceptions~(\cref{s:flowfpx})
+that hase helped improve a variety of applications,
+from ocean simulations to heat modes~(\cref{s:casestudies}):
 \begin{itemize}
   \item
-    The centerpiece of \FlowFPX{} is \FT{}, a dynamic analysis tool that uses
-    Julia's operator overloading to selectively monitor for exceptions and to
-    fuzz code for vulnerabilities.
+    The centerpiece of \FlowFPX{} is \FT{}, a dynamic analysis tool that
+    selectively monitors for exceptions and fuzzes code for vulnerabilities.
   \item
-    To visualize results, \FT{} adapts coalesced stack-trace graphs 
-    (CSTGs, or \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014} for a whole-program view on the generation,
-    propagation, and death of exceptional values.
-  \item A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
+    To visualize results, \FT{} adapts coalesced stack-trace graphs (CSTGs, or
+    \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014}
+    to summarize the program contexts that handled exceptional values.
+  \item
+    A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
 \end{itemize}
-%
-\FlowFPX{} has helped debug exceptions in a variety
-of applications: from ocean simulations to heat models~(\cref{s:casestudies}).
-This paper concludes with related work~(\cref{s:related}) and a
-brief discussion~(\cref{s:discussion}).
+
 
 \section{Floating-Point Exception Primer}
 \label{s:background}
 
-\Fp{} is essentially scientific notation---\fp{} numbers are represented by packing a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into contiguous bit fields.
-The advantages of this representation are that allows for compact representation of both very small and very large numbers in a narrow range of bits---a 64-bit float can represent numbers as big as $2^{1024}$ and as small as $2^{-1074}$.
-This range is sufficient to represent numbers as small as Planck's constant or as big as Avogadro's constant with reasonable accuracy.
-
-\begin{figure}[h]
-  \label{fig:real_vs_float}
-  \includegraphics[width=\columnwidth]{fig/real_vs_fp.png}
-  \caption{The real number line vs the points representable with \fp{}.}
+\begin{figure}[t]\centering
+  \includegraphics[trim=0 0 0 60,clip,width=0.95\columnwidth]{fig/real_vs_fp.png}
+  \caption{Floats are spread across the real number line.}
+  \label{f:real-vs-fp}
 \end{figure}
 
-The flip side is that not every real number within that wide range is representable as a \fp{} value---there is almost always some gap between the real number that we wish to represent and the \fp{} number that approximates that value.
-Whenever a value we have doesn't have a precise representation, we must \emph{round} that real value to the nearest \fp{} value, which introduces some error in our calculations.
-In addition to this error, the finite nature of \fp{} values means that we can run into some situations that wouldn't arise when working with real numbers.
-
-For example, if two numbers' exponents differ by too large an amount, adding or subtracting the smaller from the bigger will leave us with just the bigger number.
-Below we take the Planck constant and add it to Avogadro's constant and are left bit-for-bit with Avogadro's constant, as if we had never done any addition at all: there is no way to pack all the significant figures from true value that differs minutely from Avogadro's number into a 64-bit \fp{} number.
+\Fp{} numbers use a finite number of bits to represent a spectrum of points along the real number line~(\cref{f:real-vs-fp}).
+The implementation strategy is essentially scientific notation.
+A \fp{} number packs a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into a bitstring (typically 64 or 32 bits, but 16-bit and 8-bit formats are on the rise~\cite{klowerLowprecisionClimateComputing2021,fp8}).
+This representation supports very small and very large numbers in a narrow range of bits.
 
 \begin{lstlisting}[language = Julia]
-p = 6.62607015e-34
-a = 6.02214076e23
-
-println("planck:   $p : $(bitstring(p))")
-println("avogadro: $a  : $(bitstring(a))")
-println("p + a:    $(p + a)  : $(bitstring(p + a))")
+julia> prevfloat(typemax(Float64))
+1.7976931348623157e308
+julia> nextfloat(typemin(Float64))
+-1.7976931348623157e308
 \end{lstlisting}
 
-You can see in the output that \texttt{p + a} is bit-for-bit equivalent to \texttt{a}:
+The flip side is that most real numbers fall into the gaps between \fp{} numbers and must be rounded, which introduces error
+and can lead to surprising results.
+For example, adding the tiny Planck constant to the large Avogadro number results
+in Avogadro's number after rounding:
 
-\begin{lstlisting}
-planck:   6.62607015e-34 : 0011100100001 ... 001
-avogadro: 6.02214076e23  : 0100010011011 ... 111
-p + a:    6.02214076e23  : 0100010011011 ... 111
+\begin{lstlisting}[language = Julia]
+julia> planck = 6.62607015e-34
+6.62607015e-34
+julia> avogadro = 6.02214076e23
+6.02214076e23
+julia> avogadro + planck == avogadro
+true
 \end{lstlisting}
 
-This is a fairly extreme example; even when the numbers are closer in magnitude, most operations on \fp{} numbers induce loss of accuracy.
+This is an extreme example, but many operations on \fp{} numbers closer in magnitude induce a loss of accuracy.
+Refer to the literature for more details, e.g.,~\cite{knuthArtComputerProgramming1997,torontoPracticallyAccurateFloatingPoint2014,mullerHandbookFloatingPointArithmetic2018}.
 
-\subsection{Floating-Point Standards}
-
-Prior to 1985, incomparable techniques for representing \fp{} values proliferated as mainframes and later personal computers emerged.
-This made writing portable \fp{} code challenging.~\cite{houghIEEEStandard7542019}
-IEEE 754~\cite{IEEEStandardBinary1985} standardizes \fp{} representation and operations across different architectures---these days, most machines and languages follow the IEEE 754 standard, and we make no effort to generalize our work beyond what IEEE 754 specifies.
 
 \subsection{Exceptions and Exceptional Values}
+\label{s:exnvalue}
 
-IEEE 754 defines \emph{\fp{} exceptions}, which are events that occur when something goes wrong in a calculation.
-William Kahan says,
+The IEEE~754 \fp{} standard~\cite{IEEEStandardBinary1985}
+defines exceptions and exceptional values as the outcome of
+operations that have ``no single universally acceptable result''~\cite{p-draft-1997}.
+For example, dividing by zero and exceeding the \code{Float64} range
+both lead to exceptions:
 
-\begin{quote}
-An arithmetic exception arises when [there is] no result that would be acceptable universally.
-\end{quote}
+% julia> 2 / 0
+% Inf
+\begin{lstlisting}[language = Julia]
+julia> 0 / 0
+NaN
+julia> avogadro^avogadro
+Inf
+julia> log(0)
+-Inf
+julia> Inf + NaN
+NaN
+\end{lstlisting}
 
-For example, dividing by zero is an exception, as is exceeding a \fp{} format's range.
-These are exceptions because it is impossible to say what the right answer \emph{should} have been: perhaps that zero was meant to be a value that got really \emph{close} to zero,\footnote{The third kind of exceptional value is called a \emph{subnormal} value.} and suddenly rounded towards zero before division.
-Or maybe that value that got really big \emph{does} need to get that big, but you need to start using a larger bit width for your \fp{} values.
-Whatever, the case, there isn't a universally acceptable answer, so a \fp{} exception gets raised.
+IEEE~754 defers the question of how to handle such exceptions to application code.
+It is up to developers to watch for \Nan{} and \Inf{} (and also subnormal numbers)
+and implement an appropriate repair.
+Without guards, bugs happen.
 
-IEEE 754 doesn't force the programmer to always handle these exceptions, however, so we end up with \emph{exceptional values}, which are the results of exception-raising operations.
-The two values we work with in this paper are \Inf{}\footnote{There are actually two infinities: $+\infty$ and $-\infty$; they behave the same for our purposes, so we will refer to them just as ``\Inf{}''.} and \NaN{}, which result from overflow and nonsensical operations respectively.
-\Cref{fig:nan-gens} lists some of the situations that lead to exceptional values.
 
-\begin{figure}[t]
-  \centering
-  \label{fig:nan-gens}
-  % \begin{tabular}{c | p{0.5 \columnwidth}}
-  \begin{tabular}{c | c}
-    \NaN{} & \Inf{} \\
-    \hline
-    $\tfrac{0}{0}$ & $\tfrac{x}{0},\, x \neq 0$ \\
-    $0 * \infty$ & $\log{(0)}$ \\
-    $\text{\texttt{NaN}} + x$ & $\infty + x,\, x \neq \text{\texttt{NaN}}$ \\
-    $\infty - \infty$ & Any result exceeding \\
-    & representation capacity
-  \end{tabular}
-  \caption{Examples of operations leading to exceptional values}
-\end{figure}
-
-For more details on exceptional values, see~\cite{knuthArtComputerProgramming1997,torontoPracticallyAccurateFloatingPoint2014} as well as the \textit{Handbook of Floating-Point Arithmetic}.~\cite{mullerHandbookFloatingPointArithmetic2018}
-
-\subsection{Lifetimes of Unhandled Exceptions}
+\subsection{Lifetime of an Unhandled Exceptions}
 \label{s:to-kill-a-fp}
-
-Exceptional values have a life cycle: instead a program-halting exception, an exceptional value comes into being at the point of an undefined operation and propagates through the rest of the computation.
-Often they go on to manifest in the output of the code, but sometimes they can ``die'' by disappearing silently.
-We characterize this life cycle in \cref{f:gpk}.
 
 \begin{figure}[t]
   \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
@@ -176,45 +160,44 @@ We characterize this life cycle in \cref{f:gpk}.
   \label{f:gpk}
 \end{figure}
 
-When a \NaN{} or an \Inf{} comes into being as the result of an undefined operation, we call this a generation, or \emph{gen} for short.
+Exceptional values have a lifetime: they are born, or \emph{generated}, by some operation; they \emph{propagate} through other operations; and they either appear in the program output, go out of scope, or get \emph{killed} by a numeric operation.
+\Cref{f:gpk} summarizes this \emph{gen}-\emph{prop}-\emph{kill} process.
+The gens and props are straightforward; see above for examples~(\cref{s:exnvalue}).
+The kills often arise from numeric comparisons (\code{<}, \code{=}, etc.),
+but exponents (\code{1\^NaN}) and over-eager matrix optimizations can kill
+exceptions~\cite{ddghlllprr-correctness-2022}.
 
-Most of the time, when any or all of the arguments are \NaN{}, the result is also a \NaN{}.
-We call this a propagation, or \emph{prop} for short.
-This is good and desirable, because it means that an arithmetic error---even if buried deep in an expression---will still be observable, allowing a user to find and debug it.
-
-However, there are a few places where exceptional values flow into an expression, but not out.
-We call these instances \emph{kills}, and these can lead to subtle logic bugs.
-For example, \emph{any} comparison ($<$, $>$, $=$, $\neq$, etc.) with a \NaN{} returns \texttt{false}.
+To illustrate TODO
 
 Consider the following two functions to find the maximum value in a list:
 
 \begin{lstlisting}[language = Julia]
-function bad_max(lst)
+function max1(lst)
   max_seen = 0.0
   for x in lst
+    # swap if x is not too small
     if ! (x <= max_seen)
-      # swap if new val greater
       max_seen = x
     end
   end
   max_seen
 end
 
-function good_max(lst)
+function max2(lst)
   foldl(max, lst)
 end
 \end{lstlisting}
 
-Both \texttt{bad\_max} and \texttt{good\_max} compute the maximum in a list.
-However, the \texttt{<=} operator used in the \texttt{bad\_max} implementation does \emph{not} propagate \NaN{}s: \texttt{NaN <= 4} returns \texttt{false}, not \NaN{}.
+Both \code{max1} and \code{max2} compute the maximum in a list.
+However, the \texttt{<=} operator used in the \code{max1} implementation does \emph{not} propagate \NaN{}s: \texttt{NaN <= 4} returns \texttt{false}, not \NaN{}.
 Because of this, you might not get the result you expected:
 
 \begin{lstlisting}[language = Julia]
-bad_max([1, 5, NaN, 4])     # returns 4
-good_max([1, 5, NaN, 4])    # returns NaN
+max1([1, 5, NaN, 4])     # returns 4
+max2([1, 5, NaN, 4])    # returns NaN
 \end{lstlisting}
 
-Not only is the result from \texttt{bad\_max} problematic for obscuring the fact that there was a \NaN{} in the list, the result is also wrong!
+Not only is the result from \texttt{max1} problematic for obscuring the fact that there was a \NaN{} in the list, the result is also wrong!
 The built-in \texttt{max} function correctly propagates \NaN{}s, so we can see from its return that we got a \NaN{} somewhere.
 It's not entirely obvious \emph{where} that \NaN{} came from.
 
@@ -653,7 +636,7 @@ They focus on rewriting arithmetic expressions to avoid error which could lead t
 
 In a similar vein, Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a tool for automatically rewriting arithmetic expressions to reduce \fp{} error.
 \FT{} tracks down exceptional \fp{} values; once the location of a gen is found, Herbie could be employed to rewrite the arithmetic expression, if \fp{} error is the cause of the exceptional value.
-Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} provides a helpful interactive interface to the tooling that Herbie provides.
+The Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} workbench provides an interactive interface to Herbie.
 
 \subsection{Diagnosing floating-point exceptions}
 

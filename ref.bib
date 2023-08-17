@@ -42,6 +42,14 @@
   file = {/Users/ashton/Zotero/storage/23TZFSYS/30711.html}
 }
 
+@misc{p-draft-1997,
+  title={Handling {IEEE 754} Invalid Operation Exceptions in Real Interval Arithmetic},
+  author={Priest, David J.},
+  journal={Manuscript, mai},
+  note={\url{https://j3-fortran.org/doc/year/97/97-172.pdf}. Accessed 2023-08-16},
+  year={1997}
+}
+
 @phdthesis{klowerLowprecisionClimateComputing2021,
   type = {{{http://purl.org/dc/dcmitype/Text}}},
   title = {Low-Precision Climate Computing: Preserving Information despite Fewer Bits},
@@ -99,8 +107,8 @@
 
 @misc{SciMLOrdinaryDiffEqJl,
   title = {{{SciML}}/{{OrdinaryDiffEq}}.Jl},
-  url = {https://github.com/SciML/OrdinaryDiffEq.jl},
-  urldate = {2023-04-18},
+  note={\url{https://github.com/SciML/OrdinaryDiffEq.jl}. Accessed {2023-04-18}},
+  year = {2023},
   abstract = {High performance ordinary differential equation (ODE) and differential-algebraic equation (DAE) solvers, including neural ordinary differential equations (neural ODEs) and scientific machine learni...},
   file = {/Users/ashton/Zotero/storage/NVQ2YJVC/OrdinaryDiffEq.html}
 }
@@ -151,11 +159,11 @@ numpages = {11},
 year = {2019}
 }
 
-@online{dune,
+@misc{dune,
   author={Dune},
   title={{DUNE} Numerics},
-  url={https://www.dune-project.org/},
-  urldate={2023-06-06}
+  note={\url{https://www.dune-project.org/}. Accessed {2023-06-06}},
+  year={2023}
 }
 
 @article{firedrake,
@@ -207,8 +215,6 @@ year = {2019}
 
 @inproceedings{ddghlllprr-correctness-2022,
   author       = {James Demmel and Jack J. Dongarra and Mark Gates and Greg Henry and Julien Langou and Xiaoye S. Li and Piotr Luszczek and Weslley S. Pereira and E. Jason Riedy and Cindy Rubio{-}Gonz{\'{a}}lez},
-  editor       = {Ignacio Laguna and
-                  Cindy Rubio{-}Gonz{\'{a}}lez},
   title        = {Proposed Consistent Exception Handling for the {BLAS} and {LAPACK}},
   booktitle    = {{Correctness@SC}},
   pages        = {1--9},
@@ -227,11 +233,11 @@ year = {2019}
   year         = {2021}
 }
 
-@online{fpchecker-reports,
+@misc{fpchecker-reports,
   author={{FPChecker}},
   title={Open Source Reports},
-  url={https://fpchecker.org/open-source-reports.html},
-  urldate={2023-06-16}
+  note={\url{https://fpchecker.org/open-source-reports.html}. Accessed {2023-06-16}},
+  year={2023}
 }
 
 @inproceedings{llg-soap-2022,
@@ -254,11 +260,11 @@ year = {2019}
   year         = {2022}
 }
 
-@online{github-issues,
+@misc{github-issues,
   author={{GitHub}},
   title={Issue Search: \texttt{NaN+infinity}},
-  url={https://github.com/search?q=NaN+infinity++state%3Aopen&type=issues&ref=advsearch},
-  urldate={2023-06-16}
+  note={\url{https://github.com/search?q=NaN+infinity++state%3Aopen&type=issues&ref=advsearch}. Accessed {2023-06-16}},
+  year={2023}
 }
 
 @inproceedings{llsflg-hpdc-2023,
@@ -302,15 +308,13 @@ url = {https://www.osti.gov/biblio/1989443}}
   year         = {2022}
 }
 
-@software{kMilanklSherlogsJl2021,
-  title = {Milankl/{{Sherlogs}}.Jl: V0.2.0},
-  shorttitle = {milankl/{{Sherlogs}}.jl},
+@misc{kMilanklSherlogsJl2021,
+  title = {Milankl/{{Sherlogs}}.Jl},
   author = {Kl{\"o}wer, Milan and {OnButtonUp}},
-  date = {2021-07-20},
+  year = {2021},
   doi = {10.5281/ZENODO.5115765},
-  urldate = {2023-08-01},
   organization = {{Zenodo}},
-  version = {v0.2.0}
+  edition = {v0.2.0}
 }
 
 @article{humphreySystematicDebuggingMethods2014,
@@ -345,21 +349,20 @@ url = {https://www.osti.gov/biblio/1989443}}
   file = {/Users/ashton/Zotero/storage/3JNZIJHA/Panchekha et al. - 2015 - Automatically improving accuracy for floating poin.pdf}
 }
 
-@online{misbackOdysseyInteractiveWorkbench2023,
-  title = {Odyssey: {{An Interactive Workbench}} for {{Expert-Driven Floating-Point Expression Rewriting}}},
-  shorttitle = {Odyssey},
-  author = {Misback, Edward and Chan, Caleb and Saiki, Brett and Jun, Eunice and Tatlock, Zachary and Panchekha, Pavel},
-  date = {2023-05-17},
-  eprint = {2305.10599},
-  eprinttype = {arxiv},
-  eprintclass = {cs, math},
-  url = {http://arxiv.org/abs/2305.10599},
-  urldate = {2023-08-08},
-  abstract = {In recent years, researchers have proposed a number of automated tools to identify and improve floating-point rounding error in mathematical expressions. However, users struggle to effectively apply these tools. In this paper, we describe an iterative design process, working with novices, experts, and tool developers, to investigate user needs during the expression rewriting process. We find that users want to compare expressions on multiple input ranges, integrate and guide various rewriting tools, and understand where errors come from. We organize this investigation’s results into a three-stage workflow and implement that workflow in a new, extensible workbench dubbed Odyssey. Odyssey enables users to: (1) diagnose problems in an expression, (2) generate solutions automatically or by hand, and (3) tune their results. Odyssey tracks a working set of expressions and turns a state-of-the-art automated tool “inside out,” giving the user access to internal heuristics, algorithms, and functionality. In a user study, Odyssey enabled five expert numerical analysts to solve challenging rewriting problems where state-of-the-art automated tools fail. In particular, the experts unanimously praised Odyssey’s novel support for interactive range modification and local error visualization.},
-  langid = {english},
-  pubstate = {preprint},
-  keywords = {Computer Science - Human-Computer Interaction,Computer Science - Programming Languages,Mathematics - Numerical Analysis},
-  file = {/Users/ashton/Zotero/storage/LHWE7KR5/Misback et al. - 2023 - Odyssey An Interactive Workbench for Expert-Drive.pdf}
+@article{misbackOdysseyInteractiveWorkbench2023,
+  author       = {Edward Misback and
+                  Caleb Chan and
+                  Brett Saiki and
+                  Eunice Jun and
+                  Zachary Tatlock and
+                  Pavel Panchekha},
+  title        = {{Odyssey}: An Interactive Workbench for Expert-Driven Floating-Point Expression Rewriting},
+  journal      = {CoRR},
+  volume       = {abs/2305.10599},
+  doi          = {10.48550/arXiv.2305.10599},
+  eprinttype    = {arXiv},
+  eprint       = {2305.10599},
+  year         = {2023}
 }
 
 @inproceedings{arnoldStackTraceAnalysis2007,
@@ -425,4 +428,27 @@ url = {https://www.osti.gov/biblio/1989443}}
   isbn = {978-3-319-76525-9 978-3-319-76526-6},
   langid = {english},
   file = {/Users/ashton/Zotero/storage/3KCL3I6V/Muller et al. - 2018 - Handbook of Floating-Point Arithmetic.pdf}
+}
+
+@article{fp8,
+  author       = {Paulius Micikevicius and
+                  Dusan Stosic and
+                  Neil Burgess and
+                  Marius Cornea and
+                  Pradeep Dubey and
+                  Richard Grisenthwaite and
+                  Sangwon Ha and
+                  Alexander Heinecke and
+                  Patrick Judd and
+                  John Kamalu and
+                  Naveen Mellempudi and
+                  Stuart F. Oberman and
+                  Mohammad Shoeybi and
+                  Michael Y. Siu and
+                  Hao Wu},
+  title        = {{FP8} Formats for Deep Learning},
+  journal      = {CoRR},
+  volume       = {abs/2209.05433},
+  doi          = {10.48550/arXiv.2209.05433},
+  year         = {2022}
 }
