@@ -351,10 +351,11 @@ CSTG provides a map to aid in contextualizing a stack trace in a log file.
 \subsection{\GPUFPX{}}
 \label{s:gpufpx}
 
+% HELP: @ben, I'm not sure what paper you mean by "Julia CPU"
 Many programs offload work onto GPUs, which are no less susceptible to \fp{} exceptions than CPUs.
 In some regards they are \emph{more} susceptible because GPUs do not have the same exception-handling mechanisms that CPUs do.
 Thus, tools to catch \fp{} exceptions on the GPU are essential.
-\FT{} is constrained to CPU workloads; however, there is a companion tool called \GPUFPX{}\cite{llsflg-hpdc-2023} that can help diagnose \fp{} exceptions on the GPU.
+\FT{} is constrained to CPU workloads; however, there is a companion tool called \GPUFPX{}~\cite{llsflg-hpdc-2023} that can help diagnose \fp{} exceptions on the GPU.
 \GPUFPX{} can detect floating-point exceptions on the GPU that GPU code cannot do on its own.
 \GPUFPX{} reports these exceptions back to the CPU for further analysis.
 
@@ -368,44 +369,19 @@ Work remains to tighten the integration between \FT{} and \GPUFPX{} to reduce ma
   \label{fig:ft_and_gpu_fpx}
 \end{figure}
 
-See \cref{s:ocean} for an example of \GPUFPX{} in action, and \ref{f:gpufpx} for an example of its output.
-
-% * what about GPUs? companion project at Utah GPU-FPX
-% * architecture diagram, CPU + GPU, show Ocean source code
-% * replace CPU() with GPU() in code, get output like below & attached
-
-%% Ganesh
-% 3) These are conceptually usable together (Julia calling GPU kernels below).
-% The usage is simple: Start the Julia application that calls a GPU kernel under
-% LD_PRELOAD as with GPU-FPX launch. When this launch transfers control to a GPU
-% kernel, the GPU-FPX instrumentation starts notifying the exceptions on the
-% console of the CPU. When the GPU launch returns, the exceptions go in the
-% return call path of the Julia execution. Ashton and Xinyi plz validate this
-% scenario
-
 \section{Case Studies}
 \label{s:casestudies}
 
 In this section we'll discuss some case studies where tools from \FlowFPX{} aided in finding or fixing \fp{} issues.
-Our case studies are as follows:
-
-\begin{itemize}
-\item \Cref{s:sw} covers a simulation that produces \NaN{}s in the output---a common and frustrating occurrence for many a scientist.
-\item \Cref{s:ode} puts a widely-used mathematics library under a fuzzer to harden it against bad behavior in the presence of exceptional \fp{} values.
-\item \Cref{s:finch} puts another program under the fuzzer.  % <- ugh, rewrite
-\item \Cref{s:ocean} is a simulation that runs on the GPU---this puts it out of reach of \FT{} but not for other components of the \FlowFPX{} tool set.
-\end{itemize}
-
-Besides case studies that we ourselves did, \cref{s:safari} is an ``in the wild'' usage of \FT{} that helped researchers uncover the source of a \NaN{} in their own code.
+\Cref{s:sw} covers an ocean simulation that produces \NaN{}s in the output---a common and frustrating occurrence for many a scientist. \Cref{s:ode} puts the popular \texttt{OrdinaryDiffEq} solver library under a fuzzer to harden it against bad behavior in the presence of exceptional \fp{} values. \Cref{s:finch} fuzzes another library---this time a library for specifying partial differential equations (PDEs). Finally, in \cref{s:ocean}, we examine another ocean simulation library---this time the library runs on the GPU. This puts it out of reach of \FT{}, but \GPUFPX{} can handle it. In addition to the case studies that we did ourselves, \cref{s:safari} is an ``in the wild'' usage of \FT{} that helped researchers uncover the source of a \NaN{} in their own code without help from us.
 
 \subsection{ShallowWaters}
 \label{s:sw}
 
-For our first case study, we looked at the \texttt{ShallowWaters} library~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021}, which runs a simulates the flow of water over a seabed.
+\texttt{ShallowWaters}~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021} simulates the flow of water over a seabed.
 This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
-That said, it works for our purposes as a proving ground for FloatTracker.
 
-Many physics simulations of this sort include a parameter called the Courant-Friedrichs-Lewy (``CFL'') parameter, which roughly describes the size of the time step to take in running the simulation.
+The Courant-Friedrichs-Lewy (``CFL'') parameter roughly describes the size of the time step to take in running the simulation.
 Normally this value sits between 0 and 1---smaller values mean the simulation runs slower but with higher accuracy, whereas higher values mean the simulation takes bigger time steps and consequently runs faster, but results might be inaccurate.
 The primary reason for problems arising comes from information not having enough time to propagate through the simulation before the next time step is taken.
 
@@ -416,41 +392,37 @@ Identifying where \NaN{}s begin to arise can help point the way to where some ma
 We dialed the CFL parameter up to extraordinarily high values and we started seeing \NaN{}s in the result.
 \code{ShallowWaters} detected the instability, but not before producing some bad output.
 
-\begin{figure}
+\begin{figure}[ht]
   \centering
   \includegraphics[width=3in]{./fig/shallow_waters_cfl_diff.png}
   \caption{Effect of high CFL parameters: on the left, normal output. On the right: \NaN{}s cause white holes and gaps in the result.}
   \label{fig:sw_nans}
 \end{figure}
 
-The holes in the plots are regions where \NaN{}s crept into the computation and destroyed the results.
+The white regions in the right graph of \cref{fig:sw_nans} are regions where \NaN{}s crept into the computation and destroyed the results.
 In one regard, this is not as bad as a \NaN{} kill---knowing that there are \NaN{}s in the computation means that we have a chance to fix it, whereas a \NaN{} kill might silently give us the wrong answer.
-Incidentally, we know that there were no \NaN{} kills in this test because our kill logs are empty.
-But finding the sources of \NaN{}s can be tricky.
+Incidentally, we know that there were no \NaN{} kills in this test all the events in our kill logs are from calling the \texttt{isnan} function---a clear sign that the program is deliberately taking action on the presence of a \NaN{}.
+
+Finding the sources of \NaN{}s can be tricky.
 We expected \NaN{}s in this case because we set the CFL parameter up so high, but tracking down the sources of \NaN{}s generally is a difficult and time-consuming problem.
 
-Fortunately in this case, one of the key features \texttt{ShallowWaters} is its \emph{type flexibility}:
-\texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of \fp{} precision.
-Upon model construction, \texttt{ShallowWaters} allows you to specify a type for floats in the model.
+\FT{} solves this problem for us by automatically tracking all sources of potential \NaN{} generation.
+And in this case \texttt{ShallowWaters} makes this doubly easy:
+\texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of \fp{} precision, and allows you to specify a \fp{} type to use in the computation.
 We simply asked it to use our \texttt{TrackedFloat32} type, and then the entire simulation ran under the supervision of FloatTracker.
 
-We ran ShallowWaters with a CFL value known to make bad outputs and recorded \NaN{} \texttt{gen} events:
-
 \begin{lstlisting}[language = Julia]
-set_logger(buffersize=20, cstg=true, cstgArgs=true,
-           cstgLineNum=true)
-
-P = run_model(T=TrackedFloat32,
-              cfl=10, Ndays=100, nx=100, L_ratio=1,
-              bc="nonperiodic",
-              wind_forcing_x="double_gyre",
-              topography="seamount")
+run_model(T=TrackedFloat32,
+          cfl=10, Ndays=100, nx=100, L_ratio=1,
+          bc="nonperiodic",
+          wind_forcing_x="double_gyre",
+          topography="seamount")
 \end{lstlisting}
 
-This produced the following in the log file: (formatted for clarity)
+This produced almost 17000 lines of logs in the gens file. Below is a sample stack trace from these logs: (formatted for clarity)
 
 \begin{verbatim}
--                 FT/TrackedFloat.jl:106
+-([-Inf, -Inf])   FT/TrackedFloat.jl:106
 momentum_u!       ShallowWaters/rhs.jl:246
 rhs_nonlinear!    ShallowWaters/rhs.jl:50
 rhs!              ShallowWaters/rhs.jl:14 [inlined]
@@ -459,17 +431,14 @@ run_model         ShallowWaters/run_model.jl:37
 top-level
 \end{verbatim}
 
-We can see that the \NaN{} appeared from subtraction (first line) and that it was used in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
-In figure~\ref{fig:nan-gens} we can tell that this must be the result of $\infty - \infty$.
+We can see that the \NaN{} appeared as the result of $-\infty - -\infty$ (first line) and that subtraction happened in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
 Thus, with little effort we were able to track down where the \NaN{}s were originating.
-Now the question is: where did the $\infty$ come from?
 
-FloatTracker is not limited to \NaN{}s---we can track any kind of value that we want.
-We have built-in support for tracking \NaN{} and $\infty$; we can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
+Now the question is: where did the $\infty$ come from?
+We can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
 
 \begin{verbatim}
-check_error([-1.515f31, 2])  FT/TrackedFloat.jl:10
-^(::TrackedFloat32, ::Int64) FT/TrackedFloat.jl:138
+^([-1.515f31, 2])            FT/TrackedFloat.jl:138
 …
 materialize(^)               broadcast.jl:860
 top-level getproperty(P, :u) examples/sw_nan_tf.jl:14
@@ -477,18 +446,16 @@ top-level getproperty(P, :u) examples/sw_nan_tf.jl:14
 \end{verbatim}
 
 It looks like the $-\infty$ came from $-1.515e31^2$---no wonder a Float32 type couldn't handle something that large.
-We can tell that because the first line shows us the arguments\footnote{There is a configuration option that allows us to control this behavior.} and the second line shows us what function got called. Moreover, we get the top-level line: we can see that it came from line 14 in our ShallowWaters file.
+We can tell that because the first line shows us the arguments\footnote{There is a configuration option that allows us to control this behavior.} and the second line shows us what function got called.
 
-Tracking down why that value got so large is beyond the scope of FloatTracker right now.
-Most likely we will need some domain-expertise to find a solution to this problem.
-The point is, we were able to quickly and automatically arrive at this excellent starting point with FloatTracker.
+Now we have some concrete values to work with: instead of wondering where an opaque \Inf{} or a \NaN{} came from, we have \emph{specific} values that a domain expert can use to diagnose the problem.
 
 \subsubsection{CSTGs Help Us Get a Bigger Picture}
 
 Running FloatTracker can produce a lot of logs.
 To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
 
-\begin{figure}
+\begin{figure}[ht]
   \centering
   \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
   \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
@@ -498,7 +465,7 @@ To get a quick overview of the most common paths to problems, we can use CSTG to
 We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 Here is what the two graphs look like:\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
 
-\begin{figure}
+\begin{figure}[ht]
   \centering
   \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
   \caption{CSTG of \Inf{} generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
