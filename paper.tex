@@ -91,7 +91,7 @@ This range is sufficient to represent numbers as small as Planck's constant or a
 
 \begin{figure}[h]
   \label{fig:real_vs_float}
-  \includegraphics[width=\columnwidth]{ fig/real_vs_fp.png }
+  \includegraphics[width=\columnwidth]{fig/real_vs_fp.png}
   \caption{The real number line vs the points representable with \fp{}.}
 \end{figure}
 
@@ -145,7 +145,7 @@ IEEE 754 doesn't force the programmer to always handle these exceptions, however
 The two values we work with in this paper are \Inf{}\footnote{There are actually two infinities: $+\infty$ and $-\infty$; they behave the same for our purposes, so we will refer to them just as ``\Inf{}''.} and \NaN{}, which result from overflow and nonsensical operations respectively.
 \Cref{fig:nan-gens} lists some of the situations that lead to exceptional values.
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \label{fig:nan-gens}
   % \begin{tabular}{c | p{0.5 \columnwidth}}
@@ -170,7 +170,7 @@ Exceptional values have a life cycle: instead a program-halting exception, an ex
 Often they go on to manifest in the output of the code, but sometimes they can ``die'' by disappearing silently.
 We characterize this life cycle in \cref{f:gpk}.
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
   \caption{Gen, Prop, Kill: Lifetime of a \NaN{} value}
   \label{f:gpk}
@@ -337,7 +337,7 @@ However, it pairs well with \FT{} and makes analyzing the log files easier.
 
 CSTG takes a set of stack traces and makes a graph: for each stack trace, it creates a node for every frame, and then creates or increments an edge between two adjacent frames, as seen in \cref{fig:cstg_demo}.
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=3in]{./fig/cstg_static_diagram.png}
   \caption{CSTG makes a graph by connecting adjacent stack frames}
@@ -363,7 +363,7 @@ Thus, tools to catch \fp{} exceptions on the GPU are essential.
 \FT{} and \GPUFPX{} can cover the entire computational stack, as seen in \cref{fig:ft_and_gpu_fpx}.
 Work remains to tighten the integration between \FT{} and \GPUFPX{} to reduce manual work to employ both tools for heterogeneous computation.
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=3in]{./fig/float_tracker_context_boxes.png}
   \caption{FloatTracker and GPU-FPX compliment each other}
@@ -393,7 +393,7 @@ Identifying where \NaN{}s begin to arise can help point the way to where some ma
 We dialed the CFL parameter up to extraordinarily high values and we started seeing \NaN{}s in the result.
 \code{ShallowWaters} detected the instability, but not before producing some bad output.
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=3in]{./fig/shallow_waters_cfl_diff.png}
   \caption{Effect of high CFL parameters: on the left, normal output. On the right: \NaN{}s cause white holes and gaps in the result.}
@@ -459,14 +459,14 @@ We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 \Cref{fig:sw_nan_cstg} and \cref{fig:sw_inf_cstg} show what the two graphs look like.\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
 
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
   \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
   \label{fig:sw_nan_cstg}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
   \caption{CSTG of \Inf{} generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
@@ -485,7 +485,7 @@ We took the \FT{} logs from running ShallowWaters and split the logs at the 10\%
 We used CSTG to diff the flow graphs between the first 10\% of the logs and the remaining 90\%.
 The diff can be seen in \cref{fig:cstg_diff_demo}.
 
-\begin{figure}[ht]
+\begin{figure}[t]
   \centering
   \includegraphics[width=3in]{./fig/cstg_diff_pretty.png}
   \caption{Diff between the early and latter stages of ShallowWaters}
