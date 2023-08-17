@@ -168,7 +168,7 @@ For more details on exceptional values, see~\cite{knuthArtComputerProgramming199
 
 Exceptional values have a life cycle: instead a program-halting exception, an exceptional value comes into being at the point of an undefined operation and propagates through the rest of the computation.
 Often they go on to manifest in the output of the code, but sometimes they can ``die'' by disappearing silently.
-We characterize this life cycle in \cref{fig:gpk}.
+We characterize this life cycle in \cref{f:gpk}.
 
 \begin{figure}[ht]
   \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
@@ -303,10 +303,11 @@ This new method does a few things:
 \item First it checks if it should inject a \NaN{} here.
 \item If no \NaN{} is to be injected, it unwraps the \texttt{TrackedFloat}s to get to the primitive \texttt{Float} value, and computes the result normally.
 \item It examines the arguments as well as the return value, and then uses \cref{fig:lifetime-class} to determine the type of event and logs it if it is of interest.
-\item It wraps the result in a new \texttt{TrackedFloat} value and returns it.
+\item It wraps the result in a new \texttt{TrackedFloat} value.
 \end{enumerate}
 
 \begin{figure}[h]
+  \centering
   \begin{tabular}{ccc}
     Arguments & Result & Event Type \\
     \hline
@@ -438,22 +439,25 @@ Now the question is: where did the $\infty$ come from?
 We can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
 
 \begin{verbatim}
-^([-1.515f31, 2])            FT/TrackedFloat.jl:138
+^([-1.515f31, 2])          FT/TrackedFloat.jl:138
+literal_pow()              intfuncs.jl:325
 …
-materialize(^)               broadcast.jl:860
-top-level getproperty(P, :u) examples/sw_nan_tf.jl:14
+materialize(^)             broadcast.jl:860
+top-level getproperty(…)  examples/sw_nan_tf.jl:14
 …
 \end{verbatim}
 
 It looks like the $-\infty$ came from $-1.515e31^2$---no wonder a Float32 type couldn't handle something that large.
-We can tell that because the first line shows us the arguments\footnote{There is a configuration option that allows us to control this behavior.} and the second line shows us what function got called.
-
 Now we have some concrete values to work with: instead of wondering where an opaque \Inf{} or a \NaN{} came from, we have \emph{specific} values that a domain expert can use to diagnose the problem.
 
 \subsubsection{CSTGs Help Us Get a Bigger Picture}
 
 Running FloatTracker can produce a lot of logs.
 To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
+
+We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
+\Cref{fig:sw_nan_cstg} and \cref{fig:sw_inf_cstg} show what the two graphs look like.\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
+
 
 \begin{figure}[ht]
   \centering
@@ -462,9 +466,6 @@ To get a quick overview of the most common paths to problems, we can use CSTG to
   \label{fig:sw_nan_cstg}
 \end{figure}
 
-We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
-Here is what the two graphs look like:\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
-
 \begin{figure}[ht]
   \centering
   \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
@@ -472,21 +473,29 @@ Here is what the two graphs look like:\footnote{As with the call stack logs, the
   \label{fig:sw_inf_cstg}
 \end{figure}
 
+We can see in \cref{fig:sw_nan_cstg} that a thick line goes from the top-level call down to a call to \texttt{+} goes down the right side of the graph.
+This indicates that the majority of the flows took this path.
+That means we might be able to fix the majority of our problems by inspecting that particular flow.
+\Cref{fig:sw_inf_cstg} shows us that all but two flows started with a call to \texttt{^}---a promising place to start looking for improvements.
+
+\subsubsection{CSTG Diffing}
+
 Another one of CSTGs abilities is \emph{graph diffing}.
 We took the \FT{} logs from running ShallowWaters and split the logs at the 10\% mark.
-We used CSTG to diff the flow graphs between the first 10\% of the run of the program and the remaining 90\%.
+We used CSTG to diff the flow graphs between the first 10\% of the logs and the remaining 90\%.
 The diff can be seen in \cref{fig:cstg_diff_demo}.
 
-\begin{figure}
+\begin{figure}[ht]
   \centering
   \includegraphics[width=3in]{./fig/cstg_diff_pretty.png}
   \caption{Diff between the early and latter stages of ShallowWaters}
   \label{fig:cstg_diff_demo}
 \end{figure}
 
-The green lines indicate flows that were \emph{new} in the latter 90\% of the program's run.
-The red lines indicate flows that were \emph{only in} the first 10\% of the program's run.
+The green lines indicate flows that were \emph{new} in the latter 90\% of the logs.
+The red lines indicate flows that were \emph{only in} the first 10\% of the logs.
 What this means depends on the particular program; a domain expert can use these clues to e.g. find where instability started in the first part of the program, and where that instability got reinforced later on.
+In this case, we can see that \texttt{momentum_u!} only showed up in the beginning of the logs---we might look there for ways to prevent instability from beginning.
 
 \subsection{OrdinaryDiffEq}
 \label{s:ode}
@@ -495,18 +504,16 @@ To exercise the fuzzing abilities of \FT{}, we tried fuzzing \texttt{NBodySimula
 However, when we used \FT{}, we got no \fp{} operations.
 We discovered that \texttt{NBodySimulator} merely sets up the system of equations to solve, then hands all the work of running the simulation off to the \texttt{OrdinaryDiffEq}\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}} library from the same team.
 
-We configured \FT{} to inject a single \NaN{} somewhere within the scope of the \texttt{NBodySimulator} and \texttt{OrdinaryDiffEq} libraries.
+We configured \FT{} to inject a single \NaN{} randomly within the scope of the \texttt{NBodySimulator} and \texttt{OrdinaryDiffEq} libraries.
 We found a run where something curious happened: the library reported that it had detected a \NaN{} and would then exit.
 However, after printing that message, the program went into an infinite loop.
 
-% FIXME: should I show that CSTG here in the paper?
-We used CSTGs to get an idea of what the important flows were in the run of this errant behavior.
-With an idea of what was going on, we took a look at the logs and found a \NaN{} kill inside the \texttt{solve.jl} file in the \texttt{OrdinaryDiffEq} library.
+Using CSTGs to guide our search, we found a \NaN{} kill that manifested repeatedly in the logs.
+The stack traces for that kill originated from inside the \texttt{solve.jl} file in the \texttt{OrdinaryDiffEq} library.
 
 \begin{verbatim}
-…
-<       at FloatTracker/src/TrackedFloat.jl:193
-solve!  at OrdinaryDiffEq/src/solve.jl:515
+<([NaN, 3.0e6])  at FT/TrackedFloat.jl:193
+solve!           at OrdinaryDiffEq/solve.jl:515
 …
 \end{verbatim}
 
@@ -527,13 +534,13 @@ end
 The problem here is on line 2 when \texttt{tdir} is \NaN{}: multiplication propagates \NaN{}s, and comparison kills it, so the condition on the inner \texttt{while} loop is \emph{always} false.
 No work got done in the inner loop, and so the size of the \texttt{time\_stops} vector never decreases.
 
-Our kill logs led us right to this line; this is a perfect example of how \NaN{} kills can influence control flow to go awry.
+Our kill logs led us right to this line and let us know which of the arguments to \texttt{<} was a \NaN{}.
+This is a perfect example of how \NaN{} kills can influence control flow to go awry.
 In this case, the problem was apparent besides what our logs told us and it manifested as an infinite loop.
 More dangerous cases can occur when the influence of a bad comparison is not as readily observable.
 In any case, \FT{} can help monitor for kills and help fuzz to find kills before they arise in production.
 
-We were able to use the injection recording and the gen logs to track down where the first \NaN{} was injected to cause the infinite loop.
-This made it simple for us to create an example to reproduce the behavior, which we included in the GitHub issue that we opened.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl/issues/1939}}
+We were able to use the injection recording to reproduce the bug in the GitHub issue that we opened.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl/issues/1939}}
 
 \subsection{Finch}
 \label{s:finch}
