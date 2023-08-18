@@ -95,8 +95,9 @@ from ocean simulations to heat modes~(\cref{s:casestudies}):
 
 \Fp{} numbers use a finite number of bits to represent a spectrum of points along the real number line~(\cref{f:real-vs-fp}).
 The implementation strategy is essentially scientific notation.
-A \fp{} number packs a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into a bitstring (typically 64 or 32 bits, but 16-bit and 8-bit formats are on the rise~\cite{klowerLowprecisionClimateComputing2021,fp8}).
-This representation supports very small and very large numbers in a narrow range of bits.
+A \fp{} number packs a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into a bitstring.
+Typical strings are 64 or 32 bits long, but 16-bit and 8-bit formats are on the rise~\cite{klowerLowprecisionClimateComputing2021,fp8}.
+This representation supports very small and very large numbers in a narrow range of bits:
 
 \begin{lstlisting}[language = Julia]
 julia> prevfloat(typemax(Float64))
@@ -146,9 +147,15 @@ NaN
 \end{lstlisting}
 
 IEEE~754 defers the question of how to handle such exceptions to application code.
-It is up to developers to watch for \Nan{} and \Inf{} (and also subnormal numbers)
+It is up to developers to watch for \Nan{}, \Inf{}, and subnormal numbers (underflow)
 and implement an appropriate repair.
-Without guards, bugs happen.
+This is no easy task, however, because of the approximations inherent to
+floating point.
+Even an apparently-safe division could result in a \Nan{} if its
+denominator gets truncated to zero.
+Some \Nan{}s might be spurious, others might be fatal, but in any event
+anticipating the various exceptions is a burden.
+All too often, exceptional values go unhandled and flow through the code.
 
 
 \subsection{Lifetime of an Unhandled Exceptions}
@@ -160,16 +167,17 @@ Without guards, bugs happen.
   \label{f:gpk}
 \end{figure}
 
-Exceptional values have a lifetime: they are born, or \emph{generated}, by some operation; they \emph{propagate} through other operations; and they either appear in the program output, go out of scope, or get \emph{killed} by a numeric operation.
+Unhandled exceptional values have a lifetime: they are born, or \emph{generated}, by some operation; they \emph{propagate} through other operations; and they either appear in the program output, go out of scope, or get \emph{killed} by a numeric operation.
 \Cref{f:gpk} summarizes this \emph{gen}-\emph{prop}-\emph{kill} process.
 The gens and props are straightforward; see above for examples~(\cref{s:exnvalue}).
 The kills often arise from numeric comparisons (\code{<}, \code{=}, etc.),
-but exponents (\code{1\^NaN}) and over-eager matrix optimizations can kill
-exceptions~\cite{ddghlllprr-correctness-2022}.
+but exponents (\code{1{\string^}NaN}) and over-eager matrix
+optimizations~\cite{ddghlllprr-correctness-2022} can kill exceptions as well.
 
-To illustrate TODO
-
-Consider the following two functions to find the maximum value in a list:
+To illustrate the perils of killed exceptions, consider the following two ways
+of finding the maximum value in a list.
+The first compares numbers with \code{<=}
+while the second uses the built-in \code{max} function:
 
 \begin{lstlisting}[language = Julia]
 function max1(lst)
@@ -188,40 +196,30 @@ function max2(lst)
 end
 \end{lstlisting}
 
-Both \code{max1} and \code{max2} compute the maximum in a list.
-However, the \texttt{<=} operator used in the \code{max1} implementation does \emph{not} propagate \NaN{}s: \texttt{NaN <= 4} returns \texttt{false}, not \NaN{}.
-Because of this, you might not get the result you expected:
+For lists with a \Nan{} inside, the functions can give different
+results because \code{<=} kills \Nan{}s whereas \code{max}
+propagates them:
 
 \begin{lstlisting}[language = Julia]
-max1([1, 5, NaN, 4])     # returns 4
-max2([1, 5, NaN, 4])    # returns NaN
+julia> max1([1, 5, NaN, 4]) 
+4.0
+julia> max2([1, 5, NaN, 4]) 
+NaN
 \end{lstlisting}
 
-Not only is the result from \texttt{max1} problematic for obscuring the fact that there was a \NaN{} in the list, the result is also wrong!
-The built-in \texttt{max} function correctly propagates \NaN{}s, so we can see from its return that we got a \NaN{} somewhere.
-It's not entirely obvious \emph{where} that \NaN{} came from.
+Not only is the result from \code{max1} problematic for obscuring the fact that there was a \NaN{} in the list, the result is arguably wrong!
+The result from \code{max2} at least shows that a \Nan{} was in the works, though in a realistic setting it may not be clear where the \Nan{} came from.
+Both versions would thus benefit from tools that track exceptions across their lifetime.
+FlowFPX can help.
 
 \section{\FlowFPX{}}
 \label{s:flowfpx}
 
-\FlowFPX{} is a set of tools to aid in tracking down \fp{} exceptions.
-The two primary tools we cover in this paper are \FT{} and CSTG:
-
-\begin{itemize}
-\item \FT{} traces the lifetime of exceptional \fp{} values and enables inside-out fuzzing.
-\item CSTG visualizes the tracing output from \FT{} in compact form.
-\end{itemize}
-
-\GPUFPX~\cite{llsflg-hpdc-2023} is another component of \FlowFPX{} that can track \fp{} exceptions inside a GPU kernel.
-See the cited paper for more details on \GPUFPX.
-
-%% TODO julia proposed consistent NaN handling,
-%%  do we propagate the exact NaN
-%%  https://github.com/JuliaLang/julia/issues/48523
-%%
-%% Ashton: @Ben we simply propagate whatever we got from the operation. If
-%% Julia's behavior around an operator change, that should be preserved even
-%% when using FloatTracker
+\FlowFPX{} is a toolkit for tracking down \fp{} exceptions.
+The two primary tools we cover in this paper are \FT{}, which records lifetimes
+and enables fuzzing, and \CSTG{}s (more precisely, CSTGs), which visualize
+the flow of exceptions.
+\GPUFPX{} is a third component of \FlowFPX{} that tracks \fp{} exceptions inside GPU kernels~\cite{llsflg-hpdc-2023}.
 
 \subsection{\FT{}}
 \label{s:floattracker}
@@ -707,6 +705,17 @@ Work is ongoing to use \GPUFPX{} and \FT{} in tandem.
 \section{Discussion}
 \label{s:discussion}
 % future work
+
+FILL Consistent exception handling.
+
+https://github.com/JuliaLang/julia/issues/48523
+
+Ashton: @Ben we simply propagate whatever we got from the operation. If
+Julia's behavior around an operator change, that should be preserved even
+when using FloatTracker
+
+Ben: @Ashton tell the JuliaCon readers not just me!
+
 
 \subsection{Performance}
 \label{s:discussion-performance}
