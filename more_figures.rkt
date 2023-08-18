@@ -1,5 +1,5 @@
 #lang racket
-(require plot)
+(require plot/no-gui)
 
 ;; (define (floor-log n [base 10])
 ;;   (floor (log n base)))
@@ -10,8 +10,12 @@
     (set! last-val (+ last-val (expt stretch (floor (/ i subseq)))))
     last-val))
 
-(parameterize ([plot-width 1500]
-               [plot-height 100]
+(define num-points 20)
+(define point-sep 2)
+(define out-kind 'pdf)
+
+(parameterize ([plot-width 500]
+               [plot-height 80]
                [plot-x-ticks (ticks-add (linear-ticks #:number 10) (range -50 50) #f)]
                [plot-x-tick-labels? #f]
                [plot-y-ticks no-ticks]
@@ -22,22 +26,23 @@
                [plot-x-far-axis? #f]
                [plot-background-alpha 0.0]
                )
-  (define xs (append (map - (fp-example-points 20 4 1.52))
+  (define xs (append (map - (fp-example-points num-points point-sep 1.52))
                      (list 0)
-                     (fp-example-points 20 4 1.52)))
-  (displayln (cons (apply min xs) (apply max xs)))
-  (plot
-   #:out-file "/Users/ashton/Research/writing/juliacon2023-paper/fig/real_vs_fp.png"
-   #:out-kind 'png
-   #:x-min -50
-   #:x-max 50
-   #:y-min 0
-   #:y-max 3
+                     (fp-example-points num-points point-sep 1.52)))
+  #;(displayln (cons (apply min xs) (apply max xs)))
+  (plot-file
    (list
     (points (map (λ (x) (vector x 1)) xs)
             #:sym 'fullcircle5
             ;; #:sym 'point
-            ))))
+            ))
+   (format "./fig/real_vs_fp.~a" out-kind)
+   out-kind
+   #:x-min -50
+   #:x-max 50
+   #:y-min 0
+   #:y-max 2
+   ))
 
 ;; (require math/utils)
 ;; (test-floating-point 10000)
