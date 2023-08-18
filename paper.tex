@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{cleveref}
 \usepackage{microtype}
+\usepackage{pifont}
 
 %% extra links:
 %% - GPU Julia: https://cuda.juliagpu.org/stable/tutorials/introduction/
@@ -48,6 +49,12 @@
 \newcommand{\Inf}{\code{Inf}}
 \newcommand{\zerowidth}[1]{\makebox[0pt][l]{#1}}
 \newcommand{\zerocode}[1]{\zerowidth{\code{#1}}}
+\newcommand{\genpropkill}{\emph{gen}-\emph{prop}-\emph{kill}}
+\newcommand{\bigcheckmark}{\ding{51}}
+\newcommand{\bigxmark}{\ding{53}}
+\newcommand{\tblnext}{\(\Rightarrow\)}
+\newcommand{\tblY}{\mbox{\bigcheckmark}}
+\newcommand{\tblN}{\scalebox{0.8}{\bigxmark}}
 
 \section{Introduction}
 
@@ -89,7 +96,7 @@ from ocean simulations to heat modes~(\cref{s:casestudies}):
 
 \begin{figure}[t]\centering
   \includegraphics[trim=0 0 0 60,clip,width=0.95\columnwidth]{fig/real_vs_fp.png}
-  \caption{Floats are spread across the real number line.}
+  \caption{Floats are spread across the real number line}
   \label{f:real-vs-fp}
 \end{figure}
 
@@ -163,12 +170,12 @@ All too often, exceptional values go unhandled and flow through the code.
 
 \begin{figure}[t]
   \includegraphics[width=\columnwidth]{fig/genpropkill-outline.png}
-  \caption{Gen, Prop, Kill: Lifetime of a \NaN{} value}
+  \caption{Gen, Prop, Kill: Lifetime of an exceptional value}
   \label{f:gpk}
 \end{figure}
 
 Unhandled exceptional values have a lifetime: they are born, or \emph{generated}, by some operation; they \emph{propagate} through other operations; and they either appear in the program output, go out of scope, or get \emph{killed} by a numeric operation.
-\Cref{f:gpk} summarizes this \emph{gen}-\emph{prop}-\emph{kill} process.
+\Cref{f:gpk} summarizes this \genpropkill{} process.
 The gens and props are straightforward; see above for examples~(\cref{s:exnvalue}).
 The kills often arise from numeric comparisons (\code{<}, \code{=}, etc.),
 but exponents (\code{1{\string^}NaN}) and over-eager matrix
@@ -216,7 +223,7 @@ FlowFPX can help.
 \label{s:flowfpx}
 
 \FlowFPX{} is a toolkit for tracking down \fp{} exceptions.
-The two primary tools we cover in this paper are \FT{}, which records lifetimes
+The primary tools in this paper are \FT{}, which records lifetimes
 and enables fuzzing, and \CSTG{}s (more precisely, CSTGs), which visualize
 the flow of exceptions.
 \GPUFPX{} is a third component of \FlowFPX{} that tracks \fp{} exceptions inside GPU kernels~\cite{llsflg-hpdc-2023}.
@@ -224,50 +231,89 @@ the flow of exceptions.
 \subsection{\FT{}}
 \label{s:floattracker}
 
-\FT{} is implemented as a Julia library, and is available for download on JuliaHub.\footnote{\url{https://juliahub.com/ui/Packages/FloatTracker/dBXig/1.0.0}}
+\FT{} tracks exceptional values across their \genpropkill{} lifetime
+and can fuzz code for vulnerabilities by injecting a \Nan{} or \Inf{}
+as the result of an operation.
+\FT{} is implemented in Julia and is available on JuliaHub:
+
+\noindent\begin{center}\noindent\!\!\url{https://juliahub.com/ui/Packages/FloatTracker/dBXig}\!\!
+\end{center}
 
 \subsubsection{Tracking Exceptional Values}
 \label{s:trackingexceptionalvalues}
 
-\FT{}'s first purpose is to monitor \fp{} operations for exceptional value lifetime events.
-\FT{} interposes on arithmetic operations and standard library calls that involve a \fp{} value and logs a stack trace to that point whenever an exception is generated, propagated, or killed.
-\FT{} can also log the arguments to the suspect call, so you can get \emph{normal, concrete} values to help discover what is going wrong.
-A programmer can then use these stack traces to pinpoint where an exceptional value like \NaN{} came into being or where a guard against a \NaN{} kill is needed.
+\begin{figure}[t]\centering
+  \begin{tabular}{ccccc}
+    Exn. Input? & \tblnext & Exn. Output? & = & Event       \\ \hline
+    \tblN       & \tblnext &  \tblY{}     & = & {gen}  \\
+    \tblY       & \tblnext &  \tblY{}     & = & {prop} \\
+    \tblY       & \tblnext &  \tblN{}     & = & {kill} \\
+  \end{tabular}
+  \caption{How to classify operations that see exceptions}
+  \label{fig:lifetime-class}
+\end{figure}
 
-All the logs that \FT{} captures are straight from Julia's \texttt{stacktrace()} function.
-\FT{} writes these logs to three files: one file for each kind of event in a \fp{} exception's lifetime.
-This way, if a user of \FT{} is attempting to determine where a \NaN{} or an \Inf{} came from, they can look in the file for all the gen events.
-Likewise, if the user wants to find where \NaN{}s get killed, then they can look in the kills file.
+\FT{} monitors \Nan{} and \Inf{} exceptions by overloading arithmetic
+operations and logging key events.
+When the input to an operation is exception-free but the output is
+exceptional, the operation is a {gen} event~(\cref{fig:lifetime-class}).
+When the input and output contain exceptions, the operation is a {prop}
+event.
+And when the input contains an exception but the output does not,
+the operation is a {kill} event.
+Put together, the log of all {gen}s, {prop}s, and {kill}s
+sheds light of how various exceptions traveled across the program.
+The logs also record the call context (stack trace) and the arguments to the operation as a starting point for debugging efforts.
+
+\FT{} writes logs to three files: one for {gen} events, one for {prop}s, and one for {kill}s.
+This way, discovering where a \Nan{} came from is a matter of sifting through the {gen} file.
+Users can also lower the overhead of logging by turning it off for prop events.
+
+The instrumentation works through custom \fp{} types: \code{TrackedFloat64},
+\code{TrackedFloat32}, and \code{TrackedFloat16}.
+Developers must opt in to \FT{} by wrapping numbers in a custom type.
+From then on, tracking is automatic and extends transitively to all outputs
+of tracked operations.
+Multiplying a \code{Float64} value with a \code{TrackedFloat64}, for example, yields
+a \code{TrackedFloat64} to continue the logging trail.
+
 
 \subsubsection{Fuzzing}
 
-The second role of \FT{} is to fuzz code from the inside out.
-While can fuzz a program by giving it random inputs, this might not help you find \emph{all} the places where an exceptional value could crop up during a calculation.
-Demmel et. al suggest fuzzing by injecting exceptional values at intermediate calculations;~\cite{ddghlllprr-correctness-2022} this is the approach that we enable with \FT{}.
+Operator overloading gives \FT{} a powerful way to fuzz code from the inside out.
+Each overloaded function serves as a hook where \FT{} can decide whether to observe
+the operation or step in, discard the original result, and return an exception instead.
+Injecting faults in a random way~\cite{hamlet1994random}, also known as fuzzing,
+is a useful way to discover vulnerabilities in a large codebase.
+Demmel et~al. propose essentially the same idea for BLAS and
+LAPACK~\cite{ddghlllprr-correctness-2022}.
 
-\FT{}'s exception tracking infrastructure offers us a simple way to inject exceptional values wherever we want in our code: we are already interposing on \fp{} operations to monitor for exceptional lifetime values, so we can inject a \NaN{} at any of these points.
-
-Since the injection happens at random, \FT{} also provides a way to save \NaN{} injections so that injections that exercise bugs can be replayed to examine the bug repeatedly and to verify that hardening efforts have indeed eliminated the vulnerability.
-
-We have a global configuration system that allows us to turn on fuzzing and configure where, when, and how many \NaN{}s to inject, as well as whether or not to record or replay a recording:
+\FT{} exposes several parameters to let developers control the fuzzer:
 
 \begin{itemize}
-\item \texttt{replay::String} Name of a file to read an injection recording from. If set, this option makes all others irrelevant.
-\item \texttt{record::String} Name of a file to write injection events to for later replay.
-\item \texttt{active::Bool} Inject only if this is true.
-\item \texttt{n\_inject::Int64} Inject at most this many \NaN{}s.
-\item \texttt{odds::Int64} Inject if \texttt{rand(odds) == 1}.
-\item \texttt{functions::Array} Inject if we are within the dynamic extent of any of these functions.
-\item \texttt{libraries::Array} Inject if the top-most stack frame\footnote{After stripping off the stack frames that come from \FT{} itself.} comes from any of these libraries.
+\item \texttt{odds::Int64} inject if \texttt{rand(odds) == 1}.
+\item \texttt{n\_inject::Int64} upper bound on the number of \Nan{}s to inject.
+\item \texttt{active::Bool} fuzz only when set to true.
+\item \texttt{functions::Array{String}} limit fuzzing to the dynamic extent of the listed functions.
+\item \texttt{libraries::Array{String}} limit fuzzing to functions from the following libraries
 \end{itemize}
 
-Then, each time we intercept a \fp{} operation, we check to see if we should inject a \NaN{}. First we check if we're replaying a recording: if we are, just do as the recording says. Otherwise, we check that the injector is \texttt{active}, we have \NaN{}s remaining to inject (\texttt{n\_inject}), and we roll an \texttt{odds}-sided die to see if we should inject. Finally, check the current stack trace against the lists of functions and libraries to inject in. If all looks good, we inject.
+When fuzzing reveals an error, the next step is to craft a regression test to
+guide repairs.
+\FT{} therefore records the sequence of injections that it makes during a fuzzing
+run and enables a replay of any recording after the fact.
+Replay runs proceed deterministically so that developers can harden
+their code and check that the fixes remove the error.
+
 
 \subsubsection{\FT{} Internals}
 
-While other tools like profilers might accomplish the tracking that \FT{} does by writing extensions to the language's compiler or runtime, \FT{} works entirely in user land.
-\FT{} provides custom types---\texttt{TrackedFloat16}, \texttt{TrackedFloat32}, and \texttt{TrackedFloat64}---that wrap their corresponding \texttt{Float16}, \texttt{Float32}, and \texttt{Float64} counterparts.
-\FT{} also defines methods for every function in the \texttt{Base} module.
+\FT{} takes advantage of Julia's operator overloading to track exceptions and
+fuzz for vulnerabilities.
+For example, below is a variant of \code{+} that is overloaded
+for \code{TrackedFloat64}.
+It calls the basic \code{+} (or injects a \Nan{}) and checks for exceptions
+before returning:
 This lets \FT{} intercept all \fp{} operations involving \texttt{TrackedFloat} types.
 
 \begin{lstlisting}[language = Julia]
@@ -278,94 +324,77 @@ function +(x::TrackedFloat64, y::TrackedFloat64)
 end
 \end{lstlisting}
 
-This new method does a few things:
+Every arithmetic operation requires a similar overloading.
+Thus, the implementation of \FT{} uses a metaprogramming technique
+adapted from \texttt{Sherlogs.jl}~\cite{kMilanklSherlogsJl2021}
+to abstract over the common patterns.
+For every binary operation, the library creates an overloading similar
+to the one for \code{+} above.
+Unary operations and others work analogously.
+This approach saved thousands of lines of code.
+The implementation weighs in at 218 lines and defines 645 overloaded function;
+assuming 5 lines of code per function, a handwritten version would require over 3,000 lines.
 
-\begin{enumerate}
-\item First it checks if it should inject a \NaN{} here.
-\item If no \NaN{} is to be injected, it unwraps the \texttt{TrackedFloat}s to get to the primitive \texttt{Float} value, and computes the result normally.
-\item It examines the arguments as well as the return value, and then uses \cref{fig:lifetime-class} to determine the type of event and logs it if it is of interest.
-\item It wraps the result in a new \texttt{TrackedFloat} value.
-\end{enumerate}
 
-\begin{figure}[h]
-  \centering
-  \begin{tabular}{ccc}
-    Arguments & Result & Event Type \\
-    \hline
-    No \NaN{} & \NaN{} & Gen \\
-    \NaN{} & \NaN{} & Prop \\
-    \NaN{} & No \NaN{} & Kill \\
-  \end{tabular}
-  \label{fig:lifetime-class}
-  \caption{Exceptional value event classification rules}
-\end{figure}
-
-The same classification rules apply to \Inf{} and would apply to any other value of interest.
-
-These new methods had to be defined for every combination of tracked/untracked arguments;
-fortunately Julia's metaprogramming abilities made it simple for us to scale without the code becoming unwieldy.
-We made a macro that first loops through all the \texttt{TrackedFloat} types that we wished to implement, and then looped through all of the operators that we wished to support.
-This approached saved us over 10x the lines a non-macro approach would have required.\footnote{We implemented overrides for 645 function/type combinations. At roughly 5 lines per variant, this is 3225 lines of code. Our implementation at time of writing weighs in at 218 lines of code, which is \emph{including} whitespace and comments.}
-This approach was inspired by \texttt{Sherlogs.jl}.\cite{kMilanklSherlogsJl2021}
-
-\subsection{CSTG}
+\subsection{Stack Graphs}
 \label{s:cstg}
 
 \FT{} can produce copious amounts of log files which can be challenging to sift through manually.
-Coalesced Stack Trace Graphs, or CSTGs~\cite{humphreySystematicDebuggingMethods2014} provide a way to visualize large amounts of stack traces in a compact form.
-CSTG is a stand-alone tool and was not designed with \FT{} specifically in mind.
-However, it pairs well with \FT{} and makes analyzing the log files easier.
+Coalesced stack trace graphs (CSTGs or \CSTG{}s for short) provide a way to visualize large amounts of stack traces in a compact form~\cite{humphreySystematicDebuggingMethods2014}.
+This techinque pairs well with \FT{} and makes analyzing the log files easier.
 
-CSTG takes a set of stack traces and makes a graph: for each stack trace, it creates a node for every frame, and then creates or increments an edge between two adjacent frames, as seen in \cref{fig:cstg_demo}.
+\Cref{fig:cstg_demo} illustrates the construction of a \CSTG{} from a collection of stack traces.
+Each trace on the left contributes nodes and edges to the graph on the right.
+Repeated edges get emphasized with darker lines and larger counts.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=3in]{./fig/cstg_static_diagram.png}
-  \caption{CSTG makes a graph by connecting adjacent stack frames}
+  \includegraphics[width=0.9\columnwidth]{./fig/cstg_static_diagram.png}
+  \caption{From stack traces (left) to \CSTG{} (right)}
   \label{fig:cstg_demo}
 \end{figure}
 
-These graphs are meant to be read bottom-up: the bottom nodes are the roots where exceptional values manifested.
-Higher nodes in the graph show function calls progressively closer to the top-level call that spawned them.
-Thick lines and high numbers indicate flows with the highest volume leading to errors---though thin areas are still worth investigating.
-CSTG provides a map to aid in contextualizing a stack trace in a log file.
+Reading bottom-up, a \CSTG{} based on the \emph{gen} events in a program
+highlights the contexts that frequently produced exceptional values.
+Using~\cref{fig:cstg_demo} as an example, \code{Frame D} produced
+three exceptions, two of which arose under \code{Frame C}.
+In a large program with many exceptions, \CSTG{}s offer a way to prioritize
+debugging efforts: go for the heavily-trodden paths first.
+
 
 \subsection{\GPUFPX{}}
 \label{s:gpufpx}
 
-% HELP: @ben, I'm not sure what paper you mean by "Julia CPU"
 Many programs offload work onto GPUs, which are no less susceptible to \fp{} exceptions than CPUs.
-In some regards they are \emph{more} susceptible because GPUs do not have the same exception-handling mechanisms that CPUs do.
-Thus, tools to catch \fp{} exceptions on the GPU are essential.
-\FT{} is constrained to CPU workloads; however, there is a companion tool called \GPUFPX{}~\cite{llsflg-hpdc-2023} that can help diagnose \fp{} exceptions on the GPU.
-\GPUFPX{} can detect floating-point exceptions on the GPU that GPU code cannot do on its own.
-\GPUFPX{} reports these exceptions back to the CPU for further analysis.
+In fact, GPU programs are worse off because they lack exception-handling mechanisms from the CPU world~\cite{llg-soap-2022}.
+Since \FT{} instruments Julia programs, it cannot help directly;
+however, the companion tool \GPUFPX{} instruments GPU kernels to detect and report
+\fp{} exceptions~\cite{llsflg-hpdc-2023}.
+Together, \FT{} and \GPUFPX{} provide insights for accelerated programs.
 
-\FT{} and \GPUFPX{} can cover the entire computational stack, as seen in \cref{fig:ft_and_gpu_fpx}.
-Work remains to tighten the integration between \FT{} and \GPUFPX{} to reduce manual work to employ both tools for heterogeneous computation.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=3in]{./fig/float_tracker_context_boxes.png}
-  \caption{FloatTracker and GPU-FPX compliment each other}
-  \label{fig:ft_and_gpu_fpx}
-\end{figure}
 
 \section{Case Studies}
 \label{s:casestudies}
 
-In this section we'll discuss some case studies where tools from \FlowFPX{} aided in finding or fixing \fp{} issues.
-\Cref{s:sw} covers an ocean simulation that produces \NaN{}s in the output---a common and frustrating occurrence for many a scientist. \Cref{s:ode} puts the popular \texttt{OrdinaryDiffEq} solver library under a fuzzer to harden it against bad behavior in the presence of exceptional \fp{} values. \Cref{s:finch} fuzzes another library---this time a library for specifying partial differential equations (PDEs). Finally, in \cref{s:ocean}, we examine another ocean simulation library---this time the library runs on the GPU. This puts it out of reach of \FT{}, but \GPUFPX{} can handle it. In addition to the case studies that we did ourselves, \cref{s:safari} is an ``in the wild'' usage of \FT{} that helped researchers uncover the source of a \NaN{} in their own code without help from us.
+\FlowFPX{} has helped to debug exceptions and fuzz for issues in a variety
+of settings, some synthetic and some realistic.
+The case studies include a shallow water simulation, the
+\texttt{OrdinaryDiffEq} solver, and a Bayesian inference library.
 
 \subsection{ShallowWaters}
 \label{s:sw}
 
-\texttt{ShallowWaters}~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019,klowerLowprecisionClimateComputing2021} simulates the flow of water over a seabed.
-This is not a general shallow waters simulation library---it is designed primarily to showcase numerical methods involving 16-bit floats.
+\texttt{ShallowWaters.jl} simulates the flow of water over a
+seabed~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019}.
+The library has dozens of parameters that a scientist can experiment with.
+One notable parameter is the Courant-Friedrichs-Lewy (CFL) number, which roughly describes the size of the time step to take in running the simulation.
+A small CFL number makes the simulation run slowly, but accurately; a large number speeds it up but loses precision
+because the system does not get enough time to propagate information.
 
-The Courant-Friedrichs-Lewy (``CFL'') parameter roughly describes the size of the time step to take in running the simulation.
-Normally this value sits between 0 and 1---smaller values mean the simulation runs slower but with higher accuracy, whereas higher values mean the simulation takes bigger time steps and consequently runs faster, but results might be inaccurate.
-The primary reason for problems arising comes from information not having enough time to propagate through the simulation before the next time step is taken.
+Normal CFL values range between zero and one.
+X
+
+
 
 It is not uncommon to encounter cases where setting the CFL parameter too high results in \NaN{}s in the result.
 Driving the CFL parameter low enough to excise the \NaN{}s can make the simulation too long and unwieldy to be comfortable to use.
@@ -442,17 +471,17 @@ We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=3in]{fig/sw_nan_cstg_clean.png}
+  \includegraphics[width=0.96\columnwidth]{fig/sw_nan_cstg_clean.png}
   \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
   \label{fig:sw_nan_cstg}
 \end{figure}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
-  \caption{CSTG of \Inf{} generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
-  \label{fig:sw_inf_cstg}
-\end{figure}
+% \begin{figure}[t]
+%   \centering
+%   \includegraphics[width=3in]{fig/sw_inf_cstg_clean.png}
+%   \caption{CSTG of \Inf{} generation logs from the same run as~\cref{fig:sw_nan_cstg}.}
+%   \label{fig:sw_inf_cstg}
+% \end{figure}
 
 We can see in \cref{fig:sw_nan_cstg} that a thick line goes from the top-level call down to a call to \texttt{+} goes down the right side of the graph.
 This indicates that the majority of the flows took this path.
