@@ -95,7 +95,7 @@ from ocean simulations to heat modes~(\cref{s:casestudies}):
 \label{s:background}
 
 \begin{figure}[t]\centering
-  \includegraphics[trim=0 0 0 60,clip,width=0.95\columnwidth]{fig/real_vs_fp.png}
+  \includegraphics[trim=10 0 10 0,clip,width=0.95\columnwidth]{fig/real_vs_fp.pdf}
   \caption{Floats are spread across the real number line}
   \label{f:real-vs-fp}
 \end{figure}
@@ -391,48 +391,38 @@ One notable parameter is the Courant-Friedrichs-Lewy (CFL) number, which roughly
 A small CFL number makes the simulation run slowly, but accurately; a large number speeds it up but loses precision
 because the system does not get enough time to propagate information.
 
-Normal CFL values range between zero and one.
-X
+Normal values for the CFL number range between zero and one.
+With a CFL of 0.9, the shallow water simulation produces the graph on the left half
+of~\cref{fig:sw_nans} showing current speed in a rectangular basin.
+Raising the CFL too high, to 1.6, causes trouble
+(\cref{fig:sw_nans}, right) with large, white regions where the
+current speed is \NaN{} instead of a normal value.
 
-
-
-It is not uncommon to encounter cases where setting the CFL parameter too high results in \NaN{}s in the result.
-Driving the CFL parameter low enough to excise the \NaN{}s can make the simulation too long and unwieldy to be comfortable to use.
-Identifying where \NaN{}s begin to arise can help point the way to where some mathematical refinement can be used to make the simulation both fast and accurate enough for practical use.
-
-We dialed the CFL parameter up to extraordinarily high values and we started seeing \NaN{}s in the result.
-\code{ShallowWaters} detected the instability, but not before producing some bad output.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=3in]{./fig/shallow_waters_cfl_diff.png}
-  \caption{Effect of high CFL parameters: on the left, normal output. On the right: \NaN{}s cause white holes and gaps in the result.}
-  \label{fig:sw_nans}
-\end{figure}
-
-The white regions in the right graph of \cref{fig:sw_nans} are regions where \NaN{}s crept into the computation and destroyed the results.
-In one regard, this is not as bad as a \NaN{} kill---knowing that there are \NaN{}s in the computation means that we have a chance to fix it, whereas a \NaN{} kill might silently give us the wrong answer.
-Incidentally, we know that there were no \NaN{} kills in this test all the events in our kill logs are from calling the \texttt{isnan} function---a clear sign that the program is deliberately taking action on the presence of a \NaN{}.
-
-Finding the sources of \NaN{}s can be tricky.
-We expected \NaN{}s in this case because we set the CFL parameter up so high, but tracking down the sources of \NaN{}s generally is a difficult and time-consuming problem.
-
-\FT{} solves this problem for us by automatically tracking all sources of potential \NaN{} generation.
-And in this case \texttt{ShallowWaters} makes this doubly easy:
-\texttt{ShallowWaters} was designed to showcase physics simulations using variable levels of \fp{} precision, and allows you to specify a \fp{} type to use in the computation.
-We simply asked it to use our \texttt{TrackedFloat32} type, and then the entire simulation ran under the supervision of FloatTracker.
+Running \FT{} on the high-CFL simulation reveals where the simulation drifted
+from numbers to \NaN{} exceptions.
+The first step in applying \FT{} is to convert relevant floats to tracked
+floats, e.g., \code{Float32} to \code{TrackedFloat32}.
+For shallow waters, this step is easy because the simulation is parameterized by
+a \fp{} type for internal use.
+Swapping in a tracked type is enough:
 
 \begin{lstlisting}[language = Julia]
 run_model(T=TrackedFloat32,
-          cfl=10, Ndays=100, nx=100, L_ratio=1,
+          cfl=10,
+          nx=100,
+          Ndays=100,
+          L_ratio=1,
           bc="nonperiodic",
           wind_forcing_x="double_gyre",
           topography="seamount")
 \end{lstlisting}
 
-This produced almost 17000 lines of logs in the gens file. Below is a sample stack trace from these logs: (formatted for clarity)
+With tracking, the simulation runs as before, producing an ugly graph.
+It additionally outputs logs for all gen, prop, and kill events
+as they happen.
+Below is one event from the gen logs:
 
-\begin{verbatim}
+\begin{lstlisting}
 -([-Inf, -Inf])   FT/TrackedFloat.jl:106
 momentum_u!       SW/rhs.jl:246
 rhs_nonlinear!    SW/rhs.jl:50
@@ -440,39 +430,61 @@ rhs!              SW/rhs.jl:14 [inlined]
 time_integration  SW/time_integration.jl:77
 run_model         SW/run_model.jl:37
 top-level
-\end{verbatim}
+\end{lstlisting}
 
-We can see that the \NaN{} appeared as the result of $-\infty - -\infty$ (first line) and that subtraction happened in the \texttt{momentum\_u!} function on line 246 of the \texttt{rhs.jl} file (second line).
-Thus, with little effort we were able to track down where the \NaN{}s were originating.
+We can see that the \NaN{} appeared as the result of subtracting two infinities (\code{-Inf - -Inf}).
+The trace further shows that this subtraction happens inside the function \texttt{momentum\_u!} on line 246 of the \texttt{rhs.jl} file.
 
-Now the question is: where did the $\infty$ come from?
-We can look at the file of the $\infty$ gens where we see the following: (formatted for clarity)
+This solves the mystery of where one \NaN{} came from, but raises a new question
+about the source of the \Inf{} value.
+The logs for \Inf{} gens have an answer:
 
-\begin{verbatim}
+\begin{lstlisting}
 ^([-1.515f31, 2])          FT/TrackedFloat.jl:138
 literal_pow()              intfuncs.jl:325
-…
+...
 materialize(^)             broadcast.jl:860
 top-level getproperty(...) examples/sw_nan_tf.jl:14
-…
-\end{verbatim}
+..
+\end{lstlisting}
+%
+This \Inf{} came from an exponent that overflowed the float type (\code{-1.515e31\string^2}).
+\FT{} has shown exactly which numeric values in which operation
+caused exceptions to occur.
 
-It looks like the $-\infty$ came from $-1.515e31^2$---no wonder a Float32 type couldn't handle something that large.
-Now we have some concrete values to work with: instead of wondering where an opaque \Inf{} or a \NaN{} came from, we have \emph{specific} values that a domain expert can use to diagnose the problem.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=3in]{./fig/shallow_waters_cfl_diff.png}
+  \caption{Raising the CFL number creates white gaps due to \NaN{}s}
+  \label{fig:sw_nans}
+\end{figure}
 
-\subsubsection{CSTGs Help Us Get a Bigger Picture}
 
-Running FloatTracker can produce a lot of logs.
-To get a quick overview of the most common paths to problems, we can use CSTG to get an overview of what stack frames appear the most often.
 
-We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
-\Cref{fig:sw_nan_cstg} and \cref{fig:sw_inf_cstg} show what the two graphs look like.\footnote{As with the call stack logs, these have been edited for clarity. We only remove a few boxes in between—mostly due to space constraints in this paper.}
+\subsubsection{Stack Graphs for a Bigger Picture}
 
+While the logs for shallow waters contain useful information,
+there is an overwhelming amount of it.
+There are over ten thousand lines in the gen file alone.
+Converting these logs to a stack graph gives a quick overview
+of the most common paths to exceptional values.
+
+\Cref{fig:sw_nan_cstg} presents the stack graph for \NaN{} gen events
+in shallow waters with the high CFL number.
+Reading bottom-up, every \NaN{} came from calls to the \code{-} and \code{+} operations.
+Calls to \code{+} account for most of the \NaN{}s.
+These \NaN{}s arose in two different contexts: a small number (30)
+occurred within a momentum calculation, while the rest (162)
+occurred within a continuity step.
+Moving to the top of the graph, it shows that the function \code{run\_model} drove
+the entire simulation.
+With this overview of the program, a promising next step is to guard against \NaN{}s
+in the momentum and continuity functions.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.96\columnwidth]{fig/sw_nan_cstg_clean.png}
-  \caption{CSTG of \NaN{} generation logs from ShallowWaters.}
+  \caption{Stack graph for \NaN{} gens in shallow waters}
   \label{fig:sw_nan_cstg}
 \end{figure}
 
@@ -483,51 +495,63 @@ We can produce a CSTG of both the \Inf{} as well as the \NaN{} logs.
 %   \label{fig:sw_inf_cstg}
 % \end{figure}
 
-We can see in \cref{fig:sw_nan_cstg} that a thick line goes from the top-level call down to a call to \texttt{+} goes down the right side of the graph.
-This indicates that the majority of the flows took this path.
-That means we might be able to fix the majority of our problems by inspecting that particular flow.
-\Cref{fig:sw_inf_cstg} shows us that all but two flows started with a call to \texttt{\^}---a promising place to start looking for improvements.
 
-\subsubsection{CSTG Diffing}
+\subsubsection{Stack Graph Differences}
+
+Graph diffing works well for \CSTG{}s; it shows how flows in the program evolved
+from one stage to another.
+\Cref{fig:cstg_diff_demo} illustrates one diff in the context of \NaN{} gens for
+shallow waters.
+It compares the first 10\% of gen events to the latter 90\% of gens.
+The positive numbers and green lines indicate flows that are new in the latter part.
+The negative numbers and red lines show flows that disappeared in the latter part.
+
 
 Another one of CSTGs abilities is \emph{graph diffing}.
 We took the \FT{} logs from running ShallowWaters and split the logs at the 10\% mark.
 We used CSTG to diff the flow graphs between the first 10\% of the logs and the remaining 90\%.
 The diff can be seen in \cref{fig:cstg_diff_demo}.
+A domain expert might use these clues to find where an instability started in
+the first part of the program.
+In this case, the function \texttt{momentum\_u!} showed up only in the
+beginning of the logs; it may be an effective point to check for \Nan{}s.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=3in]{./fig/cstg_diff_pretty.png}
-  \caption{Diff between the early and latter stages of ShallowWaters}
+  \includegraphics[width=0.96\columnwidth]{./fig/cstg_diff_pretty.png}
+  \caption{Stack graph diff}
   \label{fig:cstg_diff_demo}
 \end{figure}
 
-The green lines indicate flows that were \emph{new} in the latter 90\% of the logs.
-The red lines indicate flows that were \emph{only in} the first 10\% of the logs.
-What this means depends on the particular program; a domain expert can use these clues to e.g. find where instability started in the first part of the program, and where that instability got reinforced later on.
-In this case, we can see that \texttt{momentum\_u!} only showed up in the beginning of the logs---we might look there for ways to prevent instability from beginning.
 
 \subsection{OrdinaryDiffEq}
 \label{s:ode}
 
-To exercise the fuzzing abilities of \FT{}, we tried fuzzing \texttt{NBodySimulator}\footnote{\url{https://github.com/SciML/NBodySimulator.jl}} from the SciML team, which simulates the gravitational interactions between two or more massive bodies.
-However, when we used \FT{}, we got no \fp{} operations.
-We discovered that \texttt{NBodySimulator} merely sets up the system of equations to solve, then hands all the work of running the simulation off to the \texttt{OrdinaryDiffEq}\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}} library from the same team.
+With the targeted fuzzing abilities of \FT{}, we set focus on the
+\texttt{NBodySimulator} package from the SciML
+team.\footnote{\url{https://github.com/SciML/NBodySimulator.jl}}
+Fuzzing discovered zero bugs and zero exceptional events.
+In fact, fuzzing injected zero exceptional values whatsoever, even with maximum odds.
+The reason for these null results, it turns out, is that the nbody
+simulation merely creates a problem for the \code{OrdinaryDiffEq}
+solver.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}}
+All the \fp{} operations were in another library.
 
-We configured \FT{} to inject a single \NaN{} randomly within the scope of the \texttt{NBodySimulator} and \texttt{OrdinaryDiffEq} libraries.
-We found a run where something curious happened: the library reported that it had detected a \NaN{} and would then exit.
+Fuzzing on \code{OrdinaryDiffEq} led to a curious situation.
+The library itself reported a \NaN{} and printed a message that it would exit.
 However, after printing that message, the program went into an infinite loop.
+Using \CSTG{}s to guide our search, we found a \NaN{} kill that manifested repeatedly in the logs.
+The stack traces for that kill originated from inside the file \texttt{solve.jl}:
 
-Using CSTGs to guide our search, we found a \NaN{} kill that manifested repeatedly in the logs.
-The stack traces for that kill originated from inside the \texttt{solve.jl} file in the \texttt{OrdinaryDiffEq} library.
-
-\begin{verbatim}
+\begin{lstlisting}
 <([NaN, 3.0e6])  at FT/TrackedFloat.jl:193
 solve!           at ODE/solve.jl:515
-…
-\end{verbatim}
+...
+\end{lstlisting}
 
-The relevant part of \texttt{solve.jl} looks like this:
+The relevant part of \texttt{solve.jl} contains a pair of loops.
+With injection, the variable \code{tdir} holds a \NaN{},
+stopping all productivity:
 
 % file here: ~/Research/ode_debug/dev/OrdinaryDiffEq/src/solve.jl
 % see line 514
@@ -541,16 +565,15 @@ while !isempty(time_stops)
 end
 \end{lstlisting}
 
-The problem here is on line 2 when \texttt{tdir} is \NaN{}: multiplication propagates \NaN{}s, and comparison kills it, so the condition on the inner \texttt{while} loop is \emph{always} false.
-No work got done in the inner loop, and so the size of the \texttt{time\_stops} vector never decreases.
+In more detail, the \NaN{} for \code{tdir} propagates though the multiplication
+and gets killed by the \code{<} comparison.
+Hence the condition for inner \code{while} loop is always false,
+which means the outer loop never ends up with an empty list.
 
-Our kill logs led us right to this line and let us know which of the arguments to \texttt{<} was a \NaN{}.
-This is a perfect example of how \NaN{} kills can influence control flow to go awry.
-In this case, the problem was apparent besides what our logs told us and it manifested as an infinite loop.
-More dangerous cases can occur when the influence of a bad comparison is not as readily observable.
-In any case, \FT{} can help monitor for kills and help fuzz to find kills before they arise in production.
+This is a real-world example of how \NaN{} kills can affect control flow, and we filed
+an issue for it.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl/issues/1939}}
+Fortunately, the problem in this case is benign as the code was already trying to halt.
 
-We were able to use the injection recording to reproduce the bug in the GitHub issue that we opened.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl/issues/1939}}
 
 \subsection{Finch}
 \label{s:finch}
@@ -571,20 +594,20 @@ protection against user input.
 The first was when reading an input mesh.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/16}{2023-06-06}}
 A \NaN{} injected in the mesh led to a crash further on:
 
-\begin{verbatim}
+\begin{lstlisting}
   BoundsError: attempt to access 1-element
    Vector{Int64} at index [2]
-\end{verbatim}
+\end{lstlisting}
 
-Defensive programming solves the issue.
+Before accessing the input, Finch needed to check for \NaN{}s.
 The second place was in setting bounds for the
 solver.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/17}{2023-06-06}}
 Here, a \NaN{} could leave bounds uninitialized, leading to a bounds error.
 Additionally, \FT{} and \CSTG{}s have been useful for identifying \NaN{}s that
-appear in unstable systems.
+appear in unstable heat simulations written in Finch.
 %% advection2d, high cfl and high T (time) led to NaN during simulation
 
-\subsection{\GPUFPX{}: Oceananigans}
+\subsection{Oceananigans}
 \label{s:ocean}
 
 Oceananigans~\cite{OceananigansJOSS} is simulation package for incompressible
@@ -641,16 +664,21 @@ of the reliability of the example.
   \label{f:gpufpx}
 \end{figure}
 
-\subsection{RxInfer: No Help Needed}
+\subsection{RxInfer}
 \label{s:safari}
 
-\FT{} has proven to be useful for more than its creators---we discovered an open issue in the \code{RxInfer.jl} library with an issue revolving around \NaN{} detection.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
-Even though we were unable to provide hands-on guidance as the code in question was proprietary, the authors of \code{RxInfer.jl} were able use \FT{} themselves, and within a day they tracked down the location of a \NaN{} gen.
+We discovered an open issue in the \code{RxInfer.jl} library related to \NaN{} detection
+and suggested \FT{} to the developers.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
+Within a day, they were able to track down the location of an important \NaN{} gen.
+This success came with little input from our end; in fact, the application program was
+closed-source.
+We merely explained how to use \FT{} by wrapping inputs in a tracked type.
+
 
 \section{Related Work}
 \label{s:related}
 
-\subsection{Floating-Point Error Analysis}
+\paragraph{Error Analysis}
 
 Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
 They describe a proposal to pack numeric codes into an \texttt{INFO\_ARRAY} that mirrors our gen-prop-kill framework.
@@ -665,7 +693,7 @@ In a similar vein, Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a
 \FT{} tracks down exceptional \fp{} values; once the location of a gen is found, Herbie could be employed to rewrite the arithmetic expression, if \fp{} error is the cause of the exceptional value.
 The Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} workbench provides an interactive interface to Herbie.
 
-\subsection{Diagnosing floating-point exceptions}
+\paragraph{Diagnosing floating-point exceptions}
 
 The Julia library \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021} inspired the use of a custom number type to intercept operations on a number.
 In contrast to \FT{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \texttt{Sherlogs} tracks and reports the range of values seen over the course of a computation.
@@ -677,13 +705,13 @@ It can monitor a program during execution for any \fp{} arithmetic issues, such 
 \FT{} in contrast focuses on the lifetime of exceptional values; \FT{} can notice when a \NaN{} gets killed, for instance, while that is not an event that FPSpy appears to be able to track.
 FPSpy has the advantage of being lightweight enough to run on production code for certain loads.
 
-\subsection{Stack Trace Graphs}
+\paragraph{Stack Graphs}
 
 CSTG~\cite{humphreySystematicDebuggingMethods2014} is built on the work of and related to the STAT~\cite{arnoldStackTraceAnalysis2007} tool developed by Laurence Livermore National Laboratory.
 STAT is a tool for collecting, analyzing, and visualizing stack traces from thousands of concurrent processes, and is designed to highlight anomalies quickly.
 It produces visualizations similar to those of CSTG, thought CSTG offers more compact views.
 
-\subsection{Floating-Point Exceptions on the GPU}
+\paragraph{GPU Exception Tracking}
 
 FPChecker~\cite{l-ase-2019} is a tool to report \fp{} exceptions occurring on the GPU.
 FPChecker relies on LLVM-level instrumentation of GPU kernels, and so cannot run on the plethora of closed-source GPU kernels in usage today.
@@ -793,11 +821,6 @@ decide whether they are protected or not.
 \FT{}'s scope is limited to Julia code: it cannot track the lifetime of exceptional values that are born, live, or die in external libraries, such as C programs.
 One approach would be to create an API for \FT{} so that programs using these external libraries could leverage \FT{}'s tooling to monitor the interface between Julia and e.g. external C programs.
 
-\subsection{Future Work}
-
-\FlowFPX{} is a growing project and we welcome feedback from domain experts
-on how to best suit their workflow.
-If you try any of our tools, please send us comments, suggestions, and bug reports via the tools' repositories on GitHub.
 
 \section{Acknowledgments}
 
