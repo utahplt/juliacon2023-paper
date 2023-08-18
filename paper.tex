@@ -277,6 +277,14 @@ of tracked operations.
 Multiplying a \code{Float64} value with a \code{TrackedFloat64}, for example, yields
 a \code{TrackedFloat64} to continue the logging trail.
 
+Crucially, the tracked version of an exception, say a \NaN{}, points
+to the original exceptional value.
+This enables techniques such as \NaN{}-packing, or otherwise
+using the payload in creative ways.
+Not all Julia operations currently preserve \NaN{}s
+bit-for-bit,\footnote{\url{https://github.com/JuliaLang/julia/issues/48523}}
+but \FT{} does its part.
+
 
 \subsubsection{Fuzzing}
 
@@ -678,59 +686,53 @@ We merely explained how to use \FT{} by wrapping inputs in a tracked type.
 \section{Related Work}
 \label{s:related}
 
-\paragraph{Error Analysis}
+\subsection{Error Analysis}
 
-Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in the BLAS and LAPACK libraries and propose solutions to inconsistencies.
-They describe a proposal to pack numeric codes into an \texttt{INFO\_ARRAY} that mirrors our gen-prop-kill framework.
-They also suggest a fuzzing technique that we realize in \FT{}:
-instead of fuzzing the \emph{inputs} to a program, we fuzz by randomly injecting exceptional values at \emph{any} point where there is an arithmetic operation. Demmel suggests that this approach is useful since any \fp{} operation could lead to an exceptional value if the inputs are in dangerous ranges.
+Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in BLAS and LAPACK, identify several inconsistencies, and propose an API for debugging and adding determinism.
+The proposal includes an extension to the \texttt{INFO\_ARRAY} parameter with fields that record \genpropkill{} information.
+It also includes fuzzing, which we realize in \FT{}.
 
-Toronto and McCarthy\cite{torontoPracticallyAccurateFloatingPoint2014} develop a methodology for assessing where arithmetic operations are liable to magnify \fp{} error.
-They include error visualization and work on how to avoid error-magnifying ``badlands''.
-They focus on rewriting arithmetic expressions to avoid error which could lead to exceptional values, rather than on the exceptional values themselves.
+Toronto and McCarthy~\cite{torontoPracticallyAccurateFloatingPoint2014} propose a test-driven method for detecting numeric error: plot the results of an expression on a range of inputs and look for sharp deviations, or \emph{badlands}.
+They point out several ways to rewrite code to avoid badlands by rewriting code in a semantics-preserving way.
 
-In a similar vein, Herbie\cite{panchekhaAutomaticallyImprovingAccuracy2015} is a tool for automatically rewriting arithmetic expressions to reduce \fp{} error.
-\FT{} tracks down exceptional \fp{} values; once the location of a gen is found, Herbie could be employed to rewrite the arithmetic expression, if \fp{} error is the cause of the exceptional value.
+Herbie~\cite{panchekhaAutomaticallyImprovingAccuracy2015} automatically rewrites arithmetic expressions to reduce \fp{} error.
+This would combine well with \FT{}: first identify the location of a \NaN{}, ask Herbie to find a repair.
 The Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} workbench provides an interactive interface to Herbie.
 
-\paragraph{Diagnosing floating-point exceptions}
 
-The Julia library \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021} inspired the use of a custom number type to intercept operations on a number.
+\subsection{Diagnosing floating-point exceptions}
+
+The Julia library \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021} inspired our use of a custom number type to intercept operations on a number.
 In contrast to \FT{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \texttt{Sherlogs} tracks and reports the range of values seen over the course of a computation.
 This is intended to provide insight into whether or not a library could tolerate a lower-precision \fp{} format.
 
 % TODO: make sure that what I said about what FPSpy can track is true.
 FPSpy~\cite{dindaSpyingFloatingPoint2020} is an \texttt{LD\_PRELOAD} shared library that works on unmodified x86 binaries.
-It can monitor a program during execution for any \fp{} arithmetic issues, such as division by zero, denormalization, underflow, and overflow.
-\FT{} in contrast focuses on the lifetime of exceptional values; \FT{} can notice when a \NaN{} gets killed, for instance, while that is not an event that FPSpy appears to be able to track.
+It monitors a program during execution for operations that generate an exception, such as division by zero, underflow, and overflow.
+By contrast to \FT{}, it does not track prop or kill events.
 FPSpy has the advantage of being lightweight enough to run on production code for certain loads.
 
-\paragraph{Stack Graphs}
 
-CSTG~\cite{humphreySystematicDebuggingMethods2014} is built on the work of and related to the STAT~\cite{arnoldStackTraceAnalysis2007} tool developed by Laurence Livermore National Laboratory.
-STAT is a tool for collecting, analyzing, and visualizing stack traces from thousands of concurrent processes, and is designed to highlight anomalies quickly.
-It produces visualizations similar to those of CSTG, thought CSTG offers more compact views.
+\subsection{Stack Graphs}
 
-\paragraph{GPU Exception Tracking}
+Our stack graphs utilize the CSTG library for coalesced stack trace graphs~\cite{humphreySystematicDebuggingMethods2014}.
+In turn, CSTGs build on the STAT tool from LLNL~\cite{arnoldStackTraceAnalysis2007}.
+STAT collects, analyzes, and visualizes stack traces from concurrent processes
+to highlight anomalies.
+It produces visualizations similar to those of CSTG, thought CSTG offers more compact views and supports diffs.
+
+\subsection{GPU Exception Tracking}
 
 FPChecker~\cite{l-ase-2019} is a tool to report \fp{} exceptions occurring on the GPU.
 FPChecker relies on LLVM-level instrumentation of GPU kernels, and so cannot run on the plethora of closed-source GPU kernels in usage today.
-
 BinFPE~\cite{llg-soap-2022} is another tool in the same space;
 BinFPE performs SASS-level analysis of GPU kernels, but is limited in that it is slow and does not catch errors that alter control flow.
 The latter deficiency is particularly worrisome, as we have seen, silent \NaN{} kills can invalidate results without the user noticing.
-
 \GPUFPX{}~\cite{llsflg-hpdc-2023} improves on the work of FPChecker and BinFPE by being more performant and catching a wider set of errors, including those that alter control flow.
 \GPUFPX{} is a shared library that, like FPSpy uses \texttt{LD\_PRELOAD} to work on unmodified binaries.
 \GPUFPX{} runs on CUDA cores from NVIDIA and reports total numbers of exceptional values.
 Like \FT{}, \GPUFPX{} can catch \NaN{} gens and kills, but it does this on the GPU where \FT{} doesn't apply.
 Despite these improvements, \GPUFPX{} is limited by the closed-source nature of common GPU cores, and cannot report at the rich level of source detail that \FT{} can.
-
-Work is ongoing to use \GPUFPX{} and \FT{} in tandem.
-
-% Error analysis, typical answer.
-% Difficult.
-% CITE
 
 % % Herbie, improving accuracy automatically.
 % % ParetoHerbie
@@ -763,46 +765,35 @@ Work is ongoing to use \GPUFPX{} and \FT{} in tandem.
 \label{s:discussion}
 % future work
 
-FILL Consistent exception handling.
+Lightweight tools for error analysis that can quickly identify
+\fp{} problems and suggest repairs are an important topic.
+The number of scale of scientific application has grown tremendously
+over the years.
+For small teams that cannot afford a full-time
+analyst, tools like \FlowFPX{} fill a critical role.
 
-https://github.com/JuliaLang/julia/issues/48523
-
-Ashton: @Ben we simply propagate whatever we got from the operation. If
-Julia's behavior around an operator change, that should be preserved even
-when using FloatTracker
-
-Ben: @Ashton tell the JuliaCon readers not just me!
+\FlowFPX{} it itself an evolving toolkit.
+Below we discuss some topics for future work.
 
 
 \subsection{Performance}
 \label{s:discussion-performance}
 
-% TODO: citations!!!!
-% TODO: real numbers!!!
 \FT{} incurs significant overhead on the order of 100x slower than a non-instrumented run of the same program.
+It is a debugging tool, not a production tool.
 To put this number into context, Valgrind runs with a similar level of slowdown.
 
-In addition to the cost incurred by intercepting \fp{} operations, gathering stack traces is expensive---we measured a significant slowdown on the order of 10x relative to a non-logging setup of \FT{}.
+In addition to the cost incurred by intercepting \fp{} operations, gathering stack traces is expensive.
+We observe a 10x slowdown on shallow waters with logging disabled.
 We recommend that users of \FT{} make use of the \texttt{maxLogs} and \texttt{exclude\_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
+Stack traces are essential to decide where to inject a fault when fuzzing,
+but we defer them as late as possible to maximize performance.
 
-When injection is turned on we defer the stack checks as late as we can.
-Once the fuzzer runs out of \NaN{}s, it effectively turns off, so the rest of the fuzzing session proceeds much more quickly.
-That said, gathering stack traces still incurs a heavy overhead during logging when interesting events occur;
-we recommend limiting the number and kinds of events logged for optimal performance.
-
-\subsection{Tracking More than \NaN{}s and \Inf{}s}
-
-FloatTracker is capable of monitoring all sorts of events in a \fp{} value's lifetime---not just a value going to \NaN{} or \Inf{}.
-For example, \FT{} could be made to monitor extreme values: in some circumstances it would be useful to notice when a value started climbing above or falling below a certain threshold.
-
-We spent most of the time engineering and testing \NaN{} tracking and injection.
-Adding \Inf{} tracking took a few hours.
-Adding other values of interest presents no fundamental difficulties.
 
 \subsection{Enhanced Fuzzing}
 
 While fuzzing is useful for discovering issues, its success rate
-is low because \emph{every} \fp{} operation is a candidate
+is low because {every} \fp{} operation is a candidate
 for injection.
 Even operations that are already well-defended against \NaN{}s are candidates.
 \FT{} could use two sorts of tools for improving injection.
@@ -818,15 +809,32 @@ decide whether they are protected or not.
 
 \subsection{Tracking Exceptions in External Libraries}
 
-\FT{}'s scope is limited to Julia code: it cannot track the lifetime of exceptional values that are born, live, or die in external libraries, such as C programs.
-One approach would be to create an API for \FT{} so that programs using these external libraries could leverage \FT{}'s tooling to monitor the interface between Julia and e.g. external C programs.
+\FT{} is limited to Julia code.
+It cannot track the lifetime of exceptional values in external libraries, such as GPU kernels or C programs.
+For GPUs it relies on \GPUFPX{}, through the connection between these tools is loose.
+In the future, \FT{} would benefit from an API to plug in tools for external libraries, gather their output,
+and present a comprehensive view of exceptions in a multi-language program.
+
+
+\subsection{Interface Concerns}
+
+FloatTracker is capable of monitoring all sorts of events and \fp{} values beyond exceptions.
+For example, \FT{} could monitor large or small values with guidance from the user about which values are worth logging.
+On a similar note, the interface to \FT{} is primitive: users express interest in a number by wrapping it
+in a constructor such as \code{TrackedFloat64}.
+Helper functions that track data structures and choose a default size would
+make it easier to experiment with \FT{}.
+
 
 
 \section{Acknowledgments}
 
-We would like to thank Alex Larsen and Rob Durst for their help with reading drafts of the paper and feedback on the presentation.
-We would also like to thank the developers of \code{RxInfer.jl} for feedback on \FlowFPX{}.
-Finally, many thanks to Milan Klöwer, the author of the \texttt{Sherlogs} library, for inspiration on the architecture of \FT{}.
+Thanks to the \code{Sherlogs.jl} developers for inspiring the architecture of \FT{}.
+Thanks to the \code{RxInfer.jl} developers for testing \FT{} and for feedback on its user interface.
+Thanks to Alex Larsen and Rob Durst for comments on an early draft.
+This work is supported by
+NSF grant \href{https://nsf.gov/awardsearch/showAward?AWD_ID=2030859&HistoricalAwards=false}{2030859}
+to the CRA for the \href{https://cifellows2020.org}{CIFellows} project.
 
 \input{bib.tex}
 

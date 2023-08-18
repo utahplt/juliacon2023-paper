@@ -16,13 +16,12 @@
 
 @incollection{heislerFinchDomainSpecific2022,
   title = {Finch: {{Domain Specific Language}} and {{Code Generation}} for {{Finite Element}} and {{Finite Volume}} in {{Julia}}},
-  shorttitle = {Finch},
-  booktitle = {Computational {{Science}} \textendash{} {{ICCS}} 2022},
+  booktitle = {{ICCS}},
   author = {Heisler, Eric and Deshmukh, Aadesh and Sundar, Hari},
   year = {2022},
   volume = {13350},
   pages = {118--132},
-  publisher = {{Springer International Publishing}},
+  publisher = {{Springer}},
   doi = {10.1007/978-3-031-08751-6\_9},
   url = {https://link.springer.com/10.1007/978-3-031-08751-6_9},
   urldate = {2023-01-27},
@@ -33,13 +32,11 @@
 
 @article{IEEEStandardBinary1985,
   title = {{{IEEE Standard}} for {{Binary Floating-Point Arithmetic}}},
-  year = {1985},
-  journal = {ANSI/IEEE Std 754-1985},
+  key = {{IEEE}},
+  journal = {{ANSI/IEEE Std 754-1985}},
   pages = {1--20},
   doi = {10.1109/IEEESTD.1985.82928},
-  abstract = {A family of commercially feasible ways for new systems to perform binary floating-point arithmetic is defined. This standard specifies basic and extended floating-point number formats; add, subtract, multiply, divide, square root, remainder, and compare operations; conversions between integer and floating-point formats; conversions between different floating-point formats; conversions between basic-format floating-point numbers and decimal strings; and floating-point exceptions and their handling, including nonnumbers.},
-  keywords = {binary,Digital arithmetic,Floating-point arithmetic,Standards},
-  file = {/Users/ashton/Zotero/storage/23TZFSYS/30711.html}
+  year = {1985}
 }
 
 @misc{p-draft-1997,
@@ -53,7 +50,6 @@
 @phdthesis{klowerLowprecisionClimateComputing2021,
   type = {{{http://purl.org/dc/dcmitype/Text}}},
   title = {Low-Precision Climate Computing: Preserving Information despite Fewer Bits},
-  shorttitle = {Low-Precision Climate Computing},
   author = {Kl{\"o}wer, Milan},
   year = {2021},
   url = {https://ora.ox.ac.uk/objects/uuid:1158e44a-7faf-45a0-8ab1-73c91fd694a6},
@@ -330,33 +326,23 @@ url = {https://www.osti.gov/biblio/1989443}}
 @article{humphreySystematicDebuggingMethods2014,
   title = {Systematic {{Debugging Methods}} for {{Large-Scale HPC Computational Frameworks}}},
   author = {Humphrey, Alan and Meng, Qingyu and Berzins, Martin and De Oliveira, Diego Caminha B. and Rakamaric, Zvonimir and Gopalakrishnan, Ganesh},
-  date = {2014-05},
+  year = {2014},
   journal = {Computing in Science \& Engineering},
-  shortjournal = {Comput. Sci. Eng.},
   volume = {16},
   number = {3},
   pages = {48--56},
-  issn = {1521-9615, 1558-366X},
+  publisher = {{IEEE}},
   doi = {10.1109/MCSE.2014.11},
-  url = {https://ieeexplore.ieee.org/document/6729885/},
-  urldate = {2023-08-02}
 }
 
 @inproceedings{panchekhaAutomaticallyImprovingAccuracy2015,
   title = {Automatically Improving Accuracy for Floating Point Expressions},
   author = {Panchekha, Pavel and Sanchez-Stern, Alex and Wilcox, James R. and Tatlock, Zachary},
-  date = {2015-06-03},
-  series = {{{PLDI}} '15},
+  booktitle = {{{PLDI}}},
   pages = {1--11},
-  publisher = {{Association for Computing Machinery}},
-  location = {{New York, NY, USA}},
+  publisher = {{ACM}},
   doi = {10.1145/2737924.2737959},
-  url = {https://dl.acm.org/doi/10.1145/2737924.2737959},
-  urldate = {2023-08-08},
-  abstract = {Scientific and engineering applications depend on floating point arithmetic to approximate real arithmetic. This approximation introduces rounding error, which can accumulate to produce unacceptable results. While the numerical methods literature provides techniques to mitigate rounding error, applying these techniques requires manually rearranging expressions and understanding the finer details of floating point arithmetic. We introduce Herbie, a tool which automatically discovers the rewrites experts perform to improve accuracy. Herbie's heuristic search estimates and localizes rounding error using sampled points (rather than static error analysis), applies a database of rules to generate improvements, takes series expansions, and combines improvements for different input regions. We evaluated Herbie on examples from a classic numerical methods textbook, and found that Herbie was able to improve accuracy on each example, some by up to 60 bits, while imposing a median performance overhead of 40\%. Colleagues in machine learning have used Herbie to significantly improve the results of a clustering algorithm, and a mathematical library has accepted two patches generated using Herbie.},
-  isbn = {978-1-4503-3468-6},
-  keywords = {Floating point,numerical accuracy,program rewriting},
-  file = {/Users/ashton/Zotero/storage/3JNZIJHA/Panchekha et al. - 2015 - Automatically improving accuracy for floating poin.pdf}
+  year = {2015}
 }
 
 @article{misbackOdysseyInteractiveWorkbench2023,
@@ -377,26 +363,19 @@ url = {https://www.osti.gov/biblio/1989443}}
 
 @inproceedings{arnoldStackTraceAnalysis2007,
   title = {Stack {{Trace Analysis}} for {{Large Scale Debugging}}},
-  booktitle = {2007 {{IEEE International Parallel}} and {{Distributed Processing Symposium}}},
+  booktitle = {{IPDPS}},
+  publisher={{IEEE}},
   author = {Arnold, Dorian C. and Ahn, Dong H. and de Supinski, Bronis R. and Lee, Gregory L. and Miller, Barton P. and Schulz, Martin},
-  options = {useprefix=true},
-  date = {2007-03},
   pages = {1--10},
-  issn = {1530-2075},
   doi = {10.1109/IPDPS.2007.370254},
-  abstract = {We present the Stack Trace Analysis Tool (STAT) to aid in debugging extreme-scale applications. STAT can reduce problem exploration spaces from thousands of processes to a few by sampling stack traces to form process equivalence classes, groups of processes exhibiting similar behavior. We can then use full-featured debuggers on representatives from these behavior classes for root cause analysis. STAT scalably collects stack traces over a sampling period to assemble a profile of the application's behavior. STAT routines process the samples to form a call graph prefix tree that encodes common behavior classes over the program's process space and time. STAT leverages MRNet, an infrastructure for tool control and data analyses, to overcome scalability barriers faced by heavy-weight debuggers. We present STAT's design and an evaluation that shows STAT gathers informative process traces from thousands of processes with sub-second latencies, a significant improvement over existing tools. Our case studies of production codes verify that STAT supports the quick identification of errors that were previously difficult to locate.},
-  eventtitle = {2007 {{IEEE International Parallel}} and {{Distributed Processing Symposium}}},
-  keywords = {Assembly,Data analysis,Debugging,Delay,Large-scale systems,Production,Sampling methods,Scalability,Space exploration,Tree graphs},
-  file = {/Users/ashton/Zotero/storage/TJG4AGTU/Arnold et al. - 2007 - Stack Trace Analysis for Large Scale Debugging.pdf;/Users/ashton/Zotero/storage/WEW7XYTV/4227982.html}
+  year = {2007}
 }
 
 @article{houghIEEEStandard7542019,
   title = {The {{IEEE Standard}} 754: {{One}} for the {{History Books}}},
-  shorttitle = {The {{IEEE Standard}} 754},
   author = {Hough, David G.},
   date = {2019-12},
   journaltitle = {Computer},
-  shortjournal = {Computer},
   volume = {52},
   number = {12},
   pages = {109--112},
@@ -410,34 +389,20 @@ url = {https://www.osti.gov/biblio/1989443}}
 
 @inproceedings{dindaSpyingFloatingPoint2020,
   title = {Spying on the {{Floating Point Behavior}} of {{Existing}}, {{Unmodified Scientific Applications}}},
-  series = {HPDC 2020},
   author = {Dinda, Peter and Bernat, Alex and Hetland, Conor},
-  date = {2020-06-23},
   pages = {5--16},
   publisher = {{ACM}},
-  location = {{Stockholm Sweden}},
   doi = {10.1145/3369583.3392673},
-  url = {https://dl.acm.org/doi/10.1145/3369583.3392673},
-  urldate = {2023-08-09},
-  abstract = {Scientific (and other) applications are critically dependent on calculations done using IEEE floating point arithmetic. A number of concerns have been raised about correctness in such applications given the numerous gotchas the IEEE standard presents for developers, as well as the complexity of its implementation at the hardware and compiler levels. The standard and its implementations do provide mechanisms for analyzing floating point arithmetic as it executes, making it possible to find and track problematic operations. However, this capability is seldom used in practice. In response, we have developed FPSpy, a tool that provides this capability when operating underneath existing, unmodified x64 application binaries on Linux, including those using thread- and process-level parallelism. FPSpy can observe application behavior without any cooperation from the application or developer, and can potentially be deployed as part of a job launch process. We present the design, implementation, and performance evaluation of FPSpy. FPSpy operates conservatively, getting out of the way if the application itself begins to use any of the OS or hardware features that FPSpy depends on. Its overhead can be throttled, allowing a tradeoff between which and how many unusual events are to be captured, and the slowdown incurred by the application, with the low point providing virtually zero slowdown. We evaluated FPSpy by using it to methodically study seven widely-used applications/frameworks from a range of domains (five of which are in the NSF XSEDE top-20), as well as the NAS and PARSEC benchmark suites. All told, these comprise about 7.5 million lines of source code in a wide range of languages, and parallelism models (including OpenMP and MPI). FPSpy was able to produce trace information for all of them. The traces show that problematic floating point events occur in both the applications and the benchmarks. Analysis of the rounding behavior captured in our traces also suggests the feasibility of an approach to adding adaptive precision underneath existing, unmodified binaries.},
-  eventtitle = {{{HPDC}} '20: {{The}} 29th {{International Symposium}} on {{High-Performance Parallel}} and {{Distributed Computing}}},
-  isbn = {978-1-4503-7052-3},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/BH95UQWA/hpdc20.pdf}
+  booktitle = {{HPDC}},
+  year = {2020}
 }
 
 @book{mullerHandbookFloatingPointArithmetic2018,
   title = {Handbook of {{Floating-Point Arithmetic}}},
   author = {Muller, Jean-Michel and Brunie, Nicolas and De Dinechin, Florent and Jeannerod, Claude-Pierre and Joldes, Mioara and Lefèvre, Vincent and Melquiond, Guillaume and Revol, Nathalie and Torres, Serge},
-  date = {2018},
-  publisher = {{Springer International Publishing}},
-  location = {{Cham}},
+  publisher = {{Springer}},
   doi = {10.1007/978-3-319-76526-6},
-  url = {http://link.springer.com/10.1007/978-3-319-76526-6},
-  urldate = {2023-08-16},
-  isbn = {978-3-319-76525-9 978-3-319-76526-6},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/3KCL3I6V/Muller et al. - 2018 - Handbook of Floating-Point Arithmetic.pdf}
+  year = {2018}
 }
 
 @article{fp8,
