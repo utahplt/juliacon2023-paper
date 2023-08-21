@@ -101,7 +101,7 @@ from ocean simulations to heat modes~(\cref{s:casestudies}):
 \end{figure}
 
 \Fp{} numbers use a finite number of bits to represent a spectrum of points along the real number line~(\cref{f:real-vs-fp}).
-The implementation strategy is essentially scientific notation.
+The implementation strategy is essentially that followed in scientific notation.
 A \fp{} number packs a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into a bitstring.
 Typical strings are 64 or 32 bits long, but 16-bit and 8-bit formats are on the rise~\cite{klowerLowprecisionClimateComputing2021,fp8}.
 This representation supports very small and very large numbers in a narrow range of bits:
@@ -479,8 +479,8 @@ of the most common paths to exceptional values.
 
 \Cref{fig:sw_nan_cstg} presents the stack graph for \NaN{} gen events
 in shallow waters with the high CFL number.
-Reading bottom-up, every \NaN{} came from calls to the \code{-} and \code{+} operations.
-Calls to \code{+} account for most of the \NaN{}s.
+Reading bottom-up, every \NaN{} came from calls to the `\code{-}' and `\code{+}' operations.
+Calls to `\code{+}' account for most of the \NaN{}s.
 These \NaN{}s arose in two different contexts: a small number (30)
 occurred within a momentum calculation, while the rest (162)
 occurred within a continuity step.
@@ -834,7 +834,8 @@ Thanks to the \code{RxInfer.jl} developers for testing \FT{} and for feedback on
 Thanks to Alex Larsen and Rob Durst for comments on an early draft.
 This work is supported by
 NSF grant \href{https://nsf.gov/awardsearch/showAward?AWD_ID=2030859&HistoricalAwards=false}{2030859}
-to the CRA for the \href{https://cifellows2020.org}{CIFellows} project.
+to the CRA for the \href{https://cifellows2020.org}{CIFellows} project,
+and DOE ASCR Award Number DE-SC0022252 and NSF CISE Awards 1956106 and 21241.
 
 \input{bib.tex}
 
