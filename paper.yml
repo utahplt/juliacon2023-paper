@@ -5,15 +5,18 @@ keywords:
   - debugging
 authors:
   - name: Taylor Allred
+    equal-contrib: true
     email: taylor.allred21@gmail.com
     affiliation: 1
   - name: Xinyi Li
+    equal-contrib: true
     orcid: 0009-0005-7276-7715
     email: xinyi.li.nicole@gmail.com
     affiliation: 1
   - name: Ashton Wiersdorf
+    equal-contrib: true
     orcid: 0000-0001-5524-7930
-    email: academics@wiersdorfmail.net
+    email: research@wiersdorfmail.net
     affiliation: 1
   - name: Ben Greenman
     orcid: 0000-0001-7078-9287
