@@ -334,7 +334,7 @@ end
 
 Every arithmetic operation requires a similar overloading.
 Thus, the implementation of \FT{} uses a metaprogramming technique
-adapted from \texttt{Sherlogs.jl}~\cite{kMilanklSherlogsJl2021}
+adapted from \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021}
 to abstract over the common patterns.
 For every binary operation, the library creates an overloading similar
 to the one for \code{+} above.
@@ -392,7 +392,7 @@ The case studies include a shallow water simulation, the
 \subsection{ShallowWaters}
 \label{s:sw}
 
-\texttt{ShallowWaters.jl} simulates the flow of water over a
+\texttt{ShallowWaters} simulates the flow of water over a
 seabed~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019}.
 The library has dozens of parameters that a scientist can experiment with.
 One notable parameter is the Courant-Friedrichs-Lewy (CFL) number, which roughly describes the size of the time step to take in running the simulation.
@@ -410,7 +410,7 @@ Running \FT{} on the high-CFL simulation reveals where the simulation drifted
 from numbers to \NaN{} exceptions.
 The first step in applying \FT{} is to convert relevant floats to tracked
 floats, e.g., \code{Float32} to \code{TrackedFloat32}.
-For shallow waters, this step is easy because the simulation is parameterized by
+For \texttt{ShallowWaters}, this step is easy because the simulation is parameterized by
 a \fp{} type for internal use.
 Swapping in a tracked type is enough:
 
@@ -468,17 +468,16 @@ caused exceptions to occur.
 \end{figure}
 
 
-
 \subsubsection{Stack Graphs for a Bigger Picture}
 
-While the logs for shallow waters contain useful information,
+While the logs for \texttt{ShallowWaters} contain useful information,
 there is an overwhelming amount of it.
 There are over ten thousand lines in the gen file alone.
 Converting these logs to a stack graph gives a quick overview
 of the most common paths to exceptional values.
 
 \Cref{fig:sw_nan_cstg} presents the stack graph for \NaN{} gen events
-in shallow waters with the high CFL number.
+in \texttt{ShallowWaters} with the high CFL number.
 Reading bottom-up, every \NaN{} came from calls to the `\code{-}' and `\code{+}' operations.
 Calls to `\code{+}' account for most of the \NaN{}s.
 These \NaN{}s arose in two different contexts: a small number (30)
@@ -492,7 +491,7 @@ in the momentum and continuity functions.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.96\columnwidth]{fig/sw_nan_cstg_clean.pdf}
-  \caption{Stack graph for \NaN{} gens in shallow waters}
+  \caption{Stack graph for \NaN{} gens in \texttt{ShallowWaters}}
   \label{fig:sw_nan_cstg}
 \end{figure}
 
@@ -509,20 +508,14 @@ in the momentum and continuity functions.
 Graph diffing works well for \CSTG{}s; it shows how flows in the program evolved
 from one stage to another.
 \Cref{fig:cstg_diff_demo} illustrates one diff in the context of \NaN{} gens for
-shallow waters.
-It compares the first 10\% of gen events to the latter 90\% of gens.
-The positive numbers and green lines indicate flows that are new in the latter part.
-The negative numbers and red lines show flows that disappeared in the latter part.
-
-
-Another one of CSTGs abilities is \emph{graph diffing}.
-We took the \FT{} logs from running ShallowWaters and split the logs at the 10\% mark.
-We used CSTG to diff the flow graphs between the first 10\% of the logs and the remaining 90\%.
-The diff can be seen in \cref{fig:cstg_diff_demo}.
+\texttt{ShallowWaters}:
+it compares the first 10\% of gen events to the latter 90\% of gens.
+The positive numbers and green lines indicate flows that are new in the latter part,
+and the negative numbers and red lines show flows that disappeared in the latter part.
 A domain expert might use these clues to find where an instability started in
 the first part of the program.
 In this case, the function \texttt{momentum\_u!} showed up only in the
-beginning of the logs; it may be an effective point to check for \Nan{}s.
+beginning of the logs---it may be an effective point to check for \Nan{}s.
 
 \begin{figure}[t]
   \centering
@@ -538,9 +531,12 @@ beginning of the logs; it may be an effective point to check for \Nan{}s.
 With the targeted fuzzing abilities of \FT{}, we set focus on the
 \texttt{NBodySimulator} package from the SciML
 team.\footnote{\url{https://github.com/SciML/NBodySimulator.jl}}
-Fuzzing discovered zero bugs and zero exceptional events.
-In fact, fuzzing injected zero exceptional values whatsoever, even with maximum odds.
-The reason for these null results, it turns out, is that the nbody
+We only wanted to test the robustness of the \texttt{NBodySimulator} package, so we configured the fuzzer to inject \NaN{}s \emph{only} when inside of a function of that library.
+This way, we could avoid injecting in the standard library or other dependencies of \texttt{NBodySimulator} and concentrate on improving this one library.
+
+However, Fuzzing discovered zero bugs and zero exceptional events.
+In fact, fuzzing injected \emph{zero} exceptional values whatsoever, even with adjusting the odds to \emph{force} an injection at the first available opportunity.
+The reason for this lack of \NaN{} injection, it turns out, is that the nbody
 simulation merely creates a problem for the \code{OrdinaryDiffEq}
 solver.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}}
 All the \fp{} operations were in another library.
@@ -618,7 +614,7 @@ appear in unstable heat simulations written in Finch.
 \subsection{Oceananigans}
 \label{s:ocean}
 
-Oceananigans~\cite{OceananigansJOSS} is simulation package for incompressible
+\texttt{Oceananigans}~\cite{OceananigansJOSS} is simulation package for incompressible
 fluid dynamics that can generate code for Nvidia GPUs.
 For example, the following program (from the project readme) simulates turbulance:
 
@@ -784,7 +780,7 @@ It is a debugging tool, not a production tool.
 To put this number into context, Valgrind runs with a similar level of slowdown.
 
 In addition to the cost incurred by intercepting \fp{} operations, gathering stack traces is expensive.
-We observe a 10x slowdown on shallow waters with logging disabled.
+We observe a 10x slowdown on \texttt{ShallowWaters} with logging disabled.
 We recommend that users of \FT{} make use of the \texttt{maxLogs} and \texttt{exclude\_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
 Stack traces are essential to decide where to inject a fault when fuzzing,
 but we defer them as late as possible to maximize performance.
