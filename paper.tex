@@ -1,37 +1,13 @@
 % JuliaCon proceedings template
 \documentclass{juliacon}
 \setcounter{page}{1}
-% \usepackage{amsmath}
-% \usepackage{cleveref}
-% \usepackage{microtype}
-% \usepackage{pifont}
-
-%% extra links:
-%% - GPU Julia: https://cuda.juliagpu.org/stable/tutorials/introduction/
-%% - GPU x2: https://nextjournal.com/sdanisch/julia-gpu-programming
-%% - NaN vs missing https://discourse.julialang.org/t/is-there-any-reason-to-use-nan-instead-of-missing/84396
-
-\begin{document}
+\usepackage{amsmath}
+\usepackage{cleveref}
+\usepackage{microtype}
+\usepackage{pifont}
 
 % Misc typographical tweaks.
 \setlength{\parindent}{10pt}
-% \setmonofont{JuliaMono}[Extension = .ttf, Path = ./, UprightFont = *-Regular, ItalicFont = *-Italic]
-
-\input{header}
-\maketitle
-
-\begin{abstract}
-  Reliable numerical computations are central to scientific computing,
-  but the floating-point arithmetic that enables large-scale models
-  is error-prone.
-  Numeric exceptions are a common occurrence and can propagate through
-  code, leading to flawed results.
-  This paper presents FlowFPX, a toolkit for systematically debugging
-  floating-point exceptions by recording their flow,
-  coalescing exception contexts, and fuzzing in select locations.
-  These tools help scientists discover when exceptions happen
-  and track down their origin, smoothing the way to a reliable codebase.
-\end{abstract}
 
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\FlowFPX}{FlowFPX}
@@ -55,6 +31,24 @@
 \newcommand{\tblnext}{\(\Rightarrow\)}
 \newcommand{\tblY}{\mbox{\bigcheckmark}}
 \newcommand{\tblN}{\scalebox{0.8}{\bigxmark}}
+
+\begin{document}
+
+\input{header}
+\maketitle
+
+\begin{abstract}
+  Reliable numerical computations are central to scientific computing,
+  but the floating-point arithmetic that enables large-scale models
+  is error-prone.
+  Numeric exceptions are a common occurrence and can propagate through
+  code, leading to flawed results.
+  This paper presents FlowFPX, a toolkit for systematically debugging
+  floating-point exceptions by recording their flow,
+  coalescing exception contexts, and fuzzing in select locations.
+  These tools help scientists discover when exceptions happen
+  and track down their origin, smoothing the way to a reliable codebase.
+\end{abstract}
 
 \section{Introduction}
 
