@@ -8,3 +8,4 @@ paper.pdf
 *.bbl
 *.synctex.gz
 *.log
+compiled/
