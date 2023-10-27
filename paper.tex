@@ -2,9 +2,10 @@
 \documentclass{juliacon}
 \setcounter{page}{1}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{cleveref}
 \usepackage{microtype}
-\usepackage{pifont}
+% \usepackage{pifont}
 
 %% extra links:
 %% - GPU Julia: https://cuda.juliagpu.org/stable/tutorials/introduction/
@@ -51,10 +52,12 @@
 \newcommand{\zerocode}[1]{\zerowidth{\code{#1}}}
 \newcommand{\genpropkill}{\emph{gen}-\emph{prop}-\emph{kill}}
 \newcommand{\bigcheckmark}{\ding{51}}
-\newcommand{\bigxmark}{\ding{53}}
+% \newcommand{\bigxmark}{\ding{53}}
 \newcommand{\tblnext}{\(\Rightarrow\)}
-\newcommand{\tblY}{\mbox{\bigcheckmark}}
-\newcommand{\tblN}{\scalebox{0.8}{\bigxmark}}
+% \newcommand{\tblY}{\mbox{\bigcheckmark}}
+% \newcommand{\tblN}{\scalebox{0.8}{\bigxmark}}
+\newcommand{\tblY}{\checkmark}
+\newcommand{\tblN}{\scalebox{1.2}{$\times$}}
 
 \section{Introduction}
 
