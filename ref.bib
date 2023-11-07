@@ -1,33 +1,22 @@
 @article{goldbergWhatEveryComputer1991,
   title = {What Every Computer Scientist Should Know about Floating-Point Arithmetic},
   author = {Goldberg, David},
-  year = {1991},
   journal = {ACM Computing Surveys},
   volume = {23},
   number = {1},
   pages = {5--48},
-  issn = {0360-0300, 1557-7341},
   doi = {10.1145/103162.103163},
-  url = {https://dl.acm.org/doi/10.1145/103162.103163},
-  urldate = {2023-04-21},
-  abstract = {Floating-point arithmetic is considered as esoteric subject by many people. This is rather surprising, because floating-point is ubiquitous in computer systems: Almost every language has a floating-point datatype; computers from PCs to supercomputers have floating-point accelerators; most compilers will be called upon to compile floating-point algorithms from time to time; and virtually every operating system must respond to floating-point exceptions such as overflow. This paper presents a tutorial on the aspects of floating-point that have a direct impact on designers of computer systems. It begins with background on floating-point representation and rounding error, continues with a discussion of the IEEE floating point standard, and concludes with examples of how computer system builders can better support floating point.},
-  langid = {english}
+  year = {1991}
 }
 
-@incollection{heislerFinchDomainSpecific2022,
-  title = {Finch: {{Domain Specific Language}} and {{Code Generation}} for {{Finite Element}} and {{Finite Volume}} in {{Julia}}},
+@inproceedings{heislerFinchDomainSpecific2022,
+  title = {{Finch}: {{Domain Specific Language}} and {{Code Generation}} for {{Finite Element}} and {{Finite Volume}} in {{Julia}}},
   booktitle = {{ICCS}},
   author = {Heisler, Eric and Deshmukh, Aadesh and Sundar, Hari},
-  year = {2022},
-  volume = {13350},
   pages = {118--132},
   publisher = {{Springer}},
   doi = {10.1007/978-3-031-08751-6\_9},
-  url = {https://link.springer.com/10.1007/978-3-031-08751-6_9},
-  urldate = {2023-01-27},
-  isbn = {978-3-031-08750-9 978-3-031-08751-6},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/MKS3PE2A/Heisler et al. - 2022 - Finch Domain Specific Language and Code Generatio.pdf}
+  year = {2022}
 }
 
 @article{IEEEStandardBinary1985,
@@ -42,117 +31,94 @@
 @misc{p-draft-1997,
   title={Handling {IEEE 754} Invalid Operation Exceptions in Real Interval Arithmetic},
   author={Priest, David J.},
-  journal={Manuscript, mai},
-  note={\url{https://j3-fortran.org/doc/year/97/97-172.pdf}. Accessed 2023-08-16},
+  note={\url{https://j3-fortran.org/doc/year/97/97-172.pdf}, Accessed 2023-08-16},
   year={1997}
 }
 
 @phdthesis{klowerLowprecisionClimateComputing2021,
-  type = {{{http://purl.org/dc/dcmitype/Text}}},
   title = {Low-Precision Climate Computing: Preserving Information despite Fewer Bits},
   author = {Kl{\"o}wer, Milan},
-  year = {2021},
   url = {https://ora.ox.ac.uk/objects/uuid:1158e44a-7faf-45a0-8ab1-73c91fd694a6},
   urldate = {2023-05-12},
-  abstract = {Progress towards more reliable weather and climate forecasts is limited by the resolution of numerical models and the complexity of simulated processes. Performance is therefore a major bottleneck and current models are not com- putationally efficient. High precision calculations are unnecessary, despite be- ing the standard, given the uncertainties in the climate system and the errors from discretisation, data assimilation and unresolved climate processes. In this thesis, we advance several aspects of low-precision climate computing to preserve information despite fewer bits: An information-preserving com- pression is developed that distinguishes between real and false information to reduce the very large volume of climate data produced by numerical mod- els, while minimising information loss. The bitwise real information content estimates the minimum required precision in climate data, which depends on the variable and is lower than the standard precision-levels of floating-point numbers. The impact of rounding errors introduced by different low-precision arithmetics with deterministic or stochastic rounding modes is analysed in chaotic dynamical systems. Standard floating-point numbers are not the best number format for weather and climate simulations. However, alternatives, such as posits, exist, but it is unclear whether the large effort needed to de- velop the respective hardware for future supercomputers is justified given the moderate advantage they provide in our applications. A much more central issue towards 16-bit climate models is the design of low precision-resilient al- gorithms. A naive transition to 16 bits either fails or was found to cause issues like amplified gravity waves, a change in geostrophy or rounding errors that grow as quickly as discretisation errors. However, many of these issues are found to be preventable with techniques such as scaling or a compensated time integration. Combining techniques, we develop a 16-bit fluid circulation model that approaches 4x speedups on Fujitsu's A64FX processor compared to 64 bits, despite minimal rounding errors. The result of this thesis show that there is little reason to assume that 16-bit weather and climate models are not possible. While the design of models to compute and output only the bitwise real information is challenging, it will be a major step towards computationally efficient digital twins of the Earth's climate system.},
-  langid = {english},
   school = {University of Oxford},
-  file = {/Users/ashton/Zotero/storage/FSU25ES8/Klöwer - 2021 - Low-precision climate computing preserving inform.pdf}
+  year = {2021}
 }
 
 @article{klowerNumberFormatsError2020,
   title = {Number {{Formats}}, {{Error Mitigation}}, and {{Scope}} for 16-{{Bit Arithmetics}} in {{Weather}} and {{Climate Modeling Analyzed With}} a {{Shallow Water Model}}},
   author = {Kl{\"o}wer, Milan and D{\"u}ben, Peter D. and Palmer, T. N.},
-  year = {2020},
   journal = {Journal of Advances in Modeling Earth Systems},
   volume = {12},
   number = {10},
-  issn = {1942-2466, 1942-2466},
   doi = {10.1029/2020MS002246},
-  url = {https://onlinelibrary.wiley.com/doi/10.1029/2020MS002246},
-  urldate = {2023-05-11},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/JSGV7Q7D/Klöwer et al. - 2020 - Number Formats, Error Mitigation, and Scope for 16.pdf}
+  year = {2020}
 }
 
 @inproceedings{klowerPositsAlternativeFloats2019,
   title = {Posits as an Alternative to Floats for Weather and Climate Models},
-  booktitle = {Proceedings of the {{Conference}} for {{Next Generation Arithmetic}} 2019},
+  booktitle = {{{Conference}} for {{Next Generation Arithmetic}}},
   author = {Kl{\"o}wer, Milan and D{\"u}ben, Peter D. and Palmer, Tim N.},
-  year = {2019},
   pages = {1--8},
   publisher = {{ACM}},
   doi = {10.1145/3316279.3316281},
-  url = {https://dl.acm.org/doi/10.1145/3316279.3316281},
-  urldate = {2023-05-11},
-  isbn = {978-1-4503-7139-1},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/J6I289XK/Klöwer et al. - 2019 - Posits as an alternative to floats for weather and.pdf}
+  year = {2019}
 }
 
 @book{knuthArtComputerProgramming1997,
   title = {The {{Art}} of {{Computer Programming}}, Volume 2: Seminumerical Algorithms},
   author = {Knuth, Donald Ervin},
-  year = {1997},
   edition = {3rd},
   publisher = {{Addison-Wesley}},
   isbn = {978-0201896848},
   lccn = {QA76.6 .K64 1997},
-  keywords = {Computer algorithms,Computer programming}
+  year = {1997}
 }
 
 @misc{SciMLOrdinaryDiffEqJl,
-  title = {{{SciML}}/{{OrdinaryDiffEq}}.Jl},
+  author = {{SciML}},
+  title = {{OrdinaryDiffEq.jl}},
   note={\url{https://github.com/SciML/OrdinaryDiffEq.jl}. Accessed {2023-04-18}},
-  year = {2023},
-  abstract = {High performance ordinary differential equation (ODE) and differential-algebraic equation (DAE) solvers, including neural ordinary differential equations (neural ODEs) and scientific machine learni...},
-  file = {/Users/ashton/Zotero/storage/NVQ2YJVC/OrdinaryDiffEq.html}
+  year={2023},
 }
 
 @article{torontoPracticallyAccurateFloatingPoint2014,
   title = {Practically {{Accurate Floating-Point Math}}},
   author = {Toronto, Neil and McCarthy, Jay},
-  year = {2014},
   journal = {Computing in Science \& Engineering},
   volume = {16},
   number = {4},
   pages = {80--95},
-  issn = {1521-9615},
   doi = {10.1109/MCSE.2014.90},
-  url = {http://ieeexplore.ieee.org/document/6879754/},
-  urldate = {2023-03-14},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/SAHMT9YY/Toronto and McCarthy - 2014 - Practically Accurate Floating-Point Math.pdf}
+  year = {2014}
 }
 
 @inproceedings{adka-cgo-2023,
-author = {Ahrens, Willow and Donenfeld, Daniel and Kjolstad, Fredrik and Amarasinghe, Saman},
-title = {{Looplets}: A Language for Structured Coiteration},
-publisher = {{ACM}},
-doi = {10.1145/3579990.3580020},
-booktitle = {{CGO}},
-pages = {41--54},
-year = {2023}
+  author = {Ahrens, Willow and Donenfeld, Daniel and Kjolstad, Fredrik and Amarasinghe, Saman},
+  title = {{Looplets}: A Language for Structured Coiteration},
+  publisher = {{ACM}},
+  doi = {10.1145/3579990.3580020},
+  booktitle = {{CGO}},
+  pages = {41--54},
+  year = {2023}
 }
 
 @article{fenics,
   title     = {The {FEniCS} Project Version 1.5},
   author    = {M. S. Alnaes and J. Blechta and J. Hake and A. Johansson and B.  Kehlet and A. Logg and C. Richardson and J. Ring and M. E. Rognes and G. N.  Wells},
   journal   = {Archive of Numerical Software},
-  year      = {2015},
   volume    = {3},
   doi       = {10.11588/ans.2015.100.20553},
+  year      = {2015}
 }
 
 @inproceedings{openfoam,
-author = {Maci\`{a}, Sandra and Mart\'{\i}nez-Ferrer, Pedro J. and Mateo, Sergi and Beltran, Vicen\c{c} and Ayguad\'{e}, Eduard},
-title = {Assembling a High-Productivity {DSL} for Computational Fluid Dynamics},
-publisher = {{ACM}},
-doi = {10.1145/3324989.3325721},
-booktitle = {{PASC}},
-articleno = {11},
-numpages = {11},
-year = {2019}
+  author = {Maci\`{a}, Sandra and Mart\'{\i}nez-Ferrer, Pedro J. and Mateo, Sergi and Beltran, Vicen\c{c} and Ayguad\'{e}, Eduard},
+  title = {Assembling a High-Productivity {DSL} for Computational Fluid Dynamics},
+  publisher = {{ACM}},
+  doi = {10.1145/3324989.3325721},
+  booktitle = {{PASC}},
+  pages = {11:1--11:11},
+  year = {2019}
 }
 
 @misc{dune,
@@ -163,16 +129,15 @@ year = {2019}
 }
 
 @article{firedrake,
-author = {Rathgeber, Florian and Ham, David A. and Mitchell, Lawrence and Lange, Michael and Luporini, Fabio and Mcrae, Andrew T. T. and Bercea, Gheorghe-Teodor and Markall, Graham R. and Kelly, Paul H. J.},
-title = {{Firedrake}: Automating the Finite Element Method by Composing Abstractions},
-publisher = {{ACM}},
-volume = {43},
-number = {3},
-doi = {10.1145/2998441},
-journal = {Transactions on Mathematical Software},
-articleno = {24},
-numpages = {27},
-year = {2016}
+  author = {Rathgeber, Florian and Ham, David A. and Mitchell, Lawrence and Lange, Michael and Luporini, Fabio and Mcrae, Andrew T. T. and Bercea, Gheorghe-Teodor and Markall, Graham R. and Kelly, Paul H. J.},
+  title = {{Firedrake}: Automating the Finite Element Method by Composing Abstractions},
+  publisher = {{ACM}},
+  volume = {43},
+  number = {3},
+  doi = {10.1145/2998441},
+  journal = {Transactions on Mathematical Software},
+  pages = {24:1--24:27},
+  year = {2016}
 }
 
 @article{freefem,
@@ -180,24 +145,20 @@ year = {2016}
   TITLE = {New development in {FreeFem++}},
   JOURNAL = {Journal of Numerical Mathematics},
   VOLUME = {20},
-  YEAR = {2012},
   NUMBER = {3-4},
   PAGES = {251--265},
-  ISSN = {1570-2820},
-  MRCLASS = {65Y15},
-  MRNUMBER = {3043640},
   DOI = {10.1515/jnum-2012-0013},
-  URL = {https://freefem.org/}
+  YEAR = {2012}
 }
 
 @inproceedings{dendro,
-author = {Fernando, Milinda and Neilsen, David and Hirschmann, Eric W. and Sundar, Hari},
-title = {A Scalable Framework for Adaptive Computational General Relativity on Heterogeneous Clusters},
-publisher = {{ACM}},
-doi = {10.1145/3330345.3330346},
-booktitle = {{SC}},
-pages = {1–12},
-year = {2019}
+  author = {Fernando, Milinda and Neilsen, David and Hirschmann, Eric W. and Sundar, Hari},
+  title = {A Scalable Framework for Adaptive Computational General Relativity on Heterogeneous Clusters},
+  publisher = {{ACM}},
+  doi = {10.1145/3330345.3330346},
+  booktitle = {{SC}},
+  pages = {1–12},
+  year = {2019}
 }
 
 @article{sdjmrstp-pc-2022,
@@ -205,10 +166,11 @@ year = {2019}
   author={{\'S}wirydowicz, Kasia and Darve, Eric and Jones, Wesley and Maack, Jonathan and Regev, Shaked and Saunders, Michael A and Thomas, Stephen J. and Pele{\v{s}}, Slaven},
   journal={Parallel Computing},
   volume={111},
-  pages={102870},
-  year={2022},
+  number={C},
+  numpages={9},
   doi={10.1016/j.parco.2021.102870},
-  publisher={Elsevier}
+  publisher={Elsevier},
+  year={2022}
 }
 
 @article{hamlet1994random,
@@ -277,12 +239,14 @@ year = {2019}
 }
 
 @inproceedings{llsflg-hpdc-2023,
-author = {Xinyi Li and Ignacio Laguna and Katarzyna Swirydowicz and Bo Fang and Ang Li and Ganesh Gopalakrishnan},
-title = {Design and Evaluation of {GPU-FPX}: A Low-Overhead tool for Floating-Point Exception Detection in {NVIDIA GPUs}},
-booktitle = {ACM HPDC 2023},
-year = 2023,
-doi = {10.11578/dc.20230713.4},
-url = {https://www.osti.gov/biblio/1989443}}
+  author = {Xinyi Li and Ignacio Laguna and Katarzyna Swirydowicz and Bo Fang and Ang Li and Ganesh Gopalakrishnan},
+  title = {Design and Evaluation of {GPU-FPX}: A Low-Overhead tool for Floating-Point Exception Detection in {NVIDIA GPUs}},
+  booktitle = {{HPDC}},
+  publisher = {{ACM}},
+  pages = {59--71},
+  doi = {10.1145/3588195.3592991},
+  year = {2023}
+}
 
 @article{OceananigansJOSS,
   doi = {10.21105/joss.02018},
@@ -290,7 +254,7 @@ url = {https://www.osti.gov/biblio/1989443}}
   publisher = {The Open Journal},
   volume = {5},
   number = {53},
-  pages = {2018},
+  numpages = {3},
   author = {Ali Ramadhan and Gregory LeClaire Wagner and Chris Hill and Jean-Michel Campin and Valentin Churavy and Tim Besard and Andre Souza and Alan Edelman and Raffaele Ferrari and John Marshall},
   title = {{Oceananigans.jl: Fast and friendly geophysical fluid dynamics on GPUs}},
   journal = {Journal of Open Source Software}
@@ -308,8 +272,7 @@ url = {https://www.osti.gov/biblio/1989443}}
 
 @inproceedings{ltlg-iiswc-2022,
   author       = {Ignacio Laguna and Tanmay Tirpankar and Xinyi Li and Ganesh Gopalakrishnan},
-  title        = {{FPChecker}: Floating-Point Exception Detection Tool and Benchmark for
-                  Parallel and Distributed {HPC}},
+  title        = {{FPChecker}: Floating-Point Exception Detection Tool and Benchmark for Parallel and Distributed {HPC}},
   booktitle    = {{IISWC}},
   pages        = {39--50},
   publisher    = {{IEEE}},
@@ -347,20 +310,14 @@ url = {https://www.osti.gov/biblio/1989443}}
   year = {2015}
 }
 
-@article{misbackOdysseyInteractiveWorkbench2023,
-  author       = {Edward Misback and
-                  Caleb Chan and
-                  Brett Saiki and
-                  Eunice Jun and
-                  Zachary Tatlock and
-                  Pavel Panchekha},
-  title        = {{Odyssey}: An Interactive Workbench for Expert-Driven Floating-Point Expression Rewriting},
-  journal      = {CoRR},
-  volume       = {abs/2305.10599},
-  doi          = {10.48550/arXiv.2305.10599},
-  eprinttype    = {arXiv},
-  eprint       = {2305.10599},
-  year         = {2023}
+@inproceedings{misbackOdysseyInteractiveWorkbench2023,
+  author = {Misback, Edward and Chan, Caleb C. and Saiki, Brett and Jun, Eunice and Tatlock, Zachary and Panchekha, Pavel},
+  title = {{Odyssey}: An Interactive Workbench for Expert-Driven Floating-Point Expression Rewriting},
+  publisher = {{ACM}},
+  doi = {10.1145/3586183.3606819},
+  booktitle = {{UIST}},
+  pages = {77:1--77:15},
+  year = {2023}
 }
 
 @inproceedings{arnoldStackTraceAnalysis2007,
@@ -376,17 +333,12 @@ url = {https://www.osti.gov/biblio/1989443}}
 @article{houghIEEEStandard7542019,
   title = {The {{IEEE Standard}} 754: {{One}} for the {{History Books}}},
   author = {Hough, David G.},
-  date = {2019-12},
   journaltitle = {Computer},
   volume = {52},
   number = {12},
   pages = {109--112},
-  issn = {0018-9162, 1558-0814},
   doi = {10.1109/MC.2019.2926614},
-  url = {https://ieeexplore.ieee.org/document/8909942/},
-  urldate = {2023-07-07},
-  langid = {english},
-  file = {/Users/ashton/Zotero/storage/2GJNGKKI/Hough - 2019 - The IEEE Standard 754 One for the History Books.pdf}
+  year = {2019}
 }
 
 @inproceedings{dindaSpyingFloatingPoint2020,
@@ -408,21 +360,7 @@ url = {https://www.osti.gov/biblio/1989443}}
 }
 
 @article{fp8,
-  author       = {Paulius Micikevicius and
-                  Dusan Stosic and
-                  Neil Burgess and
-                  Marius Cornea and
-                  Pradeep Dubey and
-                  Richard Grisenthwaite and
-                  Sangwon Ha and
-                  Alexander Heinecke and
-                  Patrick Judd and
-                  John Kamalu and
-                  Naveen Mellempudi and
-                  Stuart F. Oberman and
-                  Mohammad Shoeybi and
-                  Michael Y. Siu and
-                  Hao Wu},
+  author       = {Paulius Micikevicius and Dusan Stosic and Neil Burgess and Marius Cornea and Pradeep Dubey and Richard Grisenthwaite and Sangwon Ha and Alexander Heinecke and Patrick Judd and John Kamalu and Naveen Mellempudi and Stuart F. Oberman and Mohammad Shoeybi and Michael Y. Siu and Hao Wu},
   title        = {{FP8} Formats for Deep Learning},
   journal      = {CoRR},
   volume       = {abs/2209.05433},
