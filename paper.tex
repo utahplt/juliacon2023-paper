@@ -93,6 +93,9 @@ from ocean simulations to heat modes~(\cref{s:casestudies}):
     A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
 \end{itemize}
 
+\noindent%
+The toolkit is online: \url{https://utahplt.github.io/flowfpx}
+
 
 \section{Floating-Point Exception Primer}
 \label{s:background}
@@ -142,6 +145,8 @@ defines exceptions and exceptional values as the outcome of
 operations that have ``no single universally acceptable result''~\cite{p-draft-1997}.
 For example, dividing by zero and exceeding the \code{Float64} range
 both lead to exceptions:
+
+\bigskip
 
 % julia> 2 / 0
 % Inf
