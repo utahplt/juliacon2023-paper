@@ -113,10 +113,10 @@ Typical strings are 64 or 32 bits long, but 16-bit and 8-bit formats are on the 
 This representation supports very small and very large numbers in a narrow range of bits:
 
 \begin{lstlisting}[language = Julia]
-julia> prevfloat(typemax(Float64))
+julia> floatmax(Float64)
 1.7976931348623157e308
-julia> nextfloat(typemin(Float64))
--1.7976931348623157e308
+julia> floatmin(Float64)
+2.2250738585072014e-308
 \end{lstlisting}
 
 The flip side is that most real numbers fall into the gaps between \fp{} numbers and must be rounded, which introduces error
