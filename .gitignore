@@ -9,3 +9,4 @@ paper.pdf
 *.synctex.gz
 *.log
 compiled/
+/Archive.zip
