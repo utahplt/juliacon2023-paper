@@ -80,18 +80,22 @@ related to \NaN{} or \Inf{} exceptions~\cite{github-issues}.
 This paper introduces \FlowFPX{}, a toolkit for debugging
 \fp{} exceptions~(\cref{s:flowfpx})
 that has helped improve a variety of applications,
-from ocean simulations to heat modes~(\cref{s:casestudies}):
-\begin{itemize}
+from ocean simulations to heat modes~(\cref{s:casestudies}).
+\FlowFPX{} consists of three tools that can work together to debug \fp{} computations:
+\begin{enumerate}
   \item
     The centerpiece of \FlowFPX{} is \FT{}, a dynamic analysis tool that
-    selectively monitors for exceptions and fuzzes code for vulnerabilities.
+    selectively monitors for exceptions and fuzzes Julia code for vulnerabilities.
+    \FT{} is a Julia library that operates on Julia code.
   \item
-    To visualize results, \FT{} adapts coalesced stack-trace graphs (CSTGs, or
+    To visualize results, \FlowFPX{} uses coalesced stack-trace graphs (CSTGs, or
     \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014}
     to summarize the program contexts that handled exceptional values.
+    \CSTG{} is a generic stack-trace graph summarization tool.
   \item
     A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
-\end{itemize}
+    \GPUFPX{} is a dynamic library that programmers of GPU kernels can use.
+\end{enumerate}
 
 \noindent%
 The toolkit is online: \url{https://utahplt.github.io/flowfpx}
@@ -108,7 +112,7 @@ The toolkit is online: \url{https://utahplt.github.io/flowfpx}
 
 \Fp{} numbers use a finite number of bits to represent a spectrum of points along the real number line~(\cref{f:real-vs-fp}).
 The implementation strategy is essentially that followed in scientific notation.
-A \fp{} number packs a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into a bitstring.
+A \fp{} number packs a sign bit, an exponent, and a fraction part (also called the ``significand'' or ``mantissa'') into a bit string.
 Typical strings are 64 or 32 bits long, but 16-bit and 8-bit formats are on the rise~\cite{klowerLowprecisionClimateComputing2021,fp8,p3109}.
 This representation supports very small and very large numbers in a narrow range of bits:
 
@@ -231,18 +235,19 @@ FlowFPX can help.
 \label{s:flowfpx}
 
 \FlowFPX{} (FPX: Floating Point eXeption) is a toolkit for tracking down \fp{} exceptions.
-The primary tools in this paper are \FT{}, which records lifetimes
+The primary tools in the \FlowFPX{} toolkit are \FT{}, which records lifetimes
 and enables fuzzing, and \CSTG{}s (more precisely, CSTGs), which visualize
 the flow of exceptions.
 \GPUFPX{} is a third component of \FlowFPX{} that tracks \fp{} exceptions inside GPU kernels~\cite{llsflg-hpdc-2023}.
+This section covers each tool in detail.
 
 \subsection{\FT{}}
 \label{s:floattracker}
 
-\FT{} tracks exceptional values across their \genpropkill{} lifetime
-and can fuzz code for vulnerabilities by injecting a \Nan{} or \Inf{}
-as the result of an operation.
-\FT{} is implemented in Julia and is available on JuliaHub:
+\FT{} tracks exceptional values in Julia programs across
+their \genpropkill{} lifetime and can fuzz code for vulnerabilities by
+injecting a \Nan{} or \Inf{} as the result of an operation. \FT{} is
+implemented in Julia as a library and is available on JuliaHub:
 
 \noindent\begin{center}\noindent\!\!\url{https://juliahub.com/ui/Packages/FloatTracker/dBXig}\!\!
 \end{center}
@@ -293,10 +298,17 @@ Not all Julia operations currently preserve \NaN{}s
 bit-for-bit,\footnote{\url{https://github.com/JuliaLang/julia/issues/48523}}
 but \FT{} does its part.
 
+We note that \FT{} is currently not thread-safe; event logs are
+collected globally and running \FT{} in a multithreaded environment
+carries risks of corrupting the event log stack.
+Improving \FT{} to be thread-safe is an area for future work.
+
 
 \subsubsection{Fuzzing}
 
-Operator overloading gives \FT{} a powerful way to fuzz code from the inside out.
+In addition to enabling tracking exceptional values, operator
+overloading gives \FT{} a powerful way to fuzz code from the inside
+out.
 Each overloaded function serves as a hook where \FT{} can decide whether to observe
 the operation or step in, discard the original result, and return an exception instead.
 Injecting faults in a random way~\cite{hamlet1994random}, also known as fuzzing,
@@ -304,15 +316,35 @@ is a useful way to discover vulnerabilities in a large codebase.
 Demmel et~al. propose essentially the same idea for BLAS and
 LAPACK~\cite{ddghlllprr-correctness-2022}.
 
-\FT{} exposes several parameters to let developers control the fuzzer:
+When fuzzing is enabled, every time \FT{} intercepts a \fp{}
+operation, it decides whether or not it should return a \Nan{} instead
+of the actual computed value.
+This decision is based on several parameters that the developer can
+tune to control fuzzing:
 
 \begin{itemize}
+\item \texttt{active::Bool} fuzz only when set to true.
 \item \texttt{odds::Int64} inject if \texttt{rand(odds) == 1}.
 \item \texttt{n\_inject::Int64} upper bound on the number of \Nan{}s to inject.
-\item \texttt{active::Bool} fuzz only when set to true.
 \item \texttt{functions::Array{String}} limit fuzzing to the dynamic extent of the listed functions.
 \item \texttt{libraries::Array{String}} limit fuzzing to functions from the following libraries
 \end{itemize}
+
+\FT{} looks at these parameters in conjunction with stack-trace at the
+point where the operation was intercepted to make the decision.
+When all the conditions are met, the overloaded operator returns
+\Nan{} instead of whatever value would have been computed normally.
+This means that \Nan{}s can be injected deep inside of an algorithm,
+instead of just at the inputs.
+This can reveal vulnerabilities that otherwise would have been
+difficult to catch.
+
+Developers can use the \texttt{functions} and \texttt{libraries}
+parameters to narrow down the region where \Nan{}s can be injected.
+It might not be useful, for instance, to fuzz test code that a
+developer has no control over; a developer may not, for example, wish
+to fuzz the standard library and instead focus on the code that they
+are developing.
 
 When fuzzing reveals an error, the next step is to craft a regression test to
 guide repairs.
@@ -320,6 +352,9 @@ guide repairs.
 run and enables a replay of any recording after the fact.
 Replay runs proceed deterministically so that developers can harden
 their code and check that the fixes remove the error.
+When running a replay, each intercepted operation consults the reply
+file (instead of the stack-trace and fuzzing parameters) to decide
+whether or not to return a \Nan{} from the computation.
 
 
 \subsubsection{\FT{} Internals}
@@ -357,7 +392,7 @@ assuming 5 lines of code per function, a handwritten version would require over 
 
 \FT{} can produce copious amounts of log files which can be challenging to sift through manually.
 Coalesced stack trace graphs (CSTGs or \CSTG{}s for short) provide a way to visualize large amounts of stack traces in a compact form~\cite{humphreySystematicDebuggingMethods2014}.
-This techinque pairs well with \FT{} and makes analyzing the log files easier.
+This technique pairs well with \FT{} and makes analyzing the log files easier.
 
 \Cref{fig:cstg_demo} illustrates the construction of a \CSTG{} from a collection of stack traces.
 Each trace on the left contributes nodes and edges to the graph on the right.
@@ -624,7 +659,7 @@ appear in unstable heat simulations written in Finch.
 
 \texttt{Oceananigans}~\cite{OceananigansJOSS} is simulation package for incompressible
 fluid dynamics that can generate code for Nvidia GPUs.
-For example, the following program (from the project readme) simulates turbulance:
+For example, the following program (from the project readme) simulates turbulence:
 
 \begin{lstlisting}[language = Julia]
 using Oceananigans
@@ -753,7 +788,7 @@ Despite these improvements, \GPUFPX{} is limited by the closed-source nature of 
 
 % 6-8,24,25
 % Arnab Das scalable yet rigorous
-% Marc Daumas Certification of Bounds Expres
+% Marc Daumas Certification of Bounds Expression
 % David Delmas Towards an Industrial Use of
 % Alexey Solovyev FPTaylor Results table
 % Titolo absint
