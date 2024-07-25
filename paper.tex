@@ -88,10 +88,10 @@ from ocean simulations to heat modes~(\cref{s:casestudies}).
     selectively monitors for exceptions and fuzzes Julia code for vulnerabilities.
     \FT{} is a Julia library that operates on Julia code.
   \item
-    To visualize results, \FlowFPX{} uses coalesced stack-trace graphs (CSTGs, or
+    To visualize results, \FlowFPX{} uses coalesced stack trace graphs (CSTGs, or
     \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014}
     to summarize the program contexts that handled exceptional values.
-    \CSTG{} is a generic stack-trace graph summarization tool.
+    \CSTG{} is a generic stack trace graph summarization tool.
   \item
     A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
     \GPUFPX{} is a dynamic library that programmers of GPU kernels can use.
@@ -330,14 +330,23 @@ tune to control fuzzing:
 \item \texttt{libraries::Array{String}} limit fuzzing to functions from the following libraries
 \end{itemize}
 
-\FT{} looks at these parameters in conjunction with stack-trace at the
+\FT{} looks at these parameters in conjunction with stack trace at the
 point where the operation was intercepted to make the decision.
+When fuzzing is active (\texttt{active == true}), there are \Nan{}s
+remaining to be injected (\texttt{n\_inject > 0}), and
+\texttt{rand(odds)} returns \texttt{1}, then \FT{} inspects the
+current stack trace to see if the point is in the dynamic extend of
+the wanted \texttt{functions} or \texttt{libraries}.
 When all the conditions are met, the overloaded operator returns
 \Nan{} instead of whatever value would have been computed normally.
-This means that \Nan{}s can be injected deep inside of an algorithm,
-instead of just at the inputs.
+The value \texttt{n\_inject} is decremented before the next operation
+gets intercepted.
+
+Since \FT{} checks if it should inject a \Nan{} at \emph{every} \fp{}
+operation it intercepts, means that \Nan{}s can be injected deep
+inside of an algorithm instead of just at the inputs.
 This can reveal vulnerabilities that otherwise would have been
-difficult to catch.
+difficult to catch with input-based fuzzers.
 
 Developers can use the \texttt{functions} and \texttt{libraries}
 parameters to narrow down the region where \Nan{}s can be injected.
@@ -353,7 +362,7 @@ run and enables a replay of any recording after the fact.
 Replay runs proceed deterministically so that developers can harden
 their code and check that the fixes remove the error.
 When running a replay, each intercepted operation consults the reply
-file (instead of the stack-trace and fuzzing parameters) to decide
+file (instead of the stack trace and fuzzing parameters) to decide
 whether or not to return a \Nan{} from the computation.
 
 
