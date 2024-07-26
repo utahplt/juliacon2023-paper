@@ -432,6 +432,16 @@ however, the companion tool \GPUFPX{} instruments GPU kernels to detect and repo
 \fp{} exceptions~\cite{llsflg-hpdc-2023}.
 Together, \FT{} and \GPUFPX{} provide insights for accelerated programs.
 
+\FT{} and \GPUFPX{} have no formal connection---that is, one does not
+need to use \GPUFPX{} with \FT{}, nor vice-versa.
+These two tools compliment one another in debugging mixed-paradigm
+workloads, but they can be used in isolation.
+\GPUFPX{} is a library exclusively for NVIDIA CUDA code and has no
+special relation to Julia.
+Nevertheless, in cases where Julia code leverages a CUDA kernel,
+\GPUFPX and \FT{} can both aid in tracking down exceptional \fp{}
+values.
+
 
 \section{Case Studies}
 \label{s:casestudies}
