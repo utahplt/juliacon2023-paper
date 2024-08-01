@@ -75,7 +75,7 @@ unreliable~(\cref{s:background}).
 Exceptional values, such as Not a Number (\Nan{}) and infinity (\Inf{}),
 can and often do arise thanks to culprits such as roundoff error,
 catastrophic cancellation, singular matrices, and vanishing
-derivatives~\cite{sdjmrstp-pc-2022,ddghlllprr-correctness-2022,gllprt-correctness-2021,fpchecker-reports,llg-soap-2022,bllmg-xloop-2022}.
+derivatives~\cite{bllmg-xloop-2022,ddghlllprr-correctness-2022,fpchecker-reports,gllprt-correctness-2021,llg-soap-2022,sdjmrstp-pc-2022}.
 Developers are responsible for guarding against exceptions, but this task
 is difficult because many operations can generate and propagate exceptions.
 Worst of all, operations such as less-than (\code{<}) can kill an exceptional value,
@@ -91,17 +91,16 @@ from ocean simulations to heat modes~(\cref{s:casestudies}).
 \FlowFPX{} consists of three tools that can work together to debug \fp{} computations:
 \begin{enumerate}
   \item
-    The centerpiece of \FlowFPX{} is \TF{}, a dynamic analysis tool that
-    selectively monitors for exceptions and fuzzes Julia code for vulnerabilities.
-    \TF{} is a Julia library that operates on Julia code.
+    The centerpiece of \FlowFPX{} is \TF{}, a dynamic analysis tool written in Julia
+    for Julia code that monitors exceptions and fuzzes for vulnerabilities.
   \item
     To visualize results, \FlowFPX{} uses coalesced stack trace graphs (CSTGs, or
-    \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014}
-    to summarize the program contexts that handled exceptional values.
-    \CSTG{} is a generic stack trace graph summarization tool.
+    \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014}.
+    Our CSTG library is written in \CPP{} and accepts text-format stack traces as input.
   \item
-    A companion tool \GPUFPX{}~\cite{llsflg-hpdc-2023} provides fine-grained insights for GPU kernels.
-    \GPUFPX{} is a dynamic library that programmers of GPU kernels can use.
+    For programs that offload work to CUDA GPUs,
+    the binary instrumentation tool \GPUFPX{}~\cite{llsflg-hpdc-2023}
+    adds logging to kernels.
 \end{enumerate}
 
 \noindent%
@@ -132,8 +131,8 @@ julia> floatmin(Float64)
 
 The flip side is that most real numbers fall into the gaps between \fp{} numbers and must be rounded, which introduces error
 and can lead to surprising results.
-For example, adding the tiny Planck constant to the large Avogadro number results
-in Avogadro's number after rounding:
+For example, adding the tiny Planck constant to the large Avogadro number results in
+the Avogadro number after rounding:
 
 \begin{lstlisting}[language = Julia]
 julia> planck = 6.62607015e-34
@@ -175,11 +174,11 @@ NaN
 IEEE~754 defers the question of how to handle such exceptions to application code.
 It is up to developers to watch for \Nan{}, \Inf{}, and subnormal numbers (underflow)
 and implement an appropriate repair.
-This is no easy task, however, because of the approximations inherent to
+This is a difficult task because of the approximations inherent to
 floating point.
 Even an apparently-safe division could result in a \Nan{} if its
 denominator gets truncated to zero.
-Some \Nan{}s might be spurious, others might be fatal, but in any event
+Some \Nan{}s might be spurious while others might be fatal, but in any event
 anticipating the various exceptions is a burden.
 All too often, exceptional values go unhandled and flow through the code.
 
@@ -241,7 +240,7 @@ FlowFPX can help.
 \section{\FlowFPX{}}
 \label{s:flowfpx}
 
-\FlowFPX{} (FPX: Floating Point eXeption) is a toolkit for tracking down \fp{} exceptions.
+\FlowFPX{} (FPX: Floating Point eXception) is a toolkit for tracking down \fp{} exceptions.
 The primary tools in the \FlowFPX{} toolkit are \TF{}, which records lifetimes
 and enables fuzzing, and \CSTG{}s (more precisely, CSTGs), which visualize
 the flow of exceptions.
@@ -254,7 +253,7 @@ This section covers each tool in detail.
 \TF{} tracks exceptional values in Julia programs across
 their \genpropkill{} lifetime and can fuzz code for vulnerabilities by
 injecting a \Nan{} or \Inf{} as the result of an operation. \TF{} is
-implemented in Julia as a library and is available on JuliaHub:
+implemented in Julia as a library and is available on JuliaHub (TODO update link):
 
 \noindent\begin{center}\noindent\!\!\url{https://juliahub.com/ui/Packages/FloatTracker/dBXig}\!\!
 \end{center}
@@ -297,65 +296,59 @@ of tracked operations.
 Multiplying a \code{Float64} value with a \code{TrackedFloat64}, for example, yields
 a \code{TrackedFloat64} to continue the logging trail.
 
-Crucially, the tracked version of an exception, say a \NaN{}, points
-to the original exceptional value.
-This enables techniques such as \NaN{}-packing, or otherwise
-using the payload in creative ways.
-Not all Julia operations currently preserve \NaN{}s
-bit-for-bit,\footnote{\url{https://github.com/JuliaLang/julia/issues/48523}}
-but \TF{} does its part.
+Crucially,
+\TF{} does nothing to modify the bit-level representation of floats or exceptions.
+The tracked version of, say, a \NaN{}, points to the original exceptional
+value.
+Thus \NaN{}-packing and other creative uses of the payload continue to
+work---provided the code does not use some other Julia operation
+that does not preserve \NaN{}s bit-for-bit.\footnote{\url{https://github.com/JuliaLang/julia/issues/48523}}
 
 
 \subsubsection{Fuzzing}
 
-In addition to enabling tracking exceptional values, operator
-overloading gives \TF{} a powerful way to fuzz code from the inside
+Julia's operator overloading lets us fuzz code from the inside
 out.
 Each overloaded function serves as a hook where \TF{} can decide whether to observe
-the operation or step in, discard the original result, and return an exception instead.
+the operation or replace the original result with an exceptional value.
 Injecting faults in a random way~\cite{hamlet1994random}, also known as fuzzing,
-is a useful way to discover vulnerabilities in a large codebase.
+can discover vulnerabilities in a large codebase.
 Demmel et~al. propose essentially the same idea for BLAS and
 LAPACK~\cite{ddghlllprr-correctness-2022}.
 
 When fuzzing is enabled, every time \TF{} intercepts a \fp{}
 operation, it decides whether or not it should return a \Nan{} instead
 of the actual computed value.
-This decision is based on several parameters that the developer can
-tune to control fuzzing:
+This decision is based on several parameters:
 
 \begin{itemize}
-\item \texttt{active::Bool} fuzz only when set to true.
-\item \texttt{odds::Int64} inject if \texttt{rand(odds) == 1}.
-\item \texttt{n\_inject::Int64} upper bound on the number of \Nan{}s to inject.
-\item \texttt{functions::Array{String}} limit fuzzing to the dynamic extent of the listed functions.
-\item \texttt{libraries::Array{String}} limit fuzzing to functions from the following libraries
+\item $\,$ \texttt{active::Bool} fuzz only when set to true.
+\item $\,$ \texttt{odds::Int64} inject at each candidate location with probability $1 / \texttt{odds}$.
+\item $\,$ \texttt{n\_inject::Int64} upper bound on the number of \Nan{}s to inject.
+\item $\,$ \texttt{functions::Array{String}} limit fuzzing to the dynamic extent of the listed functions.
+\item $\,$ \texttt{libraries::Array{String}} limit fuzzing to functions from the following libraries
 \end{itemize}
 
 \TF{} looks at these parameters in conjunction with stack trace at the
 point where the operation was intercepted to make the decision.
-When fuzzing is active (\texttt{active == true}), there are \Nan{}s
-remaining to be injected (\texttt{n\_inject > 0}), and
-\texttt{rand(odds)} returns \texttt{1}, then \TF{} inspects the
-current stack trace to see if the point is in the dynamic extend of
-the wanted \texttt{functions} or \texttt{libraries}.
-When all the conditions are met, the overloaded operator returns
-\Nan{} instead of whatever value would have been computed normally.
+When fuzzing is active (\texttt{active == true})
+and there are \Nan{}s remaining to be injected (\texttt{n\_inject > 0})
+and \texttt{rand(1:odds)} returns \texttt{1}, then \TF{} inspects the
+current stack trace to see if the point is in the dynamic extent of
+the declared \texttt{functions} or \texttt{libraries} (if any).
+When all these conditions are met,
+\TF{} returns a \NaN{} instead of calling the overloaded operation.
 The value \texttt{n\_inject} is decremented before the next operation
 gets intercepted.
 
-Since \TF{} checks if it should inject a \Nan{} at \emph{every} \fp{}
-operation it intercepts, means that \Nan{}s can be injected deep
-inside of an algorithm instead of just at the inputs.
-This can reveal vulnerabilities that otherwise would have been
-difficult to catch with input-based fuzzers.
-
-Developers can use the \texttt{functions} and \texttt{libraries}
-parameters to narrow down the region where \Nan{}s can be injected.
-It might not be useful, for instance, to fuzz test code that a
-developer has no control over; a developer may not, for example, wish
-to fuzz the standard library and instead focus on the code that they
-are developing.
+Every intercepted operation is a candidate for injection,
+which means that injected \Nan{}s can appear deep
+inside of an algorithm instead of merely at its toplevel inputs.
+This can reveal vulnerabilities that are difficult to catch
+with input-based testing.
+The parameters \texttt{functions} and \texttt{libraries} let
+users control how deep to fuzz; for example, it is often helpful
+to test specific libraries and avoid trusted standard ones.
 
 When fuzzing reveals an error, the next step is to craft a regression test to
 guide repairs.
@@ -368,7 +361,7 @@ file (instead of the stack trace and fuzzing parameters) to decide
 whether or not to return a \Nan{} from the computation.
 
 
-\subsubsection{\TF{} Internals}
+\subsubsection{Internals}
 
 \TF{} takes advantage of Julia's operator overloading to track exceptions and
 fuzz for vulnerabilities.
@@ -387,7 +380,7 @@ end
 \end{lstlisting}
 
 Every arithmetic operation requires a similar overloading.
-Thus, the implementation of \TF{} uses a metaprogramming technique
+The implementation of \TF{} uses a metaprogramming technique
 adapted from \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021}
 to abstract over the common patterns.
 For every binary operation, the library creates an overloading similar
@@ -403,7 +396,7 @@ assuming 5 lines of code per function, a handwritten version would require over 
 
 \TF{} can produce copious amounts of log files which can be challenging to sift through manually.
 Coalesced stack trace graphs (CSTGs or \CSTG{}s for short) provide a way to visualize large amounts of stack traces in a compact form~\cite{humphreySystematicDebuggingMethods2014}.
-This technique pairs well with \TF{} and makes analyzing the log files easier.
+This technique pairs well with \TF{} and eases the task of analyzing log files.
 
 \Cref{fig:cstg_demo} illustrates the construction of a \CSTG{} from a collection of stack traces.
 Each trace on the left contributes nodes and edges to the graph on the right.
@@ -430,19 +423,12 @@ debugging efforts: go for the heavily-trodden paths first.
 Many programs offload work onto GPUs, which are no less susceptible to \fp{} exceptions than CPUs.
 In fact, GPU programs are worse off because they lack exception-handling mechanisms from the CPU world~\cite{llg-soap-2022}.
 Since \TF{} instruments Julia programs, it cannot help directly;
-however, the companion tool \GPUFPX{} instruments GPU kernels to detect and report
+however, the companion tool \GPUFPX{} instruments GPU kernels
+(specifically CUDA) to detect and report
 \fp{} exceptions~\cite{llsflg-hpdc-2023}.
-Together, \TF{} and \GPUFPX{} provide insights for accelerated programs.
-
-\TF{} and \GPUFPX{} have no formal connection---that is, one does not
-need to use \GPUFPX{} with \TF{}, nor vice-versa.
-These two tools compliment one another in debugging mixed-paradigm
-workloads, but they can be used in isolation.
-\GPUFPX{} is a library exclusively for NVIDIA CUDA code and has no
-special relation to Julia.
-Nevertheless, in cases where Julia code leverages a CUDA kernel,
-\GPUFPX and \TF{} can both aid in tracking down exceptional \fp{}
-values.
+There is no formal connection between \TF{} and \GPUFPX{}.
+Developers who choose to apply both tools to the respective Julia and CUDA
+components of their code can gain insights for accelerated programs.
 
 
 \section{Case Studies}
@@ -506,7 +492,6 @@ top-level
 
 We can see that the \NaN{} appeared as the result of subtracting two infinities (\code{-Inf - -Inf}).
 The trace further shows that this subtraction happens inside the function \texttt{momentum\_u!} on line 246 of the \texttt{rhs.jl} file.
-
 This solves the mystery of where one \NaN{} came from, but raises a new question
 about the source of the \Inf{} value.
 The logs for \Inf{} gens have an answer:
@@ -517,7 +502,6 @@ literal_pow()              intfuncs.jl:325
 ...
 materialize(^)             broadcast.jl:860
 top-level getproperty(...) examples/sw_nan_tf.jl:14
-..
 \end{lstlisting}
 %
 This \Inf{} came from an exponent that overflowed the float type (\code{-1.515e31\string^2}).
@@ -544,9 +528,9 @@ of the most common paths to exceptional values.
 in \ShallowWaters{} with the high CFL number.
 Reading bottom-up, every \NaN{} came from calls to the `\code{-}' and `\code{+}' operations.
 Calls to `\code{+}' account for most of the \NaN{}s.
-These \NaN{}s arose in two different contexts: a small number (30)
-occurred within a momentum calculation, while the rest (162)
-occurred within a continuity step.
+These \NaN{}s arose in two different contexts:
+a momentum calculation (30~\NaN{}s) and
+a continuity step (162~\NaN{}s).
 Moving to the top of the graph, it shows that the function \code{run\_model} drove
 the entire simulation.
 With this overview of the program, a promising next step is to guard against \NaN{}s
@@ -747,7 +731,7 @@ We merely explained how to use \TF{} by wrapping inputs in a tracked type.
 
 \subsection{Error Analysis}
 
-Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in BLAS and LAPACK, identify several inconsistencies, and propose an API for debugging and adding determinism.
+Demmel et~al.~\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in BLAS and LAPACK, identify several inconsistencies, and propose an API for debugging and adding determinism.
 The proposal includes an extension to the \texttt{INFO\_ARRAY} parameter with fields that record \genpropkill{} information.
 It also includes fuzzing, which we realize in \TF{}.
 
@@ -756,7 +740,7 @@ They point out several ways to rewrite code to avoid badlands by rewriting code 
 
 Herbie~\cite{panchekhaAutomaticallyImprovingAccuracy2015} automatically rewrites arithmetic expressions to reduce \fp{} error.
 This would combine well with \TF{}: first identify the location of a \NaN{}, ask Herbie to find a repair.
-The Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} workbench provides an interactive interface to Herbie.
+The Odyssey~\cite{misbackOdysseyInteractiveWorkbench2023} workbench provides an interactive interface to Herbie.
 
 
 \subsection{Diagnosing floating-point exceptions}
