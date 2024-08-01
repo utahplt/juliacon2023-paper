@@ -45,6 +45,7 @@
 \newcommand{\RxInfer}{\juliapkg{RxInfer}}
 \newcommand{\Sherlogs}{\juliapkg{Sherlogs}}
 \newcommand{\NBodySimulator}{\juliapkg{NBodySimulator}}
+\newcommand{\Oceananigans}{\juliapkg{Oceananigans}}
 \newcommand{\Fp}{Floating-point}
 \newcommand{\fp}{floating-point}
 \newcommand{\CSTG}{stack graph}
@@ -303,11 +304,6 @@ using the payload in creative ways.
 Not all Julia operations currently preserve \NaN{}s
 bit-for-bit,\footnote{\url{https://github.com/JuliaLang/julia/issues/48523}}
 but \TF{} does its part.
-
-We note that \TF{} is currently not thread-safe; event logs are
-collected globally and running \TF{} in a multithreaded environment
-carries risks of corrupting the event log stack.
-Improving \TF{} to be thread-safe is an area for future work.
 
 
 \subsubsection{Fuzzing}
@@ -593,25 +589,23 @@ beginning of the logs---it may be an effective point to check for \Nan{}s.
 \end{figure}
 
 
-\subsection{\OrdinaryDiffEq{}}
+\subsection{Fuzzing from NBody to ODE}
 \label{s:ode}
 
-TODO awk.
-With the targeted fuzzing abilities of \TF{}, we set focus on the
-\NBodySimulator{} package from the SciML
-team.\footnote{\url{https://github.com/SciML/NBodySimulator.jl}}
-We only wanted to test the robustness of the \NBodySimulator{} package, so we configured the fuzzer to inject \NaN{}s \emph{only} when inside of a function of that library.
-This way, we could avoid injecting in the standard library or other dependencies of \NBodySimulator{} and concentrate on improving this one library.
-
-However, Fuzzing discovered zero bugs and zero exceptional events.
-In fact, fuzzing injected \emph{zero} exceptional values whatsoever, even with adjusting the odds to \emph{force} an injection at the first available opportunity.
-The reason for this lack of \NaN{} injection, it turns out, is that the nbody
-simulation merely creates a problem for the \OrdinaryDiffEq{}
+We applied the fuzzing abilities of \TF{} to the
+\NBodySimulator{} package.\footnote{\url{https://github.com/SciML/NBodySimulator.jl}}
+To avoid injecting in the standard library or other dependencies,
+we initially configured the fuzzer to inject \NaN{}s {only} when inside of a
+function from the simulator.
+Surprisingly, fuzzing injected \emph{zero} exceptional values even
+when the fuzzer's odds were configured to force injection at the
+first available opportunity.
+It turns out that all the \fp{} operations for the simulation happened
+within the \OrdinaryDiffEq{}
 solver.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}}
-All the \fp{} operations were in another library.
 
 Fuzzing on \OrdinaryDiffEq{} led to a curious situation.
-The library itself reported a \NaN{} and printed a message that it would exit.
+The library itself reported a \NaN{} and printed a message stating that it would exit.
 However, after printing that message, the program went into an infinite loop.
 Using \CSTG{}s to guide our search, we found a \NaN{} kill that manifested repeatedly in the logs.
 The stack traces for that kill originated from inside the file \texttt{solve.jl}:
@@ -653,7 +647,7 @@ Fortunately, the problem in this case is benign as the code was already trying t
 
 Finch is a domain-specific language for specifying
 PDEs~\cite{heislerFinchDomainSpecific2022}.\footnote{Not to be confused
-with the Finch loop optimizer~\cite{adka-cgo-2023}.}
+with the loop optimizer \juliapkg{Finch}~\cite{adka-cgo-2023}.}
 In the spirit of FEniCS~\cite{fenics} and related
 tools~\cite{freefem,openfoam,dune,firedrake},
 Finch helps scientists quickly convert math into code.
@@ -680,10 +674,10 @@ Additionally, \TF{} and \CSTG{}s have been useful for identifying \NaN{}s that
 appear in unstable heat simulations written in Finch.
 %% advection2d, high cfl and high T (time) led to NaN during simulation
 
-\subsection{Oceananigans}
+\subsection{\Oceananigans{}}
 \label{s:ocean}
 
-\texttt{Oceananigans}~\cite{OceananigansJOSS} is simulation package for incompressible
+\Oceananigans{}~\cite{OceananigansJOSS} is simulation package for incompressible
 fluid dynamics that can generate code for Nvidia GPUs.
 For example, the following program (from the project readme) simulates turbulence:
 
@@ -881,15 +875,20 @@ In the future, \TF{} would benefit from an API to plug in tools for external lib
 and present a comprehensive view of exceptions in a multi-language program.
 
 
-\subsection{Interface Concerns}
+\subsection{Interface Concerns, Multi-Threading}
 
-\TF{} is capable of monitoring all sorts of events and \fp{} values beyond exceptions.
-For example, \TF{} could monitor large or small values with guidance from the user about which values are worth logging.
+\TF{} could be extended to monitor events and values that go beyond exceptions,
+such as very-large or very-small numbers according to bounds supplied by the user.
 On a similar note, the interface to \TF{} is primitive: users express interest in a number by wrapping it
 in a constructor such as \code{TrackedFloat64}.
-Helper functions that track data structures and choose a default size would
-make it easier to experiment with \TF{}.
+Helper functions that track data structures and provide a default float size would
+make experimentation easier.
 
+\TF{} stores its configuration and event logs in global data structures,
+making it unsafe for a multithreaded environment.
+Adding locks would restore safety, but perhaps a richer interface is in order.
+Individual threads may wish to configure local logging for better
+data organization and performance.
 
 
 \section{Acknowledgments}
