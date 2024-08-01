@@ -37,10 +37,16 @@
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\FlowFPX}{FlowFPX}
 \newcommand{\GPUFPX}{GPU-FPX}
-\newcommand{\FloatTracker}{FloatTracker}
-\newcommand{\FT}{\FloatTracker}
-\newcommand{\Fp}{Floating-point} % hyphen or no?
-\newcommand{\fp}{floating-point} % hyphen or no?
+\newcommand{\juliapkg}[1]{\texttt{#1.jl}}
+\newcommand{\TrackedFloats}{\juliapkg{TrackedFloats}}
+\newcommand{\TF}{\TrackedFloats}
+\newcommand{\ShallowWaters}{\juliapkg{ShallowWaters}}
+\newcommand{\OrdinaryDiffEq}{\juliapkg{OrdinaryDiffEq}}
+\newcommand{\RxInfer}{\juliapkg{RxInfer}}
+\newcommand{\Sherlogs}{\juliapkg{Sherlogs}}
+\newcommand{\NBodySimulator}{\juliapkg{NBodySimulator}}
+\newcommand{\Fp}{Floating-point}
+\newcommand{\fp}{floating-point}
 \newcommand{\CSTG}{stack graph}
 \newcommand{\CPP}{\code{C++}}
 \newcommand{\Dendro}{\textsc{Dendro}}
@@ -84,9 +90,9 @@ from ocean simulations to heat modes~(\cref{s:casestudies}).
 \FlowFPX{} consists of three tools that can work together to debug \fp{} computations:
 \begin{enumerate}
   \item
-    The centerpiece of \FlowFPX{} is \FT{}, a dynamic analysis tool that
+    The centerpiece of \FlowFPX{} is \TF{}, a dynamic analysis tool that
     selectively monitors for exceptions and fuzzes Julia code for vulnerabilities.
-    \FT{} is a Julia library that operates on Julia code.
+    \TF{} is a Julia library that operates on Julia code.
   \item
     To visualize results, \FlowFPX{} uses coalesced stack trace graphs (CSTGs, or
     \CSTG{}s)~\cite{humphreySystematicDebuggingMethods2014}
@@ -235,18 +241,18 @@ FlowFPX can help.
 \label{s:flowfpx}
 
 \FlowFPX{} (FPX: Floating Point eXeption) is a toolkit for tracking down \fp{} exceptions.
-The primary tools in the \FlowFPX{} toolkit are \FT{}, which records lifetimes
+The primary tools in the \FlowFPX{} toolkit are \TF{}, which records lifetimes
 and enables fuzzing, and \CSTG{}s (more precisely, CSTGs), which visualize
 the flow of exceptions.
 \GPUFPX{} is a third component of \FlowFPX{} that tracks \fp{} exceptions inside GPU kernels~\cite{llsflg-hpdc-2023}.
 This section covers each tool in detail.
 
-\subsection{\FT{}}
+\subsection{\TF{}}
 \label{s:floattracker}
 
-\FT{} tracks exceptional values in Julia programs across
+\TF{} tracks exceptional values in Julia programs across
 their \genpropkill{} lifetime and can fuzz code for vulnerabilities by
-injecting a \Nan{} or \Inf{} as the result of an operation. \FT{} is
+injecting a \Nan{} or \Inf{} as the result of an operation. \TF{} is
 implemented in Julia as a library and is available on JuliaHub:
 
 \noindent\begin{center}\noindent\!\!\url{https://juliahub.com/ui/Packages/FloatTracker/dBXig}\!\!
@@ -266,7 +272,7 @@ implemented in Julia as a library and is available on JuliaHub:
   \label{fig:lifetime-class}
 \end{figure}
 
-\FT{} monitors \Nan{} and \Inf{} exceptions by overloading arithmetic
+\TF{} monitors \Nan{} and \Inf{} exceptions by overloading arithmetic
 operations and logging key events.
 When the input to an operation is exception-free but the output is
 exceptional, the operation is a {gen} event~(\cref{fig:lifetime-class}).
@@ -278,13 +284,13 @@ Put together, the log of all {gen}s, {prop}s, and {kill}s
 sheds light of how various exceptions traveled across the program.
 The logs also record the call context (stack trace) and the arguments to the operation as a starting point for debugging efforts.
 
-\FT{} writes logs to three files: one for {gen} events, one for {prop}s, and one for {kill}s.
+\TF{} writes logs to three files: one for {gen} events, one for {prop}s, and one for {kill}s.
 This way, discovering where a \Nan{} came from is a matter of sifting through the {gen} file.
 Users can also lower the overhead of logging by turning it off for prop events.
 
 The instrumentation works through custom \fp{} types: \code{TrackedFloat64},
 \code{TrackedFloat32}, and \code{TrackedFloat16}.
-Developers must opt in to \FT{} by wrapping numbers in a custom type.
+Developers must opt in to \TF{} by wrapping numbers in a custom type.
 From then on, tracking is automatic and extends transitively to all outputs
 of tracked operations.
 Multiplying a \code{Float64} value with a \code{TrackedFloat64}, for example, yields
@@ -296,27 +302,27 @@ This enables techniques such as \NaN{}-packing, or otherwise
 using the payload in creative ways.
 Not all Julia operations currently preserve \NaN{}s
 bit-for-bit,\footnote{\url{https://github.com/JuliaLang/julia/issues/48523}}
-but \FT{} does its part.
+but \TF{} does its part.
 
-We note that \FT{} is currently not thread-safe; event logs are
-collected globally and running \FT{} in a multithreaded environment
+We note that \TF{} is currently not thread-safe; event logs are
+collected globally and running \TF{} in a multithreaded environment
 carries risks of corrupting the event log stack.
-Improving \FT{} to be thread-safe is an area for future work.
+Improving \TF{} to be thread-safe is an area for future work.
 
 
 \subsubsection{Fuzzing}
 
 In addition to enabling tracking exceptional values, operator
-overloading gives \FT{} a powerful way to fuzz code from the inside
+overloading gives \TF{} a powerful way to fuzz code from the inside
 out.
-Each overloaded function serves as a hook where \FT{} can decide whether to observe
+Each overloaded function serves as a hook where \TF{} can decide whether to observe
 the operation or step in, discard the original result, and return an exception instead.
 Injecting faults in a random way~\cite{hamlet1994random}, also known as fuzzing,
 is a useful way to discover vulnerabilities in a large codebase.
 Demmel et~al. propose essentially the same idea for BLAS and
 LAPACK~\cite{ddghlllprr-correctness-2022}.
 
-When fuzzing is enabled, every time \FT{} intercepts a \fp{}
+When fuzzing is enabled, every time \TF{} intercepts a \fp{}
 operation, it decides whether or not it should return a \Nan{} instead
 of the actual computed value.
 This decision is based on several parameters that the developer can
@@ -330,11 +336,11 @@ tune to control fuzzing:
 \item \texttt{libraries::Array{String}} limit fuzzing to functions from the following libraries
 \end{itemize}
 
-\FT{} looks at these parameters in conjunction with stack trace at the
+\TF{} looks at these parameters in conjunction with stack trace at the
 point where the operation was intercepted to make the decision.
 When fuzzing is active (\texttt{active == true}), there are \Nan{}s
 remaining to be injected (\texttt{n\_inject > 0}), and
-\texttt{rand(odds)} returns \texttt{1}, then \FT{} inspects the
+\texttt{rand(odds)} returns \texttt{1}, then \TF{} inspects the
 current stack trace to see if the point is in the dynamic extend of
 the wanted \texttt{functions} or \texttt{libraries}.
 When all the conditions are met, the overloaded operator returns
@@ -342,7 +348,7 @@ When all the conditions are met, the overloaded operator returns
 The value \texttt{n\_inject} is decremented before the next operation
 gets intercepted.
 
-Since \FT{} checks if it should inject a \Nan{} at \emph{every} \fp{}
+Since \TF{} checks if it should inject a \Nan{} at \emph{every} \fp{}
 operation it intercepts, means that \Nan{}s can be injected deep
 inside of an algorithm instead of just at the inputs.
 This can reveal vulnerabilities that otherwise would have been
@@ -357,7 +363,7 @@ are developing.
 
 When fuzzing reveals an error, the next step is to craft a regression test to
 guide repairs.
-\FT{} therefore records the sequence of injections that it makes during a fuzzing
+\TF{} therefore records the sequence of injections that it makes during a fuzzing
 run and enables a replay of any recording after the fact.
 Replay runs proceed deterministically so that developers can harden
 their code and check that the fixes remove the error.
@@ -366,15 +372,15 @@ file (instead of the stack trace and fuzzing parameters) to decide
 whether or not to return a \Nan{} from the computation.
 
 
-\subsubsection{\FT{} Internals}
+\subsubsection{\TF{} Internals}
 
-\FT{} takes advantage of Julia's operator overloading to track exceptions and
+\TF{} takes advantage of Julia's operator overloading to track exceptions and
 fuzz for vulnerabilities.
 For example, below is a variant of \code{+} that is overloaded
 for \code{TrackedFloat64}.
 It calls the basic \code{+} (or injects a \Nan{}) and checks for exceptions
 before returning:
-This lets \FT{} intercept all \fp{} operations involving \texttt{TrackedFloat} types.
+This lets \TF{} intercept all \fp{} operations involving \texttt{TrackedFloat} types.
 
 \begin{lstlisting}[language = Julia]
 function +(x::TrackedFloat64, y::TrackedFloat64)
@@ -385,7 +391,7 @@ end
 \end{lstlisting}
 
 Every arithmetic operation requires a similar overloading.
-Thus, the implementation of \FT{} uses a metaprogramming technique
+Thus, the implementation of \TF{} uses a metaprogramming technique
 adapted from \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021}
 to abstract over the common patterns.
 For every binary operation, the library creates an overloading similar
@@ -399,9 +405,9 @@ assuming 5 lines of code per function, a handwritten version would require over 
 \subsection{Stack Graphs}
 \label{s:cstg}
 
-\FT{} can produce copious amounts of log files which can be challenging to sift through manually.
+\TF{} can produce copious amounts of log files which can be challenging to sift through manually.
 Coalesced stack trace graphs (CSTGs or \CSTG{}s for short) provide a way to visualize large amounts of stack traces in a compact form~\cite{humphreySystematicDebuggingMethods2014}.
-This technique pairs well with \FT{} and makes analyzing the log files easier.
+This technique pairs well with \TF{} and makes analyzing the log files easier.
 
 \Cref{fig:cstg_demo} illustrates the construction of a \CSTG{} from a collection of stack traces.
 Each trace on the left contributes nodes and edges to the graph on the right.
@@ -427,19 +433,19 @@ debugging efforts: go for the heavily-trodden paths first.
 
 Many programs offload work onto GPUs, which are no less susceptible to \fp{} exceptions than CPUs.
 In fact, GPU programs are worse off because they lack exception-handling mechanisms from the CPU world~\cite{llg-soap-2022}.
-Since \FT{} instruments Julia programs, it cannot help directly;
+Since \TF{} instruments Julia programs, it cannot help directly;
 however, the companion tool \GPUFPX{} instruments GPU kernels to detect and report
 \fp{} exceptions~\cite{llsflg-hpdc-2023}.
-Together, \FT{} and \GPUFPX{} provide insights for accelerated programs.
+Together, \TF{} and \GPUFPX{} provide insights for accelerated programs.
 
-\FT{} and \GPUFPX{} have no formal connection---that is, one does not
-need to use \GPUFPX{} with \FT{}, nor vice-versa.
+\TF{} and \GPUFPX{} have no formal connection---that is, one does not
+need to use \GPUFPX{} with \TF{}, nor vice-versa.
 These two tools compliment one another in debugging mixed-paradigm
 workloads, but they can be used in isolation.
 \GPUFPX{} is a library exclusively for NVIDIA CUDA code and has no
 special relation to Julia.
 Nevertheless, in cases where Julia code leverages a CUDA kernel,
-\GPUFPX and \FT{} can both aid in tracking down exceptional \fp{}
+\GPUFPX and \TF{} can both aid in tracking down exceptional \fp{}
 values.
 
 
@@ -449,12 +455,12 @@ values.
 \FlowFPX{} has helped to debug exceptions and fuzz for issues in a variety
 of settings, some synthetic and some realistic.
 The case studies include a shallow water simulation, the
-\texttt{OrdinaryDiffEq} solver, and a Bayesian inference library.
+\OrdinaryDiffEq{} solver, and a Bayesian inference library.
 
-\subsection{ShallowWaters}
+\subsection{\ShallowWaters{}}
 \label{s:sw}
 
-\texttt{ShallowWaters} simulates the flow of water over a
+\ShallowWaters{} simulates the flow of water over a
 seabed~\cite{klowerNumberFormatsError2020,klowerPositsAlternativeFloats2019}.
 The library has dozens of parameters that a scientist can experiment with.
 One notable parameter is the Courant-Friedrichs-Lewy (CFL) number, which roughly describes the size of the time step to take in running the simulation.
@@ -468,11 +474,11 @@ Raising the CFL too high, to 1.6, causes trouble
 (\cref{fig:sw_nans}, right) with large, white regions where the
 current speed is \NaN{} instead of a normal value.
 
-Running \FT{} on the high-CFL simulation reveals where the simulation drifted
+Running \TF{} on the high-CFL simulation reveals where the simulation drifted
 from numbers to \NaN{} exceptions.
-The first step in applying \FT{} is to convert relevant floats to tracked
+The first step in applying \TF{} is to convert relevant floats to tracked
 floats, e.g., \code{Float32} to \code{TrackedFloat32}.
-For \texttt{ShallowWaters}, this step is easy because the simulation is parameterized by
+For \ShallowWaters{}, this step is easy because the simulation is parameterized by
 a \fp{} type for internal use.
 Swapping in a tracked type is enough:
 
@@ -493,7 +499,7 @@ as they happen.
 Below is one event from the gen logs:
 
 \begin{lstlisting}
--([-Inf, -Inf])   FT/TrackedFloat.jl:106
+-([-Inf, -Inf])   TF/TrackedFloat.jl:106
 momentum_u!       SW/rhs.jl:246
 rhs_nonlinear!    SW/rhs.jl:50
 rhs!              SW/rhs.jl:14 [inlined]
@@ -510,7 +516,7 @@ about the source of the \Inf{} value.
 The logs for \Inf{} gens have an answer:
 
 \begin{lstlisting}
-^([-1.515f31, 2])          FT/TrackedFloat.jl:138
+^([-1.515f31, 2])          TF/TrackedFloat.jl:138
 literal_pow()              intfuncs.jl:325
 ...
 materialize(^)             broadcast.jl:860
@@ -519,7 +525,7 @@ top-level getproperty(...) examples/sw_nan_tf.jl:14
 \end{lstlisting}
 %
 This \Inf{} came from an exponent that overflowed the float type (\code{-1.515e31\string^2}).
-\FT{} has shown exactly which numeric values in which operation
+\TF{} has shown exactly which numeric values in which operation
 caused exceptions to occur.
 
 \begin{figure}[t]
@@ -532,14 +538,14 @@ caused exceptions to occur.
 
 \subsubsection{Stack Graphs for a Bigger Picture}
 
-While the logs for \texttt{ShallowWaters} contain useful information,
+While the logs for \ShallowWaters{} contain useful information,
 there is an overwhelming amount of it.
 There are over ten thousand lines in the gen file alone.
 Converting these logs to a stack graph gives a quick overview
 of the most common paths to exceptional values.
 
 \Cref{fig:sw_nan_cstg} presents the stack graph for \NaN{} gen events
-in \texttt{ShallowWaters} with the high CFL number.
+in \ShallowWaters{} with the high CFL number.
 Reading bottom-up, every \NaN{} came from calls to the `\code{-}' and `\code{+}' operations.
 Calls to `\code{+}' account for most of the \NaN{}s.
 These \NaN{}s arose in two different contexts: a small number (30)
@@ -553,7 +559,7 @@ in the momentum and continuity functions.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.96\columnwidth]{fig/sw_nan_cstg_clean.pdf}
-  \caption{Stack graph for \NaN{} gens in \texttt{ShallowWaters}}
+  \caption{Stack graph for \NaN{} gens in \ShallowWaters{}}
   \label{fig:sw_nan_cstg}
 \end{figure}
 
@@ -570,7 +576,7 @@ in the momentum and continuity functions.
 Graph diffing works well for \CSTG{}s; it shows how flows in the program evolved
 from one stage to another.
 \Cref{fig:cstg_diff_demo} illustrates one diff in the context of \NaN{} gens for
-\texttt{ShallowWaters}:
+\ShallowWaters{}:
 it compares the first 10\% of gen events to the latter 90\% of gens.
 The positive numbers and green lines indicate flows that are new in the latter part,
 and the negative numbers and red lines show flows that disappeared in the latter part.
@@ -587,30 +593,31 @@ beginning of the logs---it may be an effective point to check for \Nan{}s.
 \end{figure}
 
 
-\subsection{OrdinaryDiffEq}
+\subsection{\OrdinaryDiffEq{}}
 \label{s:ode}
 
-With the targeted fuzzing abilities of \FT{}, we set focus on the
-\texttt{NBodySimulator} package from the SciML
+TODO awk.
+With the targeted fuzzing abilities of \TF{}, we set focus on the
+\NBodySimulator{} package from the SciML
 team.\footnote{\url{https://github.com/SciML/NBodySimulator.jl}}
-We only wanted to test the robustness of the \texttt{NBodySimulator} package, so we configured the fuzzer to inject \NaN{}s \emph{only} when inside of a function of that library.
-This way, we could avoid injecting in the standard library or other dependencies of \texttt{NBodySimulator} and concentrate on improving this one library.
+We only wanted to test the robustness of the \NBodySimulator{} package, so we configured the fuzzer to inject \NaN{}s \emph{only} when inside of a function of that library.
+This way, we could avoid injecting in the standard library or other dependencies of \NBodySimulator{} and concentrate on improving this one library.
 
 However, Fuzzing discovered zero bugs and zero exceptional events.
 In fact, fuzzing injected \emph{zero} exceptional values whatsoever, even with adjusting the odds to \emph{force} an injection at the first available opportunity.
 The reason for this lack of \NaN{} injection, it turns out, is that the nbody
-simulation merely creates a problem for the \code{OrdinaryDiffEq}
+simulation merely creates a problem for the \OrdinaryDiffEq{}
 solver.\footnote{\url{https://github.com/SciML/OrdinaryDiffEq.jl}}
 All the \fp{} operations were in another library.
 
-Fuzzing on \code{OrdinaryDiffEq} led to a curious situation.
+Fuzzing on \OrdinaryDiffEq{} led to a curious situation.
 The library itself reported a \NaN{} and printed a message that it would exit.
 However, after printing that message, the program went into an infinite loop.
 Using \CSTG{}s to guide our search, we found a \NaN{} kill that manifested repeatedly in the logs.
 The stack traces for that kill originated from inside the file \texttt{solve.jl}:
 
 \begin{lstlisting}
-<([NaN, 3.0e6])  at FT/TrackedFloat.jl:193
+<([NaN, 3.0e6])  at TF/TrackedFloat.jl:193
 solve!           at ODE/solve.jl:515
 ...
 \end{lstlisting}
@@ -655,7 +662,7 @@ It supports multiple discretization methods (finite element and finite
 volume) and multiple backends (Julia, \CPP{}, \Dendro{}~\cite{dendro}).
 Furthermore it strives to output code that humans can easily fine-tune.
 
-Fuzzing with \FT{} revealed two places where Finch needed
+Fuzzing with \TF{} revealed two places where Finch needed
 protection against user input.
 The first was when reading an input mesh.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/16}{2023-06-06}}
 A \NaN{} injected in the mesh led to a crash further on:
@@ -669,7 +676,7 @@ Before accessing the input, Finch needed to check for \NaN{}s.
 The second place was in setting bounds for the
 solver.\footnote{\urlaccess{https://github.com/paralab/Finch/issues/17}{2023-06-06}}
 Here, a \NaN{} could leave bounds uninitialized, leading to a bounds error.
-Additionally, \FT{} and \CSTG{}s have been useful for identifying \NaN{}s that
+Additionally, \TF{} and \CSTG{}s have been useful for identifying \NaN{}s that
 appear in unstable heat simulations written in Finch.
 %% advection2d, high cfl and high T (time) led to NaN during simulation
 
@@ -730,15 +737,15 @@ of the reliability of the example.
   \label{f:gpufpx}
 \end{figure}
 
-\subsection{RxInfer}
+\subsection{\RxInfer{}}
 \label{s:safari}
 
-We discovered an open issue in the \code{RxInfer.jl} library related to \NaN{} detection
-and suggested \FT{} to the developers.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
+We discovered an open issue in the \RxInfer{} library related to \NaN{} detection
+and suggested \TF{} to the developers.\footnote{\url{https://github.com/biaslab/RxInfer.jl/issues/116}}
 Within a day, they were able to track down the location of an important \NaN{} gen.
 This success came with little input from our end; in fact, the application program was
 closed-source.
-We merely explained how to use \FT{} by wrapping inputs in a tracked type.
+We merely explained how to use \TF{} by wrapping inputs in a tracked type.
 
 
 \section{Related Work}
@@ -748,26 +755,26 @@ We merely explained how to use \FT{} by wrapping inputs in a tracked type.
 
 Demmel et al.\cite{ddghlllprr-correctness-2022} examine \fp{} exceptional value handling in BLAS and LAPACK, identify several inconsistencies, and propose an API for debugging and adding determinism.
 The proposal includes an extension to the \texttt{INFO\_ARRAY} parameter with fields that record \genpropkill{} information.
-It also includes fuzzing, which we realize in \FT{}.
+It also includes fuzzing, which we realize in \TF{}.
 
 Toronto and McCarthy~\cite{torontoPracticallyAccurateFloatingPoint2014} propose a test-driven method for detecting numeric error: plot the results of an expression on a range of inputs and look for sharp deviations, or \emph{badlands}.
 They point out several ways to rewrite code to avoid badlands by rewriting code in a semantics-preserving way.
 
 Herbie~\cite{panchekhaAutomaticallyImprovingAccuracy2015} automatically rewrites arithmetic expressions to reduce \fp{} error.
-This would combine well with \FT{}: first identify the location of a \NaN{}, ask Herbie to find a repair.
+This would combine well with \TF{}: first identify the location of a \NaN{}, ask Herbie to find a repair.
 The Odyssey\cite{misbackOdysseyInteractiveWorkbench2023} workbench provides an interactive interface to Herbie.
 
 
 \subsection{Diagnosing floating-point exceptions}
 
-The Julia library \texttt{Sherlogs}~\cite{kMilanklSherlogsJl2021} inspired our use of a custom number type to intercept operations on a number.
-In contrast to \FT{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \texttt{Sherlogs} tracks and reports the range of values seen over the course of a computation.
+The Julia library \Sherlogs{}~\cite{kMilanklSherlogsJl2021} inspired our use of a custom number type to intercept operations on a number.
+In contrast to \TF{} which monitors for exceptional values and logs stack traces at interesting points in their lifetime, \Sherlogs{} tracks and reports the range of values seen over the course of a computation.
 This is intended to provide insight into whether or not a library could tolerate a lower-precision \fp{} format.
 
 % TODO: make sure that what I said about what FPSpy can track is true.
 FPSpy~\cite{dindaSpyingFloatingPoint2020} is an \texttt{LD\_PRELOAD} shared library that works on unmodified x86 binaries.
 It monitors a program during execution for operations that generate an exception, such as division by zero, underflow, and overflow.
-By contrast to \FT{}, it does not track prop or kill events.
+By contrast to \TF{}, it does not track prop or kill events.
 FPSpy has the advantage of being lightweight enough to run on production code for certain loads.
 
 
@@ -789,8 +796,8 @@ The latter deficiency is particularly worrisome, as we have seen, silent \NaN{} 
 \GPUFPX{}~\cite{llsflg-hpdc-2023} improves on the work of FPChecker and BinFPE by being more performant and catching a wider set of errors, including those that alter control flow.
 \GPUFPX{} is a shared library that, like FPSpy uses \texttt{LD\_PRELOAD} to work on unmodified binaries.
 \GPUFPX{} runs on CUDA cores from NVIDIA and reports total numbers of exceptional values.
-Like \FT{}, \GPUFPX{} can catch \NaN{} gens and kills, but it does this on the GPU where \FT{} doesn't apply.
-Despite these improvements, \GPUFPX{} is limited by the closed-source nature of common GPU cores, and cannot report at the rich level of source detail that \FT{} can.
+Like \TF{}, \GPUFPX{} can catch \NaN{} gens and kills, but it does this on the GPU where \TF{} doesn't apply.
+Despite these improvements, \GPUFPX{} is limited by the closed-source nature of common GPU cores, and cannot report at the rich level of source detail that \TF{} can.
 
 % % Herbie, improving accuracy automatically.
 % % ParetoHerbie
@@ -837,13 +844,13 @@ Below we discuss some topics for future work.
 \subsection{Performance}
 \label{s:discussion-performance}
 
-\FT{} incurs significant overhead on the order of 100x slower than a non-instrumented run of the same program.
+\TF{} incurs significant overhead on the order of 100x slower than a non-instrumented run of the same program.
 It is a debugging tool, not a production tool.
 To put this number into context, Valgrind runs with a similar level of slowdown.
 
 In addition to the cost incurred by intercepting \fp{} operations, gathering stack traces is expensive.
-We observe a 10x slowdown on \texttt{ShallowWaters} with logging disabled.
-We recommend that users of \FT{} make use of the \texttt{maxLogs} and \texttt{exclude\_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
+We observe a 10x slowdown on \ShallowWaters{} with logging disabled.
+We recommend that users of \TF{} make use of the \texttt{maxLogs} and \texttt{exclude\_stacktrace} configuration options to limit the number and kind of logs gathered, and thereby reduce the number of calls to \texttt{stacktrace()}.
 Stack traces are essential to decide where to inject a fault when fuzzing,
 but we defer them as late as possible to maximize performance.
 
@@ -854,7 +861,7 @@ While fuzzing is useful for discovering issues, its success rate
 is low because {every} \fp{} operation is a candidate
 for injection.
 Even operations that are already well-defended against \NaN{}s are candidates.
-\FT{} could use two sorts of tools for improving injection.
+\TF{} could use two sorts of tools for improving injection.
 First, fine-grained control to let users decide where not to inject.
 Second, tools for understanding the context of an injection point
 after the fact.
@@ -867,28 +874,28 @@ decide whether they are protected or not.
 
 \subsection{Tracking Exceptions in External Libraries}
 
-\FT{} is limited to Julia code.
+\TF{} is limited to Julia code.
 It cannot track the lifetime of exceptional values in external libraries, such as GPU kernels or C programs.
 For GPUs it relies on \GPUFPX{}, through the connection between these tools is loose.
-In the future, \FT{} would benefit from an API to plug in tools for external libraries, gather their output,
+In the future, \TF{} would benefit from an API to plug in tools for external libraries, gather their output,
 and present a comprehensive view of exceptions in a multi-language program.
 
 
 \subsection{Interface Concerns}
 
-FloatTracker is capable of monitoring all sorts of events and \fp{} values beyond exceptions.
-For example, \FT{} could monitor large or small values with guidance from the user about which values are worth logging.
-On a similar note, the interface to \FT{} is primitive: users express interest in a number by wrapping it
+\TF{} is capable of monitoring all sorts of events and \fp{} values beyond exceptions.
+For example, \TF{} could monitor large or small values with guidance from the user about which values are worth logging.
+On a similar note, the interface to \TF{} is primitive: users express interest in a number by wrapping it
 in a constructor such as \code{TrackedFloat64}.
 Helper functions that track data structures and choose a default size would
-make it easier to experiment with \FT{}.
+make it easier to experiment with \TF{}.
 
 
 
 \section{Acknowledgments}
 
-Thanks to the \code{Sherlogs.jl} developers for inspiring the architecture of \FT{}.
-Thanks to the \code{RxInfer.jl} developers for testing \FT{} and for feedback on its user interface.
+Thanks to the \Sherlogs{} developers for inspiring the architecture of \TF{}.
+Thanks to the \RxInfer{} developers for testing \TF{} and for feedback on its user interface.
 Thanks to Alex Larsen and Rob Durst for comments on an early draft.
 This work is supported by
 NSF grant \href{https://nsf.gov/awardsearch/showAward?AWD_ID=2030859&HistoricalAwards=false}{2030859}
